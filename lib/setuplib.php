@@ -1058,6 +1058,10 @@ function setup_get_remote_url() {
         //LiteSpeed - not officially supported
         $rurl['fullpath'] = $_SERVER['REQUEST_URI']; // TODO: verify this is always properly encoded
 
+    } else if (stripos($_SERVER['SERVER_SOFTWARE'], 'HAProxy') !== false) {
+        // HAproxy - not officially supported.
+        $rurl['fullpath'] = $_SERVER['REQUEST_URI']; // TODO: verify this is always properly encoded.
+
     } else if ($_SERVER['SERVER_SOFTWARE'] === 'HTTPD') {
         //obscure name found on some servers - this is definitely not supported
         $rurl['fullpath'] = $_SERVER['REQUEST_URI']; // TODO: verify this is always properly encoded
