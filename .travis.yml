@@ -10,7 +10,7 @@ language: php
 
 os: linux
 
-dist: bionic
+dist: focal
 
 services:
     - mysql
