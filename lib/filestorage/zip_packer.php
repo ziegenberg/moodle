@@ -252,7 +252,6 @@ class zip_packer extends file_packer {
     /**
      * Unzip file to given file path (real OS filesystem), existing files are overwritten.
      *
-     * @todo MDL-31048 localise messages
      * @param string|stored_file $archivefile full pathname of zip file or stored_file instance
      * @param string $pathname target directory
      * @param array $onlyfiles only extract files present in the array. The path to files MUST NOT
@@ -316,7 +315,7 @@ class zip_packer extends file_packer {
                 $newdir = "$pathname/$name";
                 // directory
                 if (is_file($newdir) and !unlink($newdir)) {
-                    $processed[$name] = 'Can not create directory, file already exists'; // TODO: localise
+                    $processed[$name] = get_string('cannotcreatedirfileexists', 'error');
                     $success = false;
                     continue;
                 }
@@ -327,7 +326,7 @@ class zip_packer extends file_packer {
                     if (mkdir($newdir, $CFG->directorypermissions, true)) {
                         $processed[$name] = true;
                     } else {
-                        $processed[$name] = 'Can not create directory'; // TODO: localise
+                        $processed[$name] = get_string('errorcreatingdirectory', 'error', $newdir);
                         $success = false;
                     }
                 }
@@ -340,7 +339,7 @@ class zip_packer extends file_packer {
 
             if (!is_dir($newdir)) {
                 if (!mkdir($newdir, $CFG->directorypermissions, true)) {
-                    $processed[$name] = 'Can not create directory'; // TODO: localise
+                    $processed[$name] = get_string('errorcreatingdirectory', 'error', $newdir);
                     $success = false;
                     continue;
                 }
@@ -353,13 +352,13 @@ class zip_packer extends file_packer {
                 // upstream PHP bugs #69477, #74619 and #77214. Extract the file from its stream which is slower but
                 // should work even in this case.
                 if (!$fp = fopen($newfile, 'wb')) {
-                    $processed[$name] = 'Can not write target file'; // TODO: localise.
+                    $processed[$name] = get_string('cannotwritefile', 'error', $newfile);
                     $success = false;
                     continue;
                 }
 
                 if (!$fz = $ziparch->get_stream($info->index)) {
-                    $processed[$name] = 'Can not read file from zip archive'; // TODO: localise.
+                    $processed[$name] = get_string('errorreadingfromarchive', 'error');
                     $success = false;
                     fclose($fp);
                     continue;
@@ -375,7 +374,7 @@ class zip_packer extends file_packer {
 
             } else {
                 if (!$fz = $ziparch->extract_to($pathname, $info->index)) {
-                    $processed[$name] = 'Can not read file from zip archive'; // TODO: localise.
+                    $processed[$name] = get_string('errorreadingfromarchive', 'error');
                     $success = false;
                     continue;
                 }
@@ -383,14 +382,14 @@ class zip_packer extends file_packer {
 
             // Check that the file was correctly created in the destination.
             if (!file_exists($newfile)) {
-                $processed[$name] = 'Unknown error during zip extraction (file not created).'; // TODO: localise.
+                $processed[$name] = get_string('errorunzippingfilesnotcreated', 'error');
                 $success = false;
                 continue;
             }
 
             // Check that the size of extracted file matches the expectation.
             if (filesize($newfile) !== $size) {
-                $processed[$name] = 'Unknown error during zip extraction (file size mismatch).'; // TODO: localise.
+                $processed[$name] = get_string('errorunzippingfilessizemismatch', 'error');
                 $success = false;
                 @unlink($newfile);
                 continue;
@@ -411,7 +410,6 @@ class zip_packer extends file_packer {
     /**
      * Unzip file to given file path (real OS filesystem), existing files are overwritten.
      *
-     * @todo MDL-31048 localise messages
      * @param string|stored_file $archivefile full pathname of zip file or stored_file instance
      * @param int $contextid context ID
      * @param string $component component
@@ -483,7 +481,7 @@ class zip_packer extends file_packer {
             if ($size < 2097151) {
                 // Small file.
                 if (!$fz = $ziparch->get_stream($info->index)) {
-                    $processed[$name] = 'Can not read file from zip archive'; // TODO: localise
+                    $processed[$name] = get_string('errorreadingfromarchive', 'error');
                     continue;
                 }
                 $content = '';
@@ -500,7 +498,7 @@ class zip_packer extends file_packer {
                 }
                 fclose($fz);
                 if (strlen($content) !== $size) {
-                    $processed[$name] = 'Unknown error during zip extraction'; // TODO: localise
+                    $processed[$name] = get_string('errorunzippingfilesunknown', 'error');
                     // something went wrong :-(
                     unset($content);
                     continue;
@@ -508,7 +506,7 @@ class zip_packer extends file_packer {
 
                 if ($file = $fs->get_file($contextid, $component, $filearea, $itemid, $filepath, $filename)) {
                     if (!$file->delete()) {
-                        $processed[$name] = 'Can not delete existing file'; // TODO: localise
+                        $processed[$name] = get_string('cannotdeleteexistingfile', 'error');
                         continue;
                     }
                 }
@@ -523,7 +521,7 @@ class zip_packer extends file_packer {
                 if ($fs->create_file_from_string($file_record, $content)) {
                     $processed[$name] = true;
                 } else {
-                    $processed[$name] = 'Unknown error during zip extraction'; // TODO: localise
+                    $processed[$name] = get_string('errorunzippingfiles', 'error');
                 }
                 unset($content);
                 continue;
@@ -533,12 +531,12 @@ class zip_packer extends file_packer {
                 $tmpfile = tempnam($CFG->tempdir.'/zip', 'unzip');
                 if (!$fp = fopen($tmpfile, 'wb')) {
                     @unlink($tmpfile);
-                    $processed[$name] = 'Can not write temp file'; // TODO: localise
+                    $processed[$name] = get_string('cannotcreatetempfile', 'error');
                     continue;
                 }
                 if (!$fz = $ziparch->get_stream($info->index)) {
                     @unlink($tmpfile);
-                    $processed[$name] = 'Can not read file from zip archive'; // TODO: localise
+                    $processed[$name] = get_string('errorreadingfromarchive', 'error');
                     continue;
                 }
                 $realfilesize = 0;
@@ -556,7 +554,7 @@ class zip_packer extends file_packer {
                 fclose($fz);
                 fclose($fp);
                 if (filesize($tmpfile) !== $size) {
-                    $processed[$name] = 'Unknown error during zip extraction'; // TODO: localise
+                    $processed[$name] = get_string('errorunzippingfiles', 'error');
                     // something went wrong :-(
                     @unlink($tmpfile);
                     continue;
@@ -565,7 +563,7 @@ class zip_packer extends file_packer {
                 if ($file = $fs->get_file($contextid, $component, $filearea, $itemid, $filepath, $filename)) {
                     if (!$file->delete()) {
                         @unlink($tmpfile);
-                        $processed[$name] = 'Can not delete existing file'; // TODO: localise
+                        $processed[$name] = get_string('cannotdeleteexistingfile', 'error');
                         continue;
                     }
                 }
@@ -580,7 +578,7 @@ class zip_packer extends file_packer {
                 if ($fs->create_file_from_pathname($file_record, $tmpfile)) {
                     $processed[$name] = true;
                 } else {
-                    $processed[$name] = 'Unknown error during zip extraction'; // TODO: localise
+                    $processed[$name] = get_string('errorunzippingfiles', 'error');
                 }
                 @unlink($tmpfile);
                 continue;
