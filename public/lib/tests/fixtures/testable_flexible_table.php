@@ -42,4 +42,14 @@ class testable_flexible_table extends flexible_table {
     public function can_be_reset() {
         return parent::can_be_reset();
     }
+
+    /**
+     * Provides access to flexible_table::get_user_fullname_display_fields() method.
+     *
+     * @return array
+     */
+    // phpcs:ignore Generic.CodeAnalysis.UselessOverridingMethod
+    public function get_user_fullname_display_fields(): array {
+        return parent::get_user_fullname_display_fields();
+    }
 }
