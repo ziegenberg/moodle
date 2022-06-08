@@ -114,15 +114,7 @@ class mod_feedback_responses_table extends table_sql {
      * Initialises table
      * @param int $group retrieve only users from this group (optional)
      */
-    protected function init($group = 0) {
-
-        $tablecolumns = array('userpic', 'fullname', 'groups');
-        $tableheaders = array(
-            get_string('userpic'),
-            get_string('fullnameuser'),
-            get_string('groups')
-        );
-
+    protected function init(int $group = 0): void {
         // TODO Does not support custom user profile fields (MDL-70456).
         $userfieldsapi = \core_user\fields::for_identity($this->get_context(), false)->with_userpic();
         $ufields = $userfieldsapi->get_sql('u', false, '', $this->useridfield, false)->selects;
@@ -137,10 +129,22 @@ class mod_feedback_responses_table extends table_sql {
         }
 
         if ($this->is_downloading()) {
-            // When downloading data:
-            // Remove 'userpic' from downloaded data.
-            array_shift($tablecolumns);
-            array_shift($tableheaders);
+            $tablecolumns = [];
+            $tableheaders = [];
+
+            // Add the user name fields as separate columns, in the order defined by the
+            // configured full name display format.
+            $requirednames = $this->get_user_fullname_display_fields();
+            if (!empty($requirednames)) {
+                foreach ($requirednames as $name) {
+                    $fields .= ", u.{$name}";
+                    $tablecolumns[] = $name;
+                    $tableheaders[] = \core_user\fields::get_display_name($name);
+                }
+            }
+
+            $tablecolumns[] = 'groups';
+            $tableheaders[] = get_string('groups');
 
             // Add all identity fields as separate columns.
             foreach ($extrafields as $field) {
@@ -148,6 +152,13 @@ class mod_feedback_responses_table extends table_sql {
                 $tablecolumns[] = $field;
                 $tableheaders[] = \core_user\fields::get_display_name($field);
             }
+        } else {
+            $tablecolumns = ['userpic', 'fullname', 'groups'];
+            $tableheaders = [
+                get_string('userpic'),
+                get_string('fullnameuser'),
+                get_string('groups'),
+            ];
         }
 
         if ($this->feedbackstructure->get_feedback()->course == SITEID && !$this->feedbackstructure->get_courseid()) {
