@@ -1293,7 +1293,7 @@ class flexible_table {
      * This function is not part of the public api.
      */
     public function print_headers() {
-        global $CFG, $OUTPUT;
+        global $OUTPUT;
 
         // Set the primary sort column/order where possible, so that sort links/icons are correct.
         [
@@ -1316,17 +1316,7 @@ class flexible_table {
                 default:
                     if (array_search($column, $this->userfullnamecolumns) !== false) {
                         // Check the full name display for sortable fields.
-                        if (has_capability('moodle/site:viewfullnames', $this->get_context())) {
-                            $nameformat = $CFG->alternativefullnameformat;
-                        } else {
-                            $nameformat = $CFG->fullnamedisplay;
-                        }
-
-                        if ($nameformat == 'language') {
-                            $nameformat = get_string('fullnamedisplay');
-                        }
-
-                        $requirednames = order_in_string(\core_user\fields::get_name_fields(), $nameformat);
+                        $requirednames = $this->get_user_fullname_display_fields();
 
                         if (!empty($requirednames)) {
                             if ($this->is_sortable($column)) {
@@ -1398,6 +1388,18 @@ class flexible_table {
 
         echo html_writer::end_tag('tr');
         echo html_writer::end_tag('thead');
+    }
+
+    /**
+     * Get the user name fields that should be displayed according to the configured name display
+     * format, taking into account whether the current user has the capability to view full names.
+     *
+     * @return string[] List of user name fields, in the order they are displayed.
+     */
+    protected function get_user_fullname_display_fields(): array {
+        $viewfullnames = has_capability('moodle/site:viewfullnames', $this->get_context());
+        $dummyfullname = \core_user::get_dummy_fullname(null, ['override' => $viewfullnames]);
+        return order_in_string(\core_user\fields::get_name_fields(), $dummyfullname);
     }
 
     /**
