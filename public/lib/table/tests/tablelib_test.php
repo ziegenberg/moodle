@@ -100,11 +100,11 @@ final class tablelib_test extends \advanced_testcase {
      * @param string[] $nosorting No sorting.
      * @param string $caption Caption of the table.
      * @param array $captionattribute The attribute of the caption.
-     * @return flexible_table
+     * @return testable_flexible_table
      */
     protected function create_and_setup_table($columns, $headers, $sortable, $collapsible, $suppress, $nosorting,
         $caption = '', $captionattribute = '') {
-        $table = new flexible_table('tablelib_test');
+        $table = new testable_flexible_table('tablelib_test');
 
         $table->define_columns($columns);
         $table->define_headers($headers);
@@ -415,6 +415,70 @@ final class tablelib_test extends \advanced_testcase {
 
         $table = $this->create_and_setup_table(['fullname'], [], true, false, [], []);
         $this->assertStringContainsString(fullname($user, false), $table->format_row($user)['fullname']);
+    }
+
+    /**
+     * Data provider for test_get_user_fullname_display_fields
+     *
+     * @return array
+     */
+    public static function user_fullname_display_fields_provider(): array {
+        return [
+            'language' => ['language', ['firstname', 'lastname']],
+            'alternatename lastname' => ['alternatename lastname', ['alternatename', 'lastname']],
+            'firstname lastnamephonetic' => ['firstname lastnamephonetic', ['firstname', 'lastnamephonetic']],
+            'lastname, firstname' => ['lastname, firstname', ['lastname', 'firstname']],
+        ];
+    }
+
+    /**
+     * Test the full name display fields observe the configured alternate fullname format.
+     *
+     * @param string $format
+     * @param string[] $expected
+     * @return void
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('user_fullname_display_fields_provider')]
+    public function test_get_user_fullname_display_fields(string $format, array $expected): void {
+        global $PAGE;
+
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        set_config('alternativefullnameformat', $format);
+        $PAGE->set_context(\context_system::instance());
+
+        $table = $this->create_and_setup_table(['fullname'], [], true, false, [], []);
+        $this->assertSame($expected, array_values($table->get_user_fullname_display_fields()));
+    }
+
+    /**
+     * Test the full name display fields ignore the alternate fullname format for a user with the
+     * viewfullnames capability prohibited.
+     *
+     * The viewfullnames capability gates whether the alternate fullname format is used when resolving
+     * the display fields; when it is prohibited, the fields must fall back to the standard full name
+     * display format.
+     *
+     * @return void
+     */
+    public function test_get_user_fullname_display_fields_without_viewfullnames(): void {
+        global $DB, $CFG, $PAGE;
+
+        $this->resetAfterTest();
+
+        set_config('alternativefullnameformat', 'alternatename lastname');
+        $PAGE->set_context(\context_system::instance());
+
+        $currentuser = $this->getDataGenerator()->create_user();
+        $this->setUser($currentuser);
+
+        // Prohibit the viewfullnames from the default user role.
+        $userrole = $DB->get_record('role', ['id' => $CFG->defaultuserroleid]);
+        role_change_permission($userrole->id, \context_system::instance(), 'moodle/site:viewfullnames', CAP_PROHIBIT);
+
+        $table = $this->create_and_setup_table(['fullname'], [], true, false, [], []);
+        $this->assertSame(['firstname', 'lastname'], array_values($table->get_user_fullname_display_fields()));
     }
 
     public function test_get_row_html(): void {
