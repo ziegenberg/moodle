@@ -14,9 +14,18 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') OR die('not allowed');
+defined('MOODLE_INTERNAL') || die;
 require_once($CFG->dirroot.'/mod/feedback/item/feedback_item_class.php');
 
+use core\output\html_writer;
+/**
+ * Captcha item in the feedback module.
+ *
+ * @author    Andreas Grabs
+ * @copyright 2011 Andreas Grabs
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   mod_feedback
+ */
 class feedback_item_captcha extends feedback_item_base {
     protected $type = "captcha";
 
@@ -55,6 +64,11 @@ class feedback_item_captcha extends feedback_item_base {
         $this->item->dependitem = 0;
         $this->item->dependvalue = '';
         $this->item->options = '';
+    }
+
+    #[\Override]
+    public static function is_configured(): bool {
+        return !empty($CFG->recaptchapublickey) && !empty($CFG->recaptchaprivatekey);
     }
 
     public function show_editform() {
@@ -120,12 +134,36 @@ class feedback_item_captcha extends feedback_item_base {
         $inputname = $item->typ . '_' . $item->id;
 
         if ($form->get_mode() != mod_feedback_complete_form::MODE_COMPLETE) {
-            // Span to hold the element id. The id is used for drag and drop reordering.
-            $form->add_form_element($item,
-                    ['static', $inputname, $name, html_writer::span('', '', ['id' => 'feedback_item_' . $item->id])],
+            if (!self::is_configured()) {
+                $form->add_form_element(
+                    $item,
+                    [
+                        'static',
+                        $inputname,
+                        $name,
+                        get_string('recaptchanotconfigured', 'feedback'),
+                    ],
                     false,
-                    false);
+                    false
+                );
+            } else {
+                // Span to hold the element id. The id is used for drag and drop reordering.
+                $form->add_form_element(
+                    $item,
+                    [
+                        'static',
+                        $inputname,
+                        $name,
+                        html_writer::span('', '', ['id' => 'feedback_item_' . $item->id]),
+                    ],
+                    false,
+                    false
+                );
+            }
         } else {
+            if (!self::is_configured()) {
+                return;
+            }
             // Add recaptcha element that is used during the form validation.
             $form->add_form_element($item,
                     ['recaptcha', $inputname . 'recaptcha', $name],

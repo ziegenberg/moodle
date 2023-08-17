@@ -1480,15 +1480,16 @@ function feedback_get_item_class($typ) {
 function feedback_load_feedback_items($dir = 'mod/feedback/item') {
     global $CFG;
     $names = get_list_of_plugins($dir);
-    $ret_names = array();
+    $retnames = [];
 
     foreach ($names as $name) {
         require_once($CFG->dirroot.'/'.$dir.'/'.$name.'/lib.php');
-        if (class_exists('feedback_item_'.$name)) {
-            $ret_names[] = $name;
+        $itemclassname = 'feedback_item_' . $name;
+        if (class_exists('feedback_item_'.$name) && $itemclassname::is_configured()) {
+            $retnames[] = $name;
         }
     }
-    return $ret_names;
+    return $retnames;
 }
 
 /**

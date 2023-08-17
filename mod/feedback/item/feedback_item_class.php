@@ -14,6 +14,16 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+defined('MOODLE_INTERNAL') || die;
+
+/**
+ * Base class for feedback items
+ *
+ * @author    Andreas Grabs
+ * @copyright 2011 Andreas Grabs
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   mod_feedback
+ */
 abstract class feedback_item_base {
 
     /** @var string type of the element, should be overridden by each item type */
@@ -30,6 +40,15 @@ abstract class feedback_item_base {
      */
     public function __construct() {
     }
+
+    /**
+     * Utility function that allows the feedback item implementation to do additional configuration checks to determine
+     * whether it can be used.
+     */
+    public static function is_configured(): bool {
+        return true;
+    }
+
 
     /**
      * Displays the form for editing an item

@@ -249,6 +249,7 @@ $string['questionslimited'] = 'Showing only {$a} first questions, view individua
 $string['radio'] = 'Multiple choice - single answer';
 $string['radio_values'] = 'Responses';
 $string['ready_feedbacks'] = 'Ready feedbacks';
+$string['recaptchanotconfigured'] = 'Google reCaptcha is not configured. Please contact your administrator.';
 $string['required'] = 'Required';
 $string['resetting_data'] = 'Responses';
 $string['resetting_delete'] = 'Delete responses';

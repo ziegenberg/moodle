@@ -122,3 +122,31 @@ Feature: Test creating different types of feedback questions for anonymous feedb
     And I should see "1 (50.00 %)" in the "option a" "table_row"
     And I should see "1 (50.00 %)" in the "option b" "table_row"
     And I log out
+
+  @javascript
+  Scenario Outline: I can add a Captcha type of question if the setting is disabled in the global Admin setting
+    Given the following "users" exist:
+      | username | firstname | lastname |
+      | student1 | Student   | 1        |
+    And the following "courses" exist:
+      | fullname | shortname |
+      | Course 1 | C1        |
+    And the following "course enrolments" exist:
+      | user     | course | role    |
+      | student1 | C1     | student |
+    And the following "activities" exist:
+      | activity | name                | course | idnumber  |
+      | feedback | Learning experience | C1     | feedback0 |
+    And the following config values are set as admin:
+      | recaptchapublickey  | <recaptchapublickey>  |
+      | recaptchaprivatekey | <recaptchaprivatekey> |
+    And the following config values are set as admin:
+      | allowgcaptcha | <allowgcaptcha> | feedback |
+    When I am on the "Learning experience" "feedback activity" page logged in as admin
+    And I click on "Edit questions" "link" in the "[role=main]" "css_element"
+    Then the "typ" select box <shouldcontain> "Captcha"
+    Examples:
+      | allowgcaptcha | recaptchapublickey | recaptchaprivatekey | shouldcontain      |
+      | true          | abcdefghijkl       | abcdefghijkl        | should contain     |
+      |               | abcdefghijkl       | abcdefghijkl        | should not contain |
+      | true          |                    |                     | should not contain |
