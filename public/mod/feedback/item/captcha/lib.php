@@ -14,9 +14,18 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') OR die('not allowed');
-require_once($CFG->dirroot.'/mod/feedback/item/feedback_item_class.php');
+use core\output\html_writer;
 
+defined('MOODLE_INTERNAL') || die;
+require_once($CFG->dirroot.'/mod/feedback/item/feedback_item_class.php');
+/**
+ * Captcha item in the feedback module.
+ *
+ * @author    Andreas Grabs
+ * @copyright 2011 Andreas Grabs
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   mod_feedback
+ */
 class feedback_item_captcha extends feedback_item_base {
     protected $type = "captcha";
 
@@ -55,6 +64,13 @@ class feedback_item_captcha extends feedback_item_base {
         $this->item->dependitem = 0;
         $this->item->dependvalue = '';
         $this->item->options = '';
+    }
+
+    #[\Override]
+    public static function is_configured(): bool {
+        global $CFG;
+
+        return !empty($CFG->recaptchapublickey) && !empty($CFG->recaptchaprivatekey);
     }
 
     public function show_editform() {
@@ -120,12 +136,22 @@ class feedback_item_captcha extends feedback_item_base {
         $inputname = $item->typ . '_' . $item->id;
 
         if ($form->get_mode() != mod_feedback_complete_form::MODE_COMPLETE) {
+            if ($form->get_mode() == mod_feedback_complete_form::MODE_PRINT && !self::is_configured()) {
+                // The captcha was not rendered when the response was collected, so it cannot be printed.
+                return;
+            }
             // Span to hold the element id. The id is used for drag and drop reordering.
-            $form->add_form_element($item,
-                    ['static', $inputname, $name, html_writer::span('', '', ['id' => 'feedback_item_' . $item->id])],
-                    false,
-                    false);
+            $content = html_writer::span('', '', ['id' => 'feedback_item_' . $item->id]);
+            if (!self::is_configured()) {
+                $content .= html_writer::div(get_string('recaptchanotconfigured', 'feedback'), 'text-danger');
+            }
+            $form->add_form_element($item, ['static', $inputname, $name, $content], false, false);
         } else {
+            if (!self::is_configured()) {
+                // The captcha cannot be rendered when reCAPTCHA is not configured. Do not add the
+                // item to the form so that the feedback can still be completed and submitted.
+                return;
+            }
             // Add recaptcha element that is used during the form validation.
             $form->add_form_element($item,
                     ['recaptcha', $inputname . 'recaptcha', $name],
@@ -159,13 +185,7 @@ class feedback_item_captcha extends feedback_item_base {
     }
 
     public function get_hasvalue() {
-        global $CFG;
-
-        // Is recaptcha configured in moodle?
-        if (empty($CFG->recaptchaprivatekey) OR empty($CFG->recaptchapublickey)) {
-            return 0;
-        }
-        return 1;
+        return self::is_configured() ? 1 : 0;
     }
 
     public function can_switch_require() {
@@ -189,7 +209,7 @@ class feedback_item_captcha extends feedback_item_base {
     public function get_data_for_external($item) {
         global $CFG;
 
-        if (empty($CFG->recaptchaprivatekey) || empty($CFG->recaptchapublickey)) {
+        if (!self::is_configured()) {
             return null;
         }
 

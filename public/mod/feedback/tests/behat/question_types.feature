@@ -122,3 +122,72 @@ Feature: Test creating different types of feedback questions for anonymous feedb
     And I should see "1 (50.00 %)" in the "option a" "table_row"
     And I should see "1 (50.00 %)" in the "option b" "table_row"
     And I log out
+
+  @javascript
+  Scenario: Captcha question type is available when reCAPTCHA is configured
+    Given the following "users" exist:
+      | username | firstname | lastname |
+      | teacher1 | Teacher   | 1        |
+    And the following "courses" exist:
+      | fullname | shortname |
+      | Course 1 | C1        |
+    And the following "course enrolments" exist:
+      | user     | course | role           |
+      | teacher1 | C1     | editingteacher |
+    And the following "activities" exist:
+      | activity | name                | course | idnumber  |
+      | feedback | Learning experience | C1     | feedback0 |
+    And the following config values are set as admin:
+      | recaptchapublickey  | abcdefghijkl |
+      | recaptchaprivatekey | abcdefghijkl |
+    When I am on the "Learning experience" "feedback activity" page logged in as teacher1
+    And I navigate to "Questions" in current page administration
+    And I click on "Add question" "link"
+    And I click on "Captcha" "link"
+    And I wait to be redirected
+    Then I should see "Captcha"
+
+  @javascript
+  Scenario: Captcha question type is not available when reCAPTCHA is not configured
+    Given the following "users" exist:
+      | username | firstname | lastname |
+      | teacher1 | Teacher   | 1        |
+    And the following "courses" exist:
+      | fullname | shortname |
+      | Course 1 | C1        |
+    And the following "course enrolments" exist:
+      | user     | course | role           |
+      | teacher1 | C1     | editingteacher |
+    And the following "activities" exist:
+      | activity | name                | course | idnumber  |
+      | feedback | Learning experience | C1     | feedback0 |
+    And the following "feedback questions" exist:
+      | activity            | questiontype |
+      | Learning experience | captcha      |
+    When I am on the "Learning experience" "feedback activity" page logged in as teacher1
+    And I navigate to "Questions" in current page administration
+    Then "Captcha" "link" should not exist
+    And I should see "Google reCAPTCHA is not configured"
+
+  @javascript
+  Scenario: Students can complete a feedback with a captcha item when reCAPTCHA is not configured
+    Given the following "users" exist:
+      | username | firstname | lastname |
+      | student1 | Student   | 1        |
+    And the following "courses" exist:
+      | fullname | shortname |
+      | Course 1 | C1        |
+    And the following "course enrolments" exist:
+      | user     | course | role    |
+      | student1 | C1     | student |
+    And the following "activities" exist:
+      | activity | name                | course | idnumber  |
+      | feedback | Learning experience | C1     | feedback0 |
+    And the following "feedback questions" exist:
+      | activity            | questiontype |
+      | Learning experience | captcha      |
+    When I am on the "Learning experience" "feedback activity" page logged in as student1
+    And I follow "Answer the questions"
+    Then I should not see "Captcha"
+    And I press "Submit your answers"
+    And I should see "Continue"
