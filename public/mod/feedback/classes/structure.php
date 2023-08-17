@@ -144,7 +144,7 @@ class mod_feedback_structure {
      * @return array of objects from feedback_item with an additional attribute 'itemnr'
      */
     public function get_items($hasvalueonly = false) {
-        global $DB;
+        global $CFG, $DB;
         if ($this->allitems === null) {
             if ($this->templateid) {
                 $this->allitems = $DB->get_records('feedback_item', ['template' => $this->templateid], 'position');
@@ -153,6 +153,14 @@ class mod_feedback_structure {
             }
             $idx = 1;
             foreach ($this->allitems as $id => $item) {
+                // The hasvalue property depends on the current configuration (for example, the
+                // captcha item only has a value when reCAPTCHA is configured), so recompute it
+                // instead of trusting the value stored when the item was created.
+                $itemclasspath = "{$CFG->dirroot}/mod/feedback/item/{$item->typ}/lib.php";
+                if ($item->typ === 'pagebreak' || class_exists('feedback_item_' . $item->typ) || file_exists($itemclasspath)) {
+                    $itemobj = feedback_get_item_class($item->typ);
+                    $item->hasvalue = (int) $itemobj->get_hasvalue();
+                }
                 $this->allitems[$id]->itemnr = $item->hasvalue ? ($idx++) : null;
             }
         }
