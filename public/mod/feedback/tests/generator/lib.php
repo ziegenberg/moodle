@@ -485,6 +485,41 @@ class mod_feedback_generator extends testing_module_generator {
     }
 
     /**
+     * Create captcha item.
+     *
+     * @param object $feedback feedback record
+     * @param array $record (optional) to override default values
+     * @return stdClass
+     */
+    public function create_item_captcha($feedback, $record = []) {
+        global $DB, $CFG;
+
+        require_once($CFG->dirroot . '/mod/feedback/lib.php');
+
+        $itemobj = feedback_get_item_class('captcha');
+        $position = $DB->count_records('feedback_item', ['feedback' => $feedback->id]) + 1;
+
+        $record = (array)$record + [
+            'id' => 0,
+            'feedback' => $feedback->id,
+            'template' => 0,
+            'name' => get_string('captcha', 'feedback'),
+            'label' => '',
+            'presentation' => '',
+            'typ' => 'captcha',
+            'hasvalue' => $itemobj->get_hasvalue(),
+            'position' => $position,
+            'required' => 1,
+            'dependitem' => 0,
+            'dependvalue' => '',
+            'options' => '',
+        ];
+
+        $itemobj->set_data((object) $record);
+        return $itemobj->save_item();
+    }
+
+    /**
      * Create pagebreak.
      *
      * @param object $feedback feedback record
