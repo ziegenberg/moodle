@@ -257,6 +257,7 @@ $string['questionslimited'] = 'Showing only {$a} first questions, view individua
 $string['radio'] = 'Multiple choice - single answer';
 $string['radio_values'] = 'Responses';
 $string['ready_feedbacks'] = 'Ready feedbacks';
+$string['recaptchanotconfigured'] = 'Google reCAPTCHA is not configured. This item will not be shown to students.';
 $string['required'] = 'Required';
 $string['resetting_data'] = 'Responses';
 $string['resetting_delete'] = 'Delete responses';
