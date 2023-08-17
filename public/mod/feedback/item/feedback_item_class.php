@@ -14,6 +14,16 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+defined('MOODLE_INTERNAL') || die;
+
+/**
+ * Base class for feedback items
+ *
+ * @author    Andreas Grabs
+ * @copyright 2011 Andreas Grabs
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   mod_feedback
+ */
 abstract class feedback_item_base {
 
     /** @var string type of the element, should be overridden by each item type */
@@ -30,6 +40,19 @@ abstract class feedback_item_base {
      */
     public function __construct() {
     }
+
+    /**
+     * Check whether the feedback item can be used based on the current site configuration.
+     *
+     * Item implementations can override this to hide themselves when required configuration
+     * is missing (for example, the captcha item requires the site reCAPTCHA keys to be set).
+     *
+     * @return bool true if the item is configured and can be used
+     */
+    public static function is_configured(): bool {
+        return true;
+    }
+
 
     /**
      * Displays the form for editing an item
