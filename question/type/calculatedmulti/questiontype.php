@@ -129,8 +129,6 @@ class qtype_calculatedmulti extends qtype_calculated {
             }
             $options->question            = $question->id;
             $options->answer              = $answer->id;
-            $options->tolerance           = trim($question->tolerance[$key]);
-            $options->tolerancetype       = trim($question->tolerancetype[$key]);
             $options->correctanswerlength = trim($question->correctanswerlength[$key]);
             $options->correctanswerformat = trim($question->correctanswerformat[$key]);
 

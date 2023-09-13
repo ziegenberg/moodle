@@ -817,15 +817,15 @@ class qformat_xml extends qformat_default {
 
     /**
      * Import a calculated question
-     * @param object $question the imported XML data.
+     * @param array $question the imported XML data.
      */
-    public function import_calculated($question) {
+    public function import_calculated(array $question, string $qtype = 'calculated') {
 
         // Get common parts.
         $qo = $this->import_headers($question);
 
         // Header parts particular to calculated.
-        $qo->qtype = 'calculated';
+        $qo->qtype = $qtype;
         $qo->synchronize = $this->getpath($question, array('#', 'synchronize', 0, '#'), 0);
         $single = $this->getpath($question, array('#', 'single', 0, '#'), 'true');
         $qo->single = $this->trans_single($single);
@@ -857,7 +857,6 @@ class qformat_xml extends qformat_default {
         $qo->tolerancetype = array();
         $qo->correctanswerformat = array();
         $qo->correctanswerlength = array();
-        $qo->feedback = array();
         foreach ($answers as $answer) {
             $ans = $this->import_answer($answer, true, $this->get_format($qo->questiontextformat));
             // Answer outside of <text> is deprecated.
@@ -880,14 +879,16 @@ class qformat_xml extends qformat_default {
                 $qo->answer[] = $ans->answer['text'];
             }
             $qo->feedback[] = $ans->feedback;
-            $qo->tolerance[] = $answer['#']['tolerance'][0]['#'];
+            if ($qo->qtype != 'calculatedmulti') {
+                $qo->tolerance[] = $answer['#']['tolerance'][0]['#'];
+                $qo->tolerancetype[] = $answer['#']['tolerancetype'][0]['#'];
+            }
             // Fraction as a tag is deprecated.
             if (!empty($answer['#']['fraction'][0]['#'])) {
                 $qo->fraction[] = $answer['#']['fraction'][0]['#'];
             } else {
                 $qo->fraction[] = $answer['@']['fraction'] / 100;
             }
-            $qo->tolerancetype[] = $answer['#']['tolerancetype'][0]['#'];
             $qo->correctanswerformat[] = $answer['#']['correctanswerformat'][0]['#'];
             $qo->correctanswerlength[] = $answer['#']['correctanswerlength'][0]['#'];
         }
@@ -1055,13 +1056,9 @@ class qformat_xml extends qformat_default {
         } else if ($questiontype == 'calculated') {
             return $this->import_calculated($questionxml);
         } else if ($questiontype == 'calculatedsimple') {
-            $qo = $this->import_calculated($questionxml);
-            $qo->qtype = 'calculatedsimple';
-            return $qo;
+            return $this->import_calculated($questionxml, 'calculatedsimple');
         } else if ($questiontype == 'calculatedmulti') {
-            $qo = $this->import_calculated($questionxml);
-            $qo->qtype = 'calculatedmulti';
-            return $qo;
+            return $this->import_calculated($questionxml, 'calculatedmulti');
         } else if ($questiontype == 'category') {
             return $this->import_category($questionxml);
 
@@ -1457,15 +1454,17 @@ class qformat_xml extends qformat_default {
                     // For qtype_calculatedmulti, answer options (choices) can be in plain text or in HTML
                     // format, so we need to specify when exporting a question.
                     if ($component == 'qtype_calculatedmulti') {
-                        $expout .= "<answer fraction=\"{$percent}\" {$this->format($answer->answerformat)}>\n";
+                        $expout .= "    <answer fraction=\"{$percent}\" {$this->format($answer->answerformat)}>\n";
                     } else {
-                        $expout .= "<answer fraction=\"{$percent}\">\n";
+                        $expout .= "    <answer fraction=\"{$percent}\">\n";
                     }
                     // The "<text/>" tags are an added feature, old files won't have them.
-                    $expout .= $this->writetext($answer->answer);
+                    $expout .= $this->writetext($answer->answer, 3);
                     $expout .= $this->write_files($this->answerfiles[$answer->id]);
-                    $expout .= "    <tolerance>{$answer->tolerance}</tolerance>\n";
-                    $expout .= "    <tolerancetype>{$answer->tolerancetype}</tolerancetype>\n";
+                    if ($question->qtype != 'calculatedmulti') {
+                        $expout .= "      <tolerance>{$answer->tolerance}</tolerance>\n";
+                        $expout .= "      <tolerancetype>{$answer->tolerancetype}</tolerancetype>\n";
+                    }
                     $expout .= "    <correctanswerformat>" .
                             $answer->correctanswerformat . "</correctanswerformat>\n";
                     $expout .= "      <correctanswerlength>" .
