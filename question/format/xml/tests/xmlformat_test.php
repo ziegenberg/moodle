@@ -25,6 +25,7 @@
 namespace qformat_xml;
 
 use qformat_xml;
+use qtype_calculatedmulti\qtype_calculatedmulti_answer;
 use qtype_numerical_answer;
 use question_answer;
 use question_bank;
@@ -1735,6 +1736,100 @@ END;
 ';
 
         $this->assert_same_xml($expectedxml, $xml);
+    }
+
+    /**
+     * Test the export of a Calculated Multiple Choice Question.
+     *
+     * @covers \qformat_xml::writequestion
+     */
+    public function test_export_calculatedmulti() {
+
+        $qdata = new \stdClass();
+        $qdata->id = 9452;
+        $qdata->contextid = \context_system::instance()->id;
+        $qdata->qtype = 'calculatedmulti';
+        $qdata->name = 'Calculated Multiple Choice Question: MDL-69119';
+        $qdata->questiontext = '<p>If x = {param}, what should the value of z be? Remember that &lt; means less-than</p>';
+        $qdata->questiontextformat = FORMAT_HTML;
+        $qdata->generalfeedback = 'There is <strong>no</strong> correct answers :)';
+        $qdata->generalfeedbackformat = FORMAT_HTML;
+        $qdata->defaultmark = 1;
+        $qdata->length = 1;
+        $qdata->penalty = 0.3333333;
+        $qdata->status = \core_question\local\bank\question_version_status::QUESTION_STATUS_READY;
+        $qdata->idnumber = null;
+
+        $qdata->options = new \stdClass();
+        $qdata->options->synchronize = 0;
+        $qdata->options->single = 1;
+        $qdata->options->answernumbering = 'abc';
+        $qdata->options->shuffleanswers = 1;
+        $qdata->options->correctfeedback = '<p>Your answer is correct.</p>';
+        $qdata->options->partiallycorrectfeedback = '<p>Your answer is partially correct.</p>';
+        $qdata->options->incorrectfeedback = '<p>Your answer is incorrect.</p>';
+        $qdata->options->answers = [
+            11 => new qtype_calculatedmulti_answer(11, 'z < {param}', 1, 'Correct!', FORMAT_HTML),
+            22 => new qtype_calculatedmulti_answer(22, 'z<{=2*{param}}', 0, 'Wrong', FORMAT_HTML),
+        ];
+
+        $qdata->options->answers[11]->correctanswerlength = 2;
+        $qdata->options->answers[11]->correctanswerformat = 1;
+        $qdata->options->answers[22]->correctanswerlength = 2;
+        $qdata->options->answers[22]->correctanswerformat = 1;
+
+        $exporter = new qformat_xml();
+        $xml = $exporter->writequestion($qdata);
+
+        $expectedxml = '<!-- question: 9452  -->
+  <question type="calculatedmulti">
+    <name>
+      <text>Calculated Multiple Choice Question: MDL-69119</text>
+    </name>
+    <questiontext format="html">
+      <text><![CDATA[<p>If x = {param}, what should the value of z be? Remember that &lt; means less-than</p>]]></text>
+    </questiontext>
+    <generalfeedback format="html">
+      <text><![CDATA[There is <strong>no</strong> correct answers :)]]></text>
+    </generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <synchronize>0</synchronize>
+    <single>1</single>
+    <answernumbering>abc</answernumbering>
+    <shuffleanswers>1</shuffleanswers>
+    <correctfeedback>
+      <text><![CDATA[<p>Your answer is correct.</p>]]></text>
+    </correctfeedback>
+    <partiallycorrectfeedback>
+      <text><![CDATA[<p>Your answer is partially correct.</p>]]></text>
+    </partiallycorrectfeedback>
+    <incorrectfeedback>
+      <text><![CDATA[<p>Your answer is incorrect.</p>]]></text>
+    </incorrectfeedback>
+    <answer fraction="100">
+      <text><![CDATA[z < {param}]]></text>
+      <correctanswerformat>1</correctanswerformat>
+      <correctanswerlength>2</correctanswerlength>
+      <feedback format="html">
+        <text>Correct!</text>
+      </feedback>
+    </answer>
+    <answer fraction="0">
+      <text><![CDATA[z<{=2*{param}}]]></text>
+      <correctanswerformat>1</correctanswerformat>
+      <correctanswerlength>2</correctanswerlength>
+      <feedback format="html">
+        <text>Wrong</text>
+      </feedback>
+    </answer>
+  </question>
+';
+
+        $this->assert_same_xml($expectedxml, $xml);
+
     }
 
     public function test_import_files_as_draft(): void {
