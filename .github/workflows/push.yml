@@ -53,6 +53,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        db: [mysqli, pgsql]
+        ci_node_total: [ 4 ] # ci_node_index below needs to match with 1..N
+        ci_node_index: [ 1, 2, 3, 4 ]
         include:
           # MySQL builds always run with the lowest PHP supported version.
           - os: ubuntu-22.04
@@ -115,4 +118,19 @@ jobs:
         env:
           dbtype: ${{ matrix.db }}
           phpunit_options: ${{ secrets.phpunit_options }}
-        run: vendor/bin/phpunit $phpunit_options
+          ci_node_index: ${{ matrix.ci_node_index }}
+          ci_node_total: ${{ matrix.ci_node_total }}
+        run: |
+          # Extract the test suites from each line
+          mapfile -t test_suites < <(vendor/bin/phpunit --list-suites | grep ' - ' | sed -E 's/^ - (.+)$/\1/')
+
+          # Split the test suites into equally sized chunks
+          chunk_size=$(((${#test_suites[@]} + $ci_node_total - 1) / $ci_node_total))
+          start_index=$((chunk_size * (ci_node_index - 1)))
+          end_index=$((start_index + chunk_size))
+
+          # Extract the test suites for the current node
+          mapfile -t current_test_suites < <(echo "${test_suites[@]:$start_index:$end_index}")
+
+          # Run the test suites for the current node
+          vendor/bin/phpunit --testsuite "${current_test_suites[*]// /,}" $phpunit_options
