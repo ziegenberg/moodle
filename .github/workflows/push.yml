@@ -135,4 +135,4 @@ jobs:
           mapfile -t current_test_suites < <(echo "${test_suites[@]:$start_index:$end_index}")
 
           # Run the test suites for the current node
-          vendor/bin/phpunit --testsuite "${current_test_suites[*]// /,}" $phpunit_options
+          vendor/bin/phpunit --testsuite "${current_test_suites[*]// /,}" $phpunit_options --testdox-text --enforce-time-limit --strict-coverage --verbose
