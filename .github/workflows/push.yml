@@ -40,6 +40,7 @@ jobs:
           git diff --cached --exit-code
 
   PHPUnit:
+    name: PHPUnit (${{ matrix.db }}, ${{ matrix.ci_node_index }}/${{ matrix.ci_node_total }})
     runs-on: ${{ matrix.os }}
     services:
       exttests:
