@@ -16,7 +16,6 @@
     stopOnSkipped="false"
     beStrictAboutTestsThatDoNotTestAnything="false"
     beStrictAboutOutputDuringTests="true"
-    forceCoversAnnotation="true"
     >
 
   <php>
