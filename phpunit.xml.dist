@@ -9,13 +9,14 @@
     processIsolation="false"
     backupGlobals="false"
     backupStaticAttributes="false"
-    cacheResult="false"
+    cacheResult="true"
     stopOnError="false"
     stopOnFailure="false"
     stopOnIncomplete="false"
     stopOnSkipped="false"
     beStrictAboutTestsThatDoNotTestAnything="false"
     beStrictAboutOutputDuringTests="true"
+    executionOrder="duration"
     >
 
   <php>
