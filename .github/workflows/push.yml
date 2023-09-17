@@ -41,7 +41,7 @@ jobs:
           git diff --cached --exit-code
 
   PHPUnit:
-    name: PHPUnit (${{ matrix.db }}, ${{ matrix.ci_node_index }}/${{ matrix.ci_node_total }})
+    name: PHPUnit (${{ matrix.db }}_php-${{ matrix.php }} [${{ matrix.ci_node_index }}/${{ matrix.ci_node_total }}])
     runs-on: ${{ matrix.os }}
     services:
       exttests:
@@ -56,7 +56,7 @@ jobs:
       fail-fast: false
       matrix:
         db: [mysqli, pgsql]
-        PHP: [8.0, 8.2]
+        php: [8.0, 8.2]
         ci_node_total: [ 8 ] # ci_node_index below needs to match with 1..N
         ci_node_index: [ 1, 2, 3, 4, 5, 6, 7, 8 ]
         include:
