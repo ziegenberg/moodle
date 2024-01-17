@@ -1,5 +1,13 @@
 This files describes API changes for code that uses the plagiarism API.
 
+=== 4.5 ===
+* Final deprecation and removal of the following functions:
+  - plagiarism_plugin::get_configs().
+  - plagiarism_plugin::get_file_results().
+  - plagiarism_plugin::update_status(), please use {plugin name}_before_standard_top_of_body_html instead.
+* Final deprecation and removal of plagiarism_get_file_results(). Please use plagiarism_get_links() instead.
+* Final deprecation and removal of plagiarism_update_status(). Please use {plugin name}_before_standard_top_of_body_html() instead.
+
 === 4.2 ===
 * Final deprecation and removal of the following functions:
   - plagiarism_save_form_elements(), please use {plugin name}_coursemodule_edit_post_actions() instead.
