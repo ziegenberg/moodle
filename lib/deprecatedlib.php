@@ -785,3 +785,64 @@ function plagiarism_get_file_results(): void {
 function plagiarism_update_status(): void {
     \core\deprecation::emit_deprecation_if_present(__FUNCTION__);
 }
+
+/**
+ * Check if the igbinary extension installed is buggy one
+ *
+ * There are a few php-igbinary versions that are buggy and
+ * return any unserialised array with wrong index. This defeats
+ * key() and next() operations on them.
+ *
+ * This library is used by MUC and also by memcached and redis
+ * when available.
+ *
+ * Let's inform if there is some problem when:
+ *   - php 7.2 is being used (php 7.3 and up are immune).
+ *   - the igbinary extension is installed.
+ *   - the version of the extension is between 3.2.2 and 3.2.4.
+ *   - the buggy behaviour is reproduced.
+ *
+ * @param environment_results $result object to update, if relevant.
+ * @return environment_results|null updated results or null.
+ *
+ * @deprecated Since Moodle 5.0
+ * @todo Final deprecation on Moodle 6.0. See MDL-00000.
+ */
+#[\core\attribute\deprecated(
+    since: '5.0',
+    mdl: 'MDL-73700',
+    reason: 'Remove all the old php version checks from core',
+)]
+function check_igbinary322_version(environment_results $result) {
+
+    // No problem if using PHP version 7.3 and up.
+    $phpversion = normalize_version(phpversion());
+    if (version_compare($phpversion, '7.3', '>=')) {
+        return null;
+    }
+
+    // No problem if igbinary is not installed..
+    if (!function_exists('igbinary_serialize')) {
+        return null;
+    }
+
+    // No problem if using igbinary < 3.2.2 or > 3.2.4.
+    $igbinaryversion = normalize_version(phpversion('igbinary'));
+    if (version_compare($igbinaryversion, '3.2.2', '<') || version_compare($igbinaryversion, '3.2.4', '>')) {
+        return null;
+    }
+
+    // Let's verify the real behaviour to see if the bug is around.
+    // Note that we need this extra check because they released 3.2.5 with 3.2.4 version number, so
+    // over the paper, there are 3.2.4 working versions (3.2.5 ones with messed reflection version).
+    $data = [1, 2, 3];
+    $data = igbinary_unserialize(igbinary_serialize($data));
+    if (key($data) === 0) {
+        return null;
+    }
+
+    // Arrived here, we are using PHP 7.2 and a buggy verified igbinary version, let's inform and don't allow to continue.
+    $result->setInfo('igbinary version problem');
+    $result->setStatus(false);
+    return $result;
+}

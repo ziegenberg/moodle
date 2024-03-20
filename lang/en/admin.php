@@ -760,7 +760,6 @@ $string['choosefiletoedit'] = 'Choose file to edit';
 $string['h5pgetcontenttypestask'] = 'Download available H5P content types from h5p.org';
 $string['taskh5pcleanup'] = 'Unused H5P files cleanup';
 $string['iconvrequired'] = 'Installing ICONV extension is required.';
-$string['igbinary322buggyversion'] = 'The php-igbinary extension installed on the site can lead to problems when running with PHP 7.2. You are recommended to either upgrade to php-igbinary 3.2.5 or later, or alternatively to upgrade to PHP 7.3 or later.';
 $string['ignore'] = 'Ignore';
 $string['importantupdates_content'] = '<p>In the next Moodle 5.0, planned for release in April 2025, the Chat and Survey activities will
 be removed from core Moodle. They will be available as plugins in the
@@ -1664,3 +1663,6 @@ $string['registration_help'] = 'By registering:
 * You will receive security alerts
 * You can activate mobile app push notifications from your site
 * You are contributing to our Moodle statistics of the worldwide community';
+
+// Deprecated since Moodle 5.0.
+$string['igbinary322buggyversion'] = 'The php-igbinary extension installed on the site can lead to problems when running with PHP 7.2. You are recommended to either upgrade to php-igbinary 3.2.5 or later, or alternatively to upgrade to PHP 7.3 or later.';
