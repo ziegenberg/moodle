@@ -57,7 +57,7 @@ const rememberTabs = () => {
 const enablePopovers = () => {
     $('body').popover({
         container: 'body',
-        selector: '[data-toggle="popover"]',
+        selector: '[data-bs-toggle="popover"]',
         trigger: 'focus',
         whitelist: Object.assign(DefaultWhitelist, {
             table: [],
@@ -70,7 +70,7 @@ const enablePopovers = () => {
     });
 
     document.addEventListener('keydown', e => {
-        if (e.key === 'Escape' && e.target.closest('[data-toggle="popover"]')) {
+        if (e.key === 'Escape' && e.target.closest('[data-bs-toggle="popover"]')) {
             $(e.target).popover('hide');
         }
     });

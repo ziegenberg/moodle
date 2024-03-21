@@ -194,8 +194,8 @@ class factor extends object_factor_base {
         $togglelink = \html_writer::tag('btn', get_string('setupfactor:scanfail', 'factor_totp'), [
             'class' => 'btn btn-secondary',
             'type' => 'button',
-            'data-toggle' => 'collapse',
-            'data-target' => '#collapseManualAttributes',
+            'data-bs-toggle' => 'collapse',
+            'data-bs-target' => '#collapseManualAttributes',
             'aria-expanded' => 'false',
             'aria-controls' => 'collapseManualAttributes',
             'style' => 'font-size: 14px;',
