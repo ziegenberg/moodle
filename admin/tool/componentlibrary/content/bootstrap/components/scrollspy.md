@@ -33,7 +33,7 @@ Scroll the area below the navbar and watch the active class change. The dropdown
         <a class="nav-link" href="#mdo">@mdo</a>
       </li>
       <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-expanded="false">Dropdown</a>
+        <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">Dropdown</a>
         <div class="dropdown-menu">
           <a class="dropdown-item" href="#one">one</a>
           <a class="dropdown-item" href="#two">two</a>
@@ -43,7 +43,7 @@ Scroll the area below the navbar and watch the active class change. The dropdown
       </li>
     </ul>
   </nav>
-  <div data-spy="scroll" data-target="#navbar-example2" data-offset="0" class="scrollspy-example">
+  <div data-bs-spy="scroll" data-bs-target="#navbar-example2" data-bs-offset="0" class="scrollspy-example">
     <h4 id="fat">@fat</h4>
     <p>Placeholder content for the scrollspy example. You got the finest architecture. Passport stamps, she's cosmopolitan. Fine, fresh, fierce, we got it on lock. Never planned that one day I'd be losing you. She eats your heart out. Your kiss is cosmic, every move is magic. I mean the ones, I mean like she's the one. Greetings loved ones let's take a journey. Just own the night like the 4th of July! But you'd rather get wasted.</p>
     <h4 id="mdo">@mdo</h4>
@@ -69,7 +69,7 @@ Scroll the area below the navbar and watch the active class change. The dropdown
       <a class="nav-link" href="#mdo">@mdo</a>
     </li>
     <li class="nav-item dropdown">
-      <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-expanded="false">Dropdown</a>
+      <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">Dropdown</a>
       <div class="dropdown-menu">
         <a class="dropdown-item" href="#one">one</a>
         <a class="dropdown-item" href="#two">two</a>
@@ -79,7 +79,7 @@ Scroll the area below the navbar and watch the active class change. The dropdown
     </li>
   </ul>
 </nav>
-<div data-spy="scroll" data-target="#navbar-example2" data-offset="0">
+<div data-bs-spy="scroll" data-bs-target="#navbar-example2" data-bs-offset="0">
   <h4 id="fat">@fat</h4>
   <p>...</p>
   <h4 id="mdo">@mdo</h4>
@@ -118,7 +118,7 @@ Scrollspy also works with nested `.nav`s. If a nested `.nav` is `.active`, its p
       </nav>
     </div>
     <div class="col-8">
-      <div data-spy="scroll" data-target="#navbar-example3" data-offset="0" class="scrollspy-example-2">
+      <div data-bs-spy="scroll" data-bs-target="#navbar-example3" data-bs-offset="0" class="scrollspy-example-2">
         <h4 id="item-1">Item 1</h4>
         <p>Placeholder content for the scrollspy example. This one relates to item 1. Takes you miles high, so high, 'cause she’s got that one international smile. There's a stranger in my bed, there's a pounding in my head. Oh, no. In another life I would make you stay. ‘Cause I, I’m capable of anything. Suiting up for my crowning battle. Used to steal your parents' liquor and climb to the roof. Tone, tan fit and ready, turn it up cause its gettin' heavy. Her love is like a drug. I guess that I forgot I had a choice.</p>
         <h5 id="item-1-1">Item 1-1</h5>
@@ -156,7 +156,7 @@ Scrollspy also works with nested `.nav`s. If a nested `.nav` is `.active`, its p
   </nav>
 </nav>
 
-<div data-spy="scroll" data-target="#navbar-example3" data-offset="0">
+<div data-bs-spy="scroll" data-bs-target="#navbar-example3" data-bs-offset="0">
   <h4 id="item-1">Item 1</h4>
   <p>...</p>
   <h5 id="item-1-1">Item 1-1</h5>
@@ -189,7 +189,7 @@ Scrollspy also works with `.list-group`s. Scroll the area next to the list group
       </div>
     </div>
     <div class="col-8">
-      <div data-spy="scroll" data-target="#list-example" data-offset="0" class="scrollspy-example">
+      <div data-bs-spy="scroll" data-bs-target="#list-example" data-bs-offset="0" class="scrollspy-example">
         <h4 id="list-item-1">Item 1</h4>
         <p>Placeholder content for the scrollspy list-group example. This one relates to item 1. Don't need apologies. There is no fear now, let go and just be free, I will love you unconditionally. Last Friday night. Don't be a shy kinda guy I'll bet it's beautiful. Summer after high school when we first met. 'Cause she's the muse and the artist. What? Wait. Thought that I was the exception.</p>
         <h4 id="list-item-2">Item 2</h4>
@@ -210,7 +210,7 @@ Scrollspy also works with `.list-group`s. Scroll the area next to the list group
   <a class="list-group-item list-group-item-action" href="#list-item-3">Item 3</a>
   <a class="list-group-item list-group-item-action" href="#list-item-4">Item 4</a>
 </div>
-<div data-spy="scroll" data-target="#list-example" data-offset="0" class="scrollspy-example">
+<div data-bs-spy="scroll" data-bs-target="#list-example" data-bs-offset="0" class="scrollspy-example">
   <h4 id="list-item-1">Item 1</h4>
   <p>...</p>
   <h4 id="list-item-2">Item 2</h4>
@@ -226,7 +226,7 @@ Scrollspy also works with `.list-group`s. Scroll the area next to the list group
 
 ### Via data attributes
 
-To easily add scrollspy behavior to your topbar navigation, add `data-spy="scroll"` to the element you want to spy on (most typically this would be the `<body>`). Then add the `data-target` attribute with the ID or class of the parent element of any Bootstrap `.nav` component.
+To easily add scrollspy behavior to your topbar navigation, add `data-bs-spy="scroll"` to the element you want to spy on (most typically this would be the `<body>`). Then add the `data-bs-target` attribute with the ID or class of the parent element of any Bootstrap `.nav` component.
 
 ```css
 body {
@@ -235,7 +235,7 @@ body {
 ```
 
 ```html
-<body data-spy="scroll" data-target="#navbar-example">
+<body data-bs-spy="scroll" data-bs-target="#navbar-example">
   ...
   <div id="navbar-example">
     <ul class="nav nav-tabs" role="tablist">
@@ -273,7 +273,7 @@ Target elements that are not [`:visible` according to jQuery](https://api.jquery
 When using scrollspy in conjunction with adding or removing of elements from the DOM, you'll need to call the refresh method like so:
 
 ```js
-$('[data-spy="scroll"]').each(function () {
+$('[data-bs-spy="scroll"]').each(function () {
   var $spy = $(this).scrollspy('refresh')
 })
 ```
@@ -284,7 +284,7 @@ Destroys an element's scrollspy.
 
 ### Options
 
-Options can be passed via data attributes or JavaScript. For data attributes, append the option name to `data-`, as in `data-offset=""`.
+Options can be passed via data attributes or JavaScript. For data attributes, append the option name to `data-bs-`, as in `data-bs-offset=""`.
 
 <table class="table table-bordered table-striped">
   <thead>
@@ -335,7 +335,7 @@ Options can be passed via data attributes or JavaScript. For data attributes, ap
 </table>
 
 ```js
-$('[data-spy="scroll"]').on('activate.bs.scrollspy', function () {
+$('[data-bs-spy="scroll"]').on('activate.bs.scrollspy', function () {
   // do something...
 })
 ```

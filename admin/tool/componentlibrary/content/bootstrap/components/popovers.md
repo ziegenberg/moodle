@@ -34,11 +34,11 @@ Keep reading to see how popovers work with some examples.
 
 ## Example: Enable popovers everywhere
 
-One way to initialize all popovers on a page would be to select them by their `data-toggle` attribute:
+One way to initialize all popovers on a page would be to select them by their `data-bs-toggle` attribute:
 
 ```js
 $(function () {
-  $('[data-toggle="popover"]').popover()
+  $('[data-bs-toggle="popover"]').popover()
 })
 ```
 
@@ -57,7 +57,7 @@ $(function () {
 ## Example
 
 {{< example >}}
-<button type="button" class="btn btn-lg btn-danger" data-toggle="popover" title="Popover title" data-content="And here's some amazing content. It's very engaging. Right?">Click to toggle popover</button>
+<button type="button" class="btn btn-lg btn-danger" data-bs-toggle="popover" title="Popover title" data-bs-content="And here's some amazing content. It's very engaging. Right?">Click to toggle popover</button>
 {{< /example >}}
 
 ### Four directions
@@ -65,16 +65,16 @@ $(function () {
 Four options are available: top, right, bottom, and left aligned.
 
 {{< example >}}
-<button type="button" class="btn btn-secondary" data-container="body" data-toggle="popover" data-placement="top" data-content="Top popover">
+<button type="button" class="btn btn-secondary" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Top popover">
   Popover on top
 </button>
-<button type="button" class="btn btn-secondary" data-container="body" data-toggle="popover" data-placement="right" data-content="Right popover">
+<button type="button" class="btn btn-secondary" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="right" data-bs-content="Right popover">
   Popover on right
 </button>
-<button type="button" class="btn btn-secondary" data-container="body" data-toggle="popover" data-placement="bottom" data-content="Bottom popover">
+<button type="button" class="btn btn-secondary" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="bottom" data-bs-content="Bottom popover">
   Popover on bottom
 </button>
-<button type="button" class="btn btn-secondary" data-container="body" data-toggle="popover" data-placement="left" data-content="Left popover">
+<button type="button" class="btn btn-secondary" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="left" data-bs-content="Left popover">
   Popover on left
 </button>
 {{< /example >}}
@@ -90,7 +90,7 @@ For proper cross-browser and cross-platform behavior, you must use the `<a>` tag
 {{< /callout >}}
 
 {{< example >}}
-<a tabindex="0" class="btn btn-lg btn-danger" role="button" data-toggle="popover" data-trigger="focus" title="Dismissible popover" data-content="And here's some amazing content. It's very engaging. Right?">Dismissible popover</a>
+<a tabindex="0" class="btn btn-lg btn-danger" role="button" data-bs-toggle="popover" data-bs-trigger="focus" title="Dismissible popover" data-bs-content="And here's some amazing content. It's very engaging. Right?">Dismissible popover</a>
 {{< /example >}}
 
 ```js
@@ -103,10 +103,10 @@ $('.popover-dismiss').popover({
 
 Elements with the `disabled` attribute aren't interactive, meaning users cannot hover or click them to trigger a popover (or tooltip). As a workaround, you'll want to trigger the popover from a wrapper `<div>` or `<span>` and override the `pointer-events` on the disabled element.
 
-For disabled popover triggers, you may also prefer `data-trigger="hover"` so that the popover appears as immediate visual feedback to your users as they may not expect to _click_ on a disabled element.
+For disabled popover triggers, you may also prefer `data-bs-trigger="hover"` so that the popover appears as immediate visual feedback to your users as they may not expect to _click_ on a disabled element.
 
 {{< example >}}
-<span class="d-inline-block" data-toggle="popover" data-content="Disabled popover">
+<span class="d-inline-block" data-bs-toggle="popover" data-bs-content="Disabled popover">
   <button class="btn btn-primary" style="pointer-events: none;" type="button" disabled>Disabled button</button>
 </span>
 {{< /example >}}
@@ -143,7 +143,7 @@ Additionally, while it is possible to also include interactive controls (such as
 
 ### Options
 
-Options can be passed via data attributes or JavaScript. For data attributes, append the option name to `data-`, as in `data-animation=""`.
+Options can be passed via data attributes or JavaScript. For data attributes, append the option name to `data-bs-`, as in `data-bs-animation=""`.
 
 {{< callout warning >}}
 Note that for security reasons the `sanitize`, `sanitizeFn` and `whiteList` options cannot be supplied using data attributes.

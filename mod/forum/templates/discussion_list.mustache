@@ -220,10 +220,10 @@
                                             </span>
                                             {{#discussion.timed.istimed}}
                                             <span>
-                                                 <button class="btn badge bg-primary text-white rounded border-0" data-region="timed-label"
-                                                    data-toggle="popover" data-container="body" data-placement="right" data-html="true"
-                                                    data-content="{{#discussion.timed}}{{#discussion.times}}{{> mod_forum/discussion_times}}{{/discussion.times}}{{/discussion.timed}}"
-                                                    data-trigger="click" aria-label="{{#str}}timeddiscussion, forum{{/str}}" title="{{#str}}timeddiscussion, forum{{/str}}">
+                                                 <button class="btn badge bg-primary text-white rounded border-0" data-bs-region="timed-label"
+                                                    data-bs-toggle="popover" data-bs-container="body" data-bs-placement="right" data-bs-html="true"
+                                                    data-bs-content="{{#discussion.timed}}{{#discussion.times}}{{> mod_forum/discussion_times}}{{/discussion.times}}{{/discussion.timed}}"
+                                                    data-bs-trigger="click" aria-label="{{#str}}timeddiscussion, forum{{/str}}" title="{{#str}}timeddiscussion, forum{{/str}}">
                                                      {{#str}}timed, forum{{/str}}
                                                  </button>
                                             </span>
@@ -321,10 +321,10 @@
                                                     type="checkbox"
                                                     class="custom-control-input"
                                                     id="subscription-toggle-{{id}}"
-                                                    data-type="subscription-toggle"
-                                                    data-action="toggle"
-                                                    data-discussionid="{{id}}"
-                                                    data-forumid="{{forumid}}"
+                                                    data-bs-type="subscription-toggle"
+                                                    data-bs-action="toggle"
+                                                    data-bs-discussionid="{{id}}"
+                                                    data-bs-forumid="{{forumid}}"
                                                     {{#userstate.subscribed}}data-targetstate="0" checked{{/userstate.subscribed}}
                                                     {{^userstate.subscribed}}data-targetstate="1"{{/userstate.subscribed}}>
                                                 <label class="custom-control-label" for="subscription-toggle-{{id}}">
