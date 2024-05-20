@@ -38,7 +38,7 @@ use \core_privacy\local\request\approved_userlist;
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @coversDefaultClass \core_privacy\local\request\userlist_collection
  */
-class userlist_collection_test extends advanced_testcase {
+final class userlist_collection_test extends advanced_testcase {
 
     /**
      * A userlist_collection should support the userlist type.

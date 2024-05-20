@@ -34,7 +34,7 @@ require_once($CFG->dirroot . '/mod/quiz/tests/quiz_question_helper_test_trait.ph
  * @author     Jamie Pratt <me@jamiep.org>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class attempt_walkthrough_from_csv_test extends \advanced_testcase {
+final class attempt_walkthrough_from_csv_test extends \advanced_testcase {
 
     use \quiz_question_helper_test_trait;
 
