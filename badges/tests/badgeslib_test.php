@@ -31,7 +31,7 @@ use core\task\manager;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @author     Yuliya Bozhko <yuliya.bozhko@totaralms.com>
  */
-class badgeslib_test extends advanced_testcase {
+final class badgeslib_test extends advanced_testcase {
     protected $badgeid;
     protected $course;
     protected $user;

@@ -33,7 +33,7 @@ require_once('all_checks.php');
  *
  * This check test does not currently exist
  */
-class marquee_is_not_used_test extends all_checks {
+final class marquee_is_not_used_test extends all_checks {
     /** @var string Check type */
     public $checktype = 'marquee_is_not_used';
 

@@ -33,6 +33,7 @@ use customfield_textarea;
  * @covers \core_customfield\field_controller
  */
 final class field_controller_test extends \advanced_testcase {
+
     /**
      * Get generator.
      *

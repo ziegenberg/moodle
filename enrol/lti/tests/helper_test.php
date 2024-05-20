@@ -25,7 +25,7 @@ namespace enrol_lti;
  *
  * @covers \enrol_lti\helper
  */
-class helper_test extends \advanced_testcase {
+final class helper_test extends \advanced_testcase {
 
     /**
      * @var \stdClass $user1 A user.
