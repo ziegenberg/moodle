@@ -4,8 +4,12 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit8c729390e3f26f25c6e8fe4b9504a4d9
+class ComposerStaticInitffda228f8caaad01b458728fb2965f3d
 {
+    public static $files = array (
+        '344f11dc3484aaed5cbde58e23513be4' => __DIR__ . '/..' . '/apereo/phpcas/source/CAS.php',
+    );
+
     public static $prefixLengthsPsr4 = array (
         'P' => 
         array (
@@ -16,7 +20,7 @@ class ComposerStaticInit8c729390e3f26f25c6e8fe4b9504a4d9
     public static $prefixDirsPsr4 = array (
         'Psr\\Log\\' => 
         array (
-            0 => __DIR__ . '/..' . '/psr/log/Psr/Log',
+            0 => __DIR__ . '/..' . '/psr/log/src',
         ),
     );
 
@@ -79,9 +83,9 @@ class ComposerStaticInit8c729390e3f26f25c6e8fe4b9504a4d9
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit8c729390e3f26f25c6e8fe4b9504a4d9::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit8c729390e3f26f25c6e8fe4b9504a4d9::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInit8c729390e3f26f25c6e8fe4b9504a4d9::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInitffda228f8caaad01b458728fb2965f3d::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInitffda228f8caaad01b458728fb2965f3d::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInitffda228f8caaad01b458728fb2965f3d::$classMap;
 
         }, null, ClassLoader::class);
     }
