@@ -14,13 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Events tests.
- *
- * @package core_question
- * @copyright 2014 Mark Nelson <markn@moodle.com>
- * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
 
 namespace core_question\event;
 
@@ -35,6 +28,13 @@ global $CFG;
 
 require_once($CFG->dirroot . '/question/editlib.php');
 
+/**
+ * Events tests.
+ *
+ * @package core_question
+ * @copyright 2014 Mark Nelson <markn@moodle.com>
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class events_test extends \advanced_testcase {
 
     /**
