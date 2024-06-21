@@ -14,16 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Unit tests for badges
- *
- * @package    core
- * @subpackage badges
- * @copyright  2013 onwards Totara Learning Solutions Ltd {@link http://www.totaralms.com/}
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @author     Yuliya Bozhko <yuliya.bozhko@totaralms.com>
- */
-
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
@@ -33,6 +23,14 @@ require_once($CFG->dirroot . '/badges/lib.php');
 use core_badges\helper;
 use core\task\manager;
 
+/**
+ * Unit tests for badges
+ *
+ * @package    core_badges
+ * @copyright  2013 onwards Totara Learning Solutions Ltd {@link http://www.totaralms.com/}
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @author     Yuliya Bozhko <yuliya.bozhko@totaralms.com>
+ */
 final class badgeslib_test extends advanced_testcase {
     protected $badgeid;
     protected $course;

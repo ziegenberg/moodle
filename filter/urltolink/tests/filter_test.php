@@ -14,14 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Unit test for the filter_urltolink
- *
- * @package    filter_urltolink
- * @category   phpunit
- * @copyright  2010 David Mudrak <david@moodle.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
 
 namespace filter_urltolink;
 
@@ -32,7 +24,14 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 require_once($CFG->dirroot . '/filter/urltolink/filter.php'); // Include the code to test
 
-
+/**
+ * Unit test for the filter_urltolink
+ *
+ * @package    filter_urltolink
+ * @category   test
+ * @copyright  2010 David Mudrak <david@moodle.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 final class filter_test extends \basic_testcase {
 
     function get_convert_urls_into_links_test_cases() {

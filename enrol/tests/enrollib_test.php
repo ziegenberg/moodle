@@ -14,25 +14,15 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Test non-plugin enrollib parts.
- *
- * @package    core_enrol
- * @category   phpunit
- * @copyright  2012 Petr Skoda {@link http://skodak.org}
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 use core\plugininfo\enrol;
 
 defined('MOODLE_INTERNAL') || die();
 
-
 /**
  * Test non-plugin enrollib parts.
  *
- * @package    core
- * @category   phpunit
+ * @package    core_enrol
+ * @category   test
  * @copyright  2012 Petr Skoda {@link http://skodak.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */

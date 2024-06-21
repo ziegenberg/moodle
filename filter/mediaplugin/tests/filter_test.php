@@ -14,15 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Unit test for the filter_mediaplugin
- *
- * @package    filter_mediaplugin
- * @category   phpunit
- * @copyright  2011 Rossiani Wijaya <rwijaya@moodle.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace filter_mediaplugin;
 
 use filter_mediaplugin;
@@ -33,6 +24,14 @@ global $CFG;
 require_once($CFG->dirroot . '/filter/mediaplugin/filter.php'); // Include the code to test
 
 
+/**
+ * Unit test for the filter_mediaplugin
+ *
+ * @package    filter_mediaplugin
+ * @category   phpunit
+ * @copyright  2011 Rossiani Wijaya <rwijaya@moodle.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 final class filter_test extends \advanced_testcase {
 
     function test_filter_mediaplugin_link(): void {
