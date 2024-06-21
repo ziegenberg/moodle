@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace core_enrol;
+
 use core\plugininfo\enrol;
 
 defined('MOODLE_INTERNAL') || die();
@@ -26,7 +28,7 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright  2012 Petr Skoda {@link http://skodak.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-final class enrollib_test extends advanced_testcase {
+final class enrollib_test extends \advanced_testcase {
 
     public function test_enrol_get_all_users_courses(): void {
         global $DB, $CFG;

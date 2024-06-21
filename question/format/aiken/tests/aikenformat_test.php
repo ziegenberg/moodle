@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace qformat_aiken;
+
 /**
  * Unit tests for the Moodle Aiken format.
  *
@@ -38,12 +40,12 @@ require_once($CFG->dirroot . '/question/engine/tests/helpers.php');
  * @copyright  2018 Eric Merrill (eric.a.merrill@gmail.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-final class aikenformat_test extends question_testcase {
+final class aikenformat_test extends \question_testcase {
     public function test_readquestions(): void {
         global $CFG;
 
         $lines = file($CFG->dirroot.'/question/format/aiken/tests/fixtures/aiken_errors.txt');
-        $importer = new qformat_aiken($lines);
+        $importer = new \qformat_aiken($lines);
 
         // The importer echos some errors, so we need to capture and check that.
         ob_start();

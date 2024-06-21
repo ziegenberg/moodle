@@ -14,15 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Tests for tool_licensemanager helper class.
- *
- * @package    tool_licensemanager
- * @copyright  2020 Tom Dickman <tom.dickman@catalyst-au.net>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+namespace tool_licensemanager;
 
-defined('MOODLE_INTERNAL') || die();
+use advanced_testcase;
 
 /**
  * Tests for tool_licensemanager helper class.

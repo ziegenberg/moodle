@@ -14,14 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Tests for restore_structure_parser_processor class.
- *
- * @package     core_backup
- * @category    test
- * @copyright   2017 Dmitrii Metelkin (dmitriim@catalyst-au.net)
- * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+namespace core_backup;
+use advanced_testcase;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -129,7 +123,7 @@ final class restore_structure_parser_processor_test extends advanced_testcase {
         $CFG->slasharguments = $slasharguments;
         $CFG->wwwroot = 'http://test.test';
 
-        $processor = new restore_structure_parser_processor(1, 1);
+        $processor = new \restore_structure_parser_processor(1, 1);
 
         $this->assertEquals($expected, $processor->process_cdata($content));
     }

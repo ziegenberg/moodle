@@ -14,6 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace core_backup;
+
+use advanced_testcase;
+
 defined('MOODLE_INTERNAL') || die();
 
 // Include all the needed stuff.
@@ -37,12 +41,12 @@ final class roles_backup_restore_test extends advanced_testcase {
      *
      * @return stdClass the new course.
      */
-    protected function create_course_with_role_overrides(): stdClass {
+    protected function create_course_with_role_overrides(): \stdClass {
         $generator = $this->getDataGenerator();
         $course = $generator->create_course();
         $teacher = $generator->create_user();
 
-        $context = context_course::instance($course->id);
+        $context = \context_course::instance($course->id);
         $generator->enrol_user($teacher->id, $course->id, 'teacher');
 
         $editingteacherrole = $this->get_role('teacher');
@@ -58,7 +62,7 @@ final class roles_backup_restore_test extends advanced_testcase {
      * @param string $shortname the role shortname.
      * @return stdClass the role from the DB.
      */
-    protected function get_role(string $shortname): stdClass {
+    protected function get_role(string $shortname): \stdClass {
         global $DB;
         return $DB->get_record('role', ['shortname' => $shortname]);
     }
@@ -89,12 +93,12 @@ final class roles_backup_restore_test extends advanced_testcase {
         global $CFG, $USER;
 
         // Turn off file logging, otherwise it can't delete the file (Windows).
-        $CFG->backup_file_logger_level = backup::LOG_NONE;
+        $CFG->backup_file_logger_level = \backup::LOG_NONE;
 
         // Do backup with default settings. MODE_IMPORT means it will just
         // create the directory and not zip it.
-        $bc = new \backup_controller(backup::TYPE_1COURSE, $course->id,
-                backup::FORMAT_MOODLE, backup::INTERACTIVE_NO, backup::MODE_IMPORT,
+        $bc = new \backup_controller(\backup::TYPE_1COURSE, $course->id,
+                \backup::FORMAT_MOODLE, \backup::INTERACTIVE_NO, \backup::MODE_IMPORT,
                 $USER->id);
         $backupid = $bc->get_backupid();
         $bc->execute_plan();
@@ -122,12 +126,12 @@ final class roles_backup_restore_test extends advanced_testcase {
         $this->setUser($restorer);
 
         // Turn off file logging, otherwise it can't delete the file (Windows).
-        $CFG->backup_file_logger_level = backup::LOG_NONE;
+        $CFG->backup_file_logger_level = \backup::LOG_NONE;
 
         // Do restore to new course with default settings.
         $rc = new \restore_controller($backupid, $course->id,
-                backup::INTERACTIVE_NO, backup::MODE_GENERAL, $USER->id,
-                backup::TARGET_CURRENT_ADDING);
+                \backup::INTERACTIVE_NO, \backup::MODE_GENERAL, $USER->id,
+                \backup::TARGET_CURRENT_ADDING);
 
         $precheck = $rc->execute_precheck();
         $this->assertTrue($precheck);
@@ -152,7 +156,7 @@ final class roles_backup_restore_test extends advanced_testcase {
 
         // Verify.
         $overrides = $this->get_overrides_for_role_on_context('teacher',
-                context_course::instance($newcourseid));
+                \context_course::instance($newcourseid));
         $this->assertArrayHasKey('moodle/user:loginas', $overrides);
         $this->assertEquals(CAP_ALLOW, $overrides['moodle/user:loginas']);
         $this->assertArrayHasKey('moodle/site:accessallgroups', $overrides);
@@ -172,7 +176,7 @@ final class roles_backup_restore_test extends advanced_testcase {
 
         // Verify.
         $overrides = $this->get_overrides_for_role_on_context('teacher',
-                context_course::instance($newcourseid));
+                \context_course::instance($newcourseid));
         $this->assertArrayNotHasKey('moodle/user:loginas', $overrides);
         $this->assertArrayHasKey('moodle/site:accessallgroups', $overrides);
         $this->assertEquals(CAP_ALLOW, $overrides['moodle/site:accessallgroups']);

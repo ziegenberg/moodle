@@ -14,6 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace tool_filetypes;
+
+use advanced_testcase;
 use tool_filetypes\utils;
 
 /**
@@ -88,7 +91,7 @@ final class tool_filetypes_test extends advanced_testcase {
      */
     public function test_get_file_icons(): void {
         $icons = utils::get_file_icons();
-        $filetypes = core_filetypes::get_types();
+        $filetypes = \core_filetypes::get_types();
 
         $requiredicons = array_column($filetypes, 'icon');
         $requireduniqueicons = array_unique($requiredicons);

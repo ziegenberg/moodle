@@ -14,13 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Tests for tool_licensemanager manager class.
- *
- * @package    tool_licensemanager
- * @copyright  2020 Tom Dickman <tom.dickman@catalyst-au.net>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+namespace tool_licensemanager;
+
+use advanced_testcase;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -45,15 +41,15 @@ final class manager_test extends advanced_testcase {
         $this->resetAfterTest();
 
         // Create initial custom license to edit.
-        $testlicense = new stdClass();
+        $testlicense = new \stdClass();
         $testlicense->shortname = 'my-lic';
         $testlicense->fullname = 'My License';
         $testlicense->source = 'https://fakeurl.net';
         $testlicense->version = date('Ymd', time()) . '00';
-        $testlicense->custom = license_manager::CUSTOM_LICENSE;
+        $testlicense->custom = \license_manager::CUSTOM_LICENSE;
 
-        license_manager::save($testlicense);
-        license_manager::enable($testlicense->shortname);
+        \license_manager::save($testlicense);
+        \license_manager::enable($testlicense->shortname);
 
         $manager = new \tool_licensemanager\manager();
 
@@ -69,13 +65,13 @@ final class manager_test extends advanced_testcase {
         \tool_licensemanager\form\edit_license::mock_submit($formdata);
 
         // We're testing a private method, so we need to setup reflector magic.
-        $method = new ReflectionMethod('\tool_licensemanager\manager', 'edit');
+        $method = new \ReflectionMethod('\tool_licensemanager\manager', 'edit');
         $method->invoke($manager, \tool_licensemanager\manager::ACTION_UPDATE, $testlicense->shortname);
 
         // Should not create a new license when updating an existing license.
-        $this->assertEmpty(license_manager::get_license_by_shortname($formdata['shortname']));
+        $this->assertEmpty(\license_manager::get_license_by_shortname($formdata['shortname']));
 
-        $actual = license_manager::get_license_by_shortname('my-lic');
+        $actual = \license_manager::get_license_by_shortname('my-lic');
         // Should not be able to update the shortname of the license.
         $this->assertNotSame($formdata['shortname'], $actual->shortname);
         // Should be able to update other details of the license.
@@ -88,7 +84,7 @@ final class manager_test extends advanced_testcase {
         $manager = new \tool_licensemanager\manager();
 
         // We're testing a private method, so we need to setup reflector magic.
-        $method = new ReflectionMethod('\tool_licensemanager\manager', 'edit');
+        $method = new \ReflectionMethod('\tool_licensemanager\manager', 'edit');
 
         // Attempt to update a license that doesn't exist.
         $formdata = [
@@ -108,7 +104,7 @@ final class manager_test extends advanced_testcase {
         $manager = new \tool_licensemanager\manager();
 
         // We're testing a private method, so we need to setup reflector magic.
-        $method = new ReflectionMethod('\tool_licensemanager\manager', 'edit');
+        $method = new \ReflectionMethod('\tool_licensemanager\manager', 'edit');
 
         // Attempt to update a license without passing license shortname.
         $formdata = [
@@ -129,7 +125,7 @@ final class manager_test extends advanced_testcase {
     public function test_edit_create_license(): void {
         $this->resetAfterTest();
 
-        $licensecount = count(license_manager::get_licenses());
+        $licensecount = count(\license_manager::get_licenses());
 
         $manager = new \tool_licensemanager\manager();
 
@@ -144,12 +140,12 @@ final class manager_test extends advanced_testcase {
         \tool_licensemanager\form\edit_license::mock_submit($formdata);
 
         // We're testing a private method, so we need to setup reflector magic.
-        $method = new ReflectionMethod('\tool_licensemanager\manager', 'edit');
+        $method = new \ReflectionMethod('\tool_licensemanager\manager', 'edit');
         $method->invoke($manager, \tool_licensemanager\manager::ACTION_CREATE, $formdata['shortname']);
 
         // Should create a new license in database.
-        $this->assertCount($licensecount + 1, license_manager::get_licenses());
-        $actual = license_manager::get_license_by_shortname($formdata['shortname']);
+        $this->assertCount($licensecount + 1, \license_manager::get_licenses());
+        $actual = \license_manager::get_license_by_shortname($formdata['shortname']);
         $this->assertSame($formdata['shortname'], $actual->shortname);
         $this->assertSame($formdata['fullname'], $actual->fullname);
         $this->assertSame($formdata['source'], $actual->source);
@@ -169,23 +165,23 @@ final class manager_test extends advanced_testcase {
     public function test_change_license_order(): void {
         $this->resetAfterTest();
 
-        $licenseorder = array_keys(license_manager::get_licenses());
+        $licenseorder = array_keys(\license_manager::get_licenses());
         $initialposition = array_search('cc-nc-4.0', $licenseorder);
 
-        $manager = new tool_licensemanager\manager();
+        $manager = new \tool_licensemanager\manager();
 
         // We're testing a private method, so we need to setup reflector magic.
-        $method = new ReflectionMethod('\tool_licensemanager\manager', 'change_license_order');
+        $method = new \ReflectionMethod('\tool_licensemanager\manager', 'change_license_order');
         $method->invoke($manager, \tool_licensemanager\manager::ACTION_MOVE_UP, 'cc-nc-4.0');
 
-        $licenseorder = array_keys(license_manager::get_licenses());
+        $licenseorder = array_keys(\license_manager::get_licenses());
         $newposition = array_search('cc-nc-4.0', $licenseorder);
 
         $this->assertLessThan($initialposition, $newposition);
 
         $initialposition = array_search('allrightsreserved', $licenseorder);
         $method->invoke($manager, \tool_licensemanager\manager::ACTION_MOVE_DOWN, 'allrightsreserved');
-        $licenseorder = array_keys(license_manager::get_licenses());
+        $licenseorder = array_keys(\license_manager::get_licenses());
         $newposition = array_search('cc-nc-4.0', $licenseorder);
 
         $this->assertGreaterThan($initialposition, $newposition);

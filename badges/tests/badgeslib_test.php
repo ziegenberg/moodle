@@ -14,12 +14,15 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace core_badges;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 require_once($CFG->libdir . '/badgeslib.php');
 require_once($CFG->dirroot . '/badges/lib.php');
 
+use advanced_testcase;
 use core_badges\helper;
 use core\task\manager;
 
@@ -48,7 +51,7 @@ final class badgeslib_test extends advanced_testcase {
         $this->resetAfterTest(true);
         $CFG->enablecompletion = true;
         $user = $this->getDataGenerator()->create_user();
-        $fordb = new stdClass();
+        $fordb = new \stdClass();
         $fordb->id = null;
         $fordb->name = "Test badge with 'apostrophe' and other friends (<>&@#)";
         $fordb->description = "Testing badges";
@@ -103,7 +106,7 @@ final class badgeslib_test extends advanced_testcase {
         $this->coursebadge = $DB->insert_record('badge', $fordb, true);
 
         // Insert Endorsement.
-        $endorsement = new stdClass();
+        $endorsement = new \stdClass();
         $endorsement->badgeid = $this->coursebadge;
         $endorsement->issuername = "Issuer 123";
         $endorsement->issueremail = "issuer123@email.com";
@@ -120,13 +123,13 @@ final class badgeslib_test extends advanced_testcase {
         $badgeclone->status = BADGE_STATUS_ACTIVE;
         $badgeclone->save();
 
-        $relatebadge = new stdClass();
+        $relatebadge = new \stdClass();
         $relatebadge->badgeid = $this->coursebadge;
         $relatebadge->relatedbadgeid = $clonedid;
         $relatebadge->relatedid = $DB->insert_record('badge_related', $relatebadge, true);
 
         // Insert a aligment.
-        $alignment = new stdClass();
+        $alignment = new \stdClass();
         $alignment->badgeid = $this->coursebadge;
         $alignment->targetname = 'CCSS.ELA-Literacy.RST.11-12.3';
         $alignment->targeturl = 'http://www.corestandards.org/ELA-Literacy/RST/11-12/3';
@@ -136,15 +139,15 @@ final class badgeslib_test extends advanced_testcase {
         $DB->insert_record('badge_alignment', $alignment, true);
 
         // Insert tags.
-        core_tag_tag::set_item_tags('core_badges', 'badge', $badge->id, $badge->get_context(), ['tag1', 'tag2']);
+        \core_tag_tag::set_item_tags('core_badges', 'badge', $badge->id, $badge->get_context(), ['tag1', 'tag2']);
 
-        $this->assertion = new stdClass();
+        $this->assertion = new \stdClass();
         $this->assertion->badge = '{"uid":"%s","recipient":{"identity":"%s","type":"email","hashed":true,"salt":"%s"},' .
             '"badge":"%s","verify":{"type":"hosted","url":"%s"},"issuedOn":"%d","evidence":"%s","tags":%s}';
         $this->assertion->class = '{"name":"%s","description":"%s","image":"%s","criteria":"%s","issuer":"%s","tags":%s}';
         $this->assertion->issuer = '{"name":"%s","url":"%s","email":"%s"}';
         // Format JSON-LD for Openbadge specification version 2.0.
-        $this->assertion2 = new stdClass();
+        $this->assertion2 = new \stdClass();
         $this->assertion2->badge = '{"recipient":{"identity":"%s","type":"email","hashed":true,"salt":"%s"},' .
             '"badge":{"name":"%s","description":"%s","image":"%s",' .
             '"criteria":{"id":"%s","narrative":"%s"},"issuer":{"name":"%s","url":"%s","email":"%s",' .
@@ -222,7 +225,7 @@ final class badgeslib_test extends advanced_testcase {
 
         $badge = new badge($this->badgeid);
         // Insert tags for the badge.
-        core_tag_tag::set_item_tags('core_badges', 'badge', $badge->id, $badge->get_context(), ['tag1', 'tag2']);
+        \core_tag_tag::set_item_tags('core_badges', 'badge', $badge->id, $badge->get_context(), ['tag1', 'tag2']);
 
         $newid1 = $badge->make_clone();
         $newid2 = $badge->make_clone();
@@ -263,12 +266,12 @@ final class badgeslib_test extends advanced_testcase {
 
     public function test_create_badge_criteria(): void {
         $badge = new badge($this->badgeid);
-        $criteria_overall = award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_OVERALL, 'badgeid' => $badge->id));
+        $criteria_overall = \award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_OVERALL, 'badgeid' => $badge->id));
         $criteria_overall->save(array('agg' => BADGE_CRITERIA_AGGREGATION_ALL));
 
         $this->assertCount(1, $badge->get_criteria());
 
-        $criteria_profile = award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_PROFILE, 'badgeid' => $badge->id));
+        $criteria_profile = \award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_PROFILE, 'badgeid' => $badge->id));
         $params = array('agg' => BADGE_CRITERIA_AGGREGATION_ALL, 'field_address' => 'address');
         $criteria_profile->save($params);
 
@@ -276,14 +279,14 @@ final class badgeslib_test extends advanced_testcase {
     }
 
     public function test_add_badge_criteria_description(): void {
-        $criteriaoverall = award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_OVERALL, 'badgeid' => $this->badgeid));
+        $criteriaoverall = \award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_OVERALL, 'badgeid' => $this->badgeid));
         $criteriaoverall->save(array(
                 'agg' => BADGE_CRITERIA_AGGREGATION_ALL,
                 'description' => 'Overall description',
                 'descriptionformat' => FORMAT_HTML
         ));
 
-        $criteriaprofile = award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_PROFILE, 'badgeid' => $this->badgeid));
+        $criteriaprofile = \award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_PROFILE, 'badgeid' => $this->badgeid));
         $params = array(
                 'agg' => BADGE_CRITERIA_AGGREGATION_ALL,
                 'field_address' => 'address',
@@ -298,7 +301,7 @@ final class badgeslib_test extends advanced_testcase {
     }
 
     public function test_delete_badge_criteria(): void {
-        $criteria_overall = award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_OVERALL, 'badgeid' => $this->badgeid));
+        $criteria_overall = \award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_OVERALL, 'badgeid' => $this->badgeid));
         $criteria_overall->save(array('agg' => BADGE_CRITERIA_AGGREGATION_ALL));
         $badge = new badge($this->badgeid);
 
@@ -357,7 +360,7 @@ final class badgeslib_test extends advanced_testcase {
         // Create 11 badges with which to test.
         for ($i = 1; $i <= 11; $i++) {
             // Mock up a badge.
-            $badge = new stdClass();
+            $badge = new \stdClass();
             $badge->id = null;
             $badge->name = "Test badge $i";
             $badge->description = "Testing badges $i";
@@ -438,7 +441,7 @@ final class badgeslib_test extends advanced_testcase {
         $sitebadgeid = key($badges);
         $badges[$sitebadgeid]->issue($this->user->id, true);
 
-        $badge = new stdClass();
+        $badge = new \stdClass();
         $badge->id = null;
         $badge->name = "Test course badge";
         $badge->description = "Testing course badge";
@@ -553,14 +556,14 @@ final class badgeslib_test extends advanced_testcase {
             'id' => $this->course->id,
             'criteria_activity' => $criteriaactivityarray,
         ];
-        $criterion = new completion_criteria_activity();
+        $criterion = new \completion_criteria_activity();
         $criterion->update_config($criteriadata);
 
         $badge = new badge($this->coursebadge);
 
-        $criteriaoverall = award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_OVERALL, 'badgeid' => $badge->id));
+        $criteriaoverall = \award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_OVERALL, 'badgeid' => $badge->id));
         $criteriaoverall->save(array('agg' => BADGE_CRITERIA_AGGREGATION_ANY));
-        $criteriaactivity = award_criteria::build(['criteriatype' => BADGE_CRITERIA_TYPE_ACTIVITY, 'badgeid' => $badge->id]);
+        $criteriaactivity = \award_criteria::build(['criteriatype' => BADGE_CRITERIA_TYPE_ACTIVITY, 'badgeid' => $badge->id]);
 
         $modulescrit = ['agg' => BADGE_CRITERIA_AGGREGATION_ALL];
         foreach ($assigns as $assign) {
@@ -609,9 +612,9 @@ final class badgeslib_test extends advanced_testcase {
         $badge = new badge($this->coursebadge);
         $this->assertFalse($badge->is_issued($this->user->id));
 
-        $criteria_overall = award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_OVERALL, 'badgeid' => $badge->id));
+        $criteria_overall = \award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_OVERALL, 'badgeid' => $badge->id));
         $criteria_overall->save(array('agg' => BADGE_CRITERIA_AGGREGATION_ANY));
-        $criteria_overall = award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_ACTIVITY, 'badgeid' => $badge->id));
+        $criteria_overall = \award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_ACTIVITY, 'badgeid' => $badge->id));
         $criteria_overall->save(array('agg' => BADGE_CRITERIA_AGGREGATION_ANY, 'module_'.$this->module->cmid => $this->module->cmid));
 
         // Assert the badge will not be issued to the user as is.
@@ -620,7 +623,7 @@ final class badgeslib_test extends advanced_testcase {
         $this->assertFalse($badge->is_issued($this->user->id));
 
         // Set completion for forum activity.
-        $c = new completion_info($this->course);
+        $c = new \completion_info($this->course);
         $activities = $c->get_activities();
         $this->assertEquals(1, count($activities));
         $this->assertTrue(isset($activities[$this->module->cmid]));
@@ -647,12 +650,12 @@ final class badgeslib_test extends advanced_testcase {
         $badge = new badge($this->coursebadge);
         $this->assertFalse($badge->is_issued($this->user->id));
 
-        $criteria_overall = award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_OVERALL, 'badgeid' => $badge->id));
+        $criteria_overall = \award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_OVERALL, 'badgeid' => $badge->id));
         $criteria_overall->save(array('agg' => BADGE_CRITERIA_AGGREGATION_ANY));
-        $criteria_overall1 = award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_COURSE, 'badgeid' => $badge->id));
+        $criteria_overall1 = \award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_COURSE, 'badgeid' => $badge->id));
         $criteria_overall1->save(array('agg' => BADGE_CRITERIA_AGGREGATION_ANY, 'course_'.$this->course->id => $this->course->id));
 
-        $ccompletion = new completion_completion(array('course' => $this->course->id, 'userid' => $this->user->id));
+        $ccompletion = new \completion_completion(array('course' => $this->course->id, 'userid' => $this->user->id));
 
         // Assert the badge will not be issued to the user as is.
         $badge = new badge($this->coursebadge);
@@ -689,9 +692,9 @@ final class badgeslib_test extends advanced_testcase {
         $this->preventResetByRollback(); // Messaging is not compatible with transactions.
         $badge = new badge($this->coursebadge);
 
-        $criteria_overall = award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_OVERALL, 'badgeid' => $badge->id));
+        $criteria_overall = \award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_OVERALL, 'badgeid' => $badge->id));
         $criteria_overall->save(array('agg' => BADGE_CRITERIA_AGGREGATION_ANY));
-        $criteria_overall1 = award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_PROFILE, 'badgeid' => $badge->id));
+        $criteria_overall1 = \award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_PROFILE, 'badgeid' => $badge->id));
         $criteria_overall1->save(array('agg' => BADGE_CRITERIA_AGGREGATION_ALL, 'field_address' => 'address',
             'field_department' => 'department', 'field_' . $customprofileid => $customprofileid));
 
@@ -733,9 +736,9 @@ final class badgeslib_test extends advanced_testcase {
         $this->assertSame(0, $badge->review_all_criteria()); // Verify award_criteria_cohort->get_completed_criteria_sql().
 
         // Set up the badge criteria.
-        $criteriaoverall = award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_OVERALL, 'badgeid' => $badge->id));
+        $criteriaoverall = \award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_OVERALL, 'badgeid' => $badge->id));
         $criteriaoverall->save(array('agg' => BADGE_CRITERIA_AGGREGATION_ANY));
-        $criteriaoverall1 = award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_COHORT, 'badgeid' => $badge->id));
+        $criteriaoverall1 = \award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_COHORT, 'badgeid' => $badge->id));
         $criteriaoverall1->save(array('agg' => BADGE_CRITERIA_AGGREGATION_ANY,
             'cohort_cohorts' => array('0' => $cohort1->id, '1' => $cohort2->id)));
         $badge->set_status(BADGE_STATUS_ACTIVE);
@@ -790,9 +793,9 @@ final class badgeslib_test extends advanced_testcase {
         $this->assertSame(0, $badge->review_all_criteria()); // Verify award_criteria_cohort->get_completed_criteria_sql().
 
         // Set up the badge criteria.
-        $criteriaoverall = award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_OVERALL, 'badgeid' => $badge->id));
+        $criteriaoverall = \award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_OVERALL, 'badgeid' => $badge->id));
         $criteriaoverall->save(array('agg' => BADGE_CRITERIA_AGGREGATION_ANY));
-        $criteriaoverall1 = award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_COHORT, 'badgeid' => $badge->id));
+        $criteriaoverall1 = \award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_COHORT, 'badgeid' => $badge->id));
         $criteriaoverall1->save(array('agg' => BADGE_CRITERIA_AGGREGATION_ALL,
             'cohort_cohorts' => array('0' => $cohort1->id, '1' => $cohort2->id, '2' => $cohort3->id)));
         $badge->set_status(BADGE_STATUS_ACTIVE);
@@ -845,9 +848,9 @@ final class badgeslib_test extends advanced_testcase {
         $badge = new badge($this->coursebadge);
         $this->assertFalse($badge->is_issued($this->user->id));
 
-        $criteria_overall = award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_OVERALL, 'badgeid' => $badge->id));
+        $criteria_overall = \award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_OVERALL, 'badgeid' => $badge->id));
         $criteria_overall->save(array('agg' => BADGE_CRITERIA_AGGREGATION_ANY));
-        $criteria_overall1 = award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_PROFILE, 'badgeid' => $badge->id));
+        $criteria_overall1 = \award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_PROFILE, 'badgeid' => $badge->id));
         $criteria_overall1->save(array('agg' => BADGE_CRITERIA_AGGREGATION_ALL, 'field_address' => 'address'));
 
         $this->user->address = 'Test address';
@@ -862,7 +865,7 @@ final class badgeslib_test extends advanced_testcase {
 
         // Get assertion.
         $award = reset($awards);
-        $assertion = new core_badges_assertion($award->uniquehash, OPEN_BADGES_V1);
+        $assertion = new \core_badges_assertion($award->uniquehash, OPEN_BADGES_V1);
         $testassertion = $this->assertion;
 
         // Make sure JSON strings have the same structure.
@@ -873,7 +876,7 @@ final class badgeslib_test extends advanced_testcase {
         // Test Openbadge specification version 2.
         // Get assertion version 2.
         $award = reset($awards);
-        $assertion2 = new core_badges_assertion($award->uniquehash, OPEN_BADGES_V2);
+        $assertion2 = new \core_badges_assertion($award->uniquehash, OPEN_BADGES_V2);
         $testassertion2 = $this->assertion2;
 
         // Make sure JSON strings have the same structure.
@@ -884,7 +887,7 @@ final class badgeslib_test extends advanced_testcase {
         // Test Openbadge specification version 2.1. It has the same format as OBv2.0.
         // Get assertion version 2.1.
         $award = reset($awards);
-        $assertion2 = new core_badges_assertion($award->uniquehash, OPEN_BADGES_V2P1);
+        $assertion2 = new \core_badges_assertion($award->uniquehash, OPEN_BADGES_V2P1);
 
         // Make sure JSON strings have the same structure.
         $this->assertStringMatchesFormat($testassertion2->badge, json_encode($assertion2->get_badge_assertion()));
@@ -909,7 +912,7 @@ final class badgeslib_test extends advanced_testcase {
 
         // Check the node tree is correct.
         core_badges_myprofile_navigation($tree, $this->user, $iscurrentuser, $course);
-        $reflector = new ReflectionObject($tree);
+        $reflector = new \ReflectionObject($tree);
         $nodes = $reflector->getProperty('nodes');
         $this->assertArrayHasKey('localbadges', $nodes->getValue($tree));
     }
@@ -931,7 +934,7 @@ final class badgeslib_test extends advanced_testcase {
 
         // Check the node tree is correct.
         core_badges_myprofile_navigation($tree, $this->user, $iscurrentuser, $course);
-        $reflector = new ReflectionObject($tree);
+        $reflector = new \ReflectionObject($tree);
         $nodes = $reflector->getProperty('nodes');
         $this->assertArrayNotHasKey('localbadges', $nodes->getValue($tree));
     }
@@ -949,7 +952,7 @@ final class badgeslib_test extends advanced_testcase {
 
         // Check the node tree is correct.
         core_badges_myprofile_navigation($tree, $this->user, $iscurrentuser, $this->course);
-        $reflector = new ReflectionObject($tree);
+        $reflector = new \ReflectionObject($tree);
         $nodes = $reflector->getProperty('nodes');
         $this->assertArrayHasKey('localbadges', $nodes->getValue($tree));
     }
@@ -961,7 +964,7 @@ final class badgeslib_test extends advanced_testcase {
         $badge = new badge($this->badgeid);
 
         // Insert Endorsement.
-        $endorsement = new stdClass();
+        $endorsement = new \stdClass();
         $endorsement->badgeid = $this->badgeid;
         $endorsement->issuername = "Issuer 123";
         $endorsement->issueremail = "issuer123@email.com";
@@ -1019,7 +1022,7 @@ final class badgeslib_test extends advanced_testcase {
         $badge = new badge($this->badgeid);
 
         // Insert a alignment.
-        $alignment1 = new stdClass();
+        $alignment1 = new \stdClass();
         $alignment1->badgeid = $this->badgeid;
         $alignment1->targetname = 'CCSS.ELA-Literacy.RST.11-12.3';
         $alignment1->targeturl = 'http://www.corestandards.org/ELA-Literacy/RST/11-12/3';
