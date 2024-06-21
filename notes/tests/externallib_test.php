@@ -14,14 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * External notes functions unit tests
- *
- * @package    core_notes
- * @category   external
- * @copyright  2012 Jerome Mouneyrac
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
 
 namespace core_notes;
 
@@ -36,6 +28,14 @@ global $CFG;
 require_once($CFG->dirroot . '/webservice/tests/helpers.php');
 require_once($CFG->dirroot . '/notes/externallib.php');
 
+/**
+ * External notes functions unit tests
+ *
+ * @package    core_notes
+ * @category   external
+ * @copyright  2012 Jerome Mouneyrac
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class externallib_test extends externallib_advanced_testcase {
 
     /**

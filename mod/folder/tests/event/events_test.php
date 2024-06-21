@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace mod_folder\event;
+
 /**
  * Events tests.
  *
@@ -22,9 +24,6 @@
  * @copyright  2013 Mark Nelson <markn@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-namespace mod_folder\event;
-
 class events_test extends \advanced_testcase {
 
     /**

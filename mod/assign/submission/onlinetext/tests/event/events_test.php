@@ -14,14 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Contains the event tests for the plugin.
- *
- * @package   assignsubmission_onlinetext
- * @copyright 2013 Frédéric Massart
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace assignsubmission_onlinetext\event;
 
 use mod_assign_test_generator;
@@ -31,6 +23,13 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 require_once($CFG->dirroot . '/mod/assign/tests/generator.php');
 
+/**
+ * Contains the event tests for the plugin.
+ *
+ * @package   assignsubmission_onlinetext
+ * @copyright 2013 Frédéric Massart
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class events_test extends \advanced_testcase {
 
     // Use the generator helper.

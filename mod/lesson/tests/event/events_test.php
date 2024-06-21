@@ -14,15 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Events tests.
- *
- * @package    mod_lesson
- * @category   test
- * @copyright  2013 Mark Nelson <markn@moodle.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace mod_lesson\event;
 
 use lesson;
@@ -33,6 +24,14 @@ global $CFG;
 
 require_once($CFG->dirroot.'/mod/lesson/locallib.php');
 
+/**
+ * Events tests.
+ *
+ * @package    mod_lesson
+ * @category   test
+ * @copyright  2013 Mark Nelson <markn@moodle.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class events_test extends \advanced_testcase {
 
     /** @var stdClass the course used for testing */
