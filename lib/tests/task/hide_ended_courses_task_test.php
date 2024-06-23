@@ -16,9 +16,7 @@
 
 namespace core\task;
 
-defined('MOODLE_INTERNAL') || die;
-
-require_once(__DIR__ . '/show_started_courses_task_test.php');
+use advanced_testcase;
 
 /**
  * Class containing unit tests for the hide ended courses task.
@@ -30,7 +28,7 @@ require_once(__DIR__ . '/show_started_courses_task_test.php');
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @coversDefaultClass \core\task\hide_ended_courses_task
  */
-final class hide_ended_courses_task_test extends \core\task\show_started_courses_task_test {
+final class hide_ended_courses_task_test extends advanced_testcase {
 
     /**
      * Test hide_ended_courses cron task.
@@ -115,5 +113,58 @@ final class hide_ended_courses_task_test extends \core\task\show_started_courses
             $this->assertInstanceOf('\\core\\event\\course_ended', $event);
             $this->assertArrayHasKey($event->courseid, array_flip($expected));
         }
+    }
+
+    /**
+     * Data provider for test_show_started_courses.
+     *
+     * @return array
+     */
+    public static function get_courses_provider(): array {
+        return [
+            'No hidden courses' => [
+                'lastweek' => 0,
+                'yesterday' => 0,
+                'tomorrow' => 0,
+            ],
+            'No hidden courses (without visible courses)' => [
+                'lastweek' => 0,
+                'yesterday' => 0,
+                'tomorrow' => 0,
+                'createvisible' => false,
+            ],
+            'Hidden courses with last week or tomorrow dates' => [
+                'lastweek' => 2,
+                'yesterday' => 0,
+                'tomorrow' => 2,
+            ],
+            'One hidden course of each type (last week, yesterday and tomorrow)' => [
+                'lastweek' => 1,
+                'yesterday' => 1,
+                'tomorrow' => 1,
+            ],
+            'Different hidden courses of each type' => [
+                'lastweek' => 2,
+                'yesterday' => 3,
+                'tomorrow' => 4,
+            ],
+            'A couple of hidden courses of each type (without visible courses)' => [
+                'lastweek' => 2,
+                'yesterday' => 2,
+                'tomorrow' => 2,
+                'createvisible' => false,
+            ],
+            'Only a few hidden courses for yesterday' => [
+                'lastweek' => 0,
+                'yesterday' => 5,
+                'tomorrow' => 0,
+            ],
+            'Only a few hidden courses for yesterday (without visible courses)' => [
+                'lastweek' => 0,
+                'yesterday' => 5,
+                'tomorrow' => 0,
+                'createvisible' => false,
+            ],
+        ];
     }
 }
