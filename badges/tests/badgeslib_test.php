@@ -35,11 +35,23 @@ use core\task\manager;
  * @author     Yuliya Bozhko <yuliya.bozhko@totaralms.com>
  */
 final class badgeslib_test extends advanced_testcase {
-    protected $badgeid;
+
+    /** @var $badgeid */
+    protected int $badgeid;
+
+    /** @var $course */
     protected $course;
+
+    /** @var $user */
     protected $user;
+
+    /** @var $module */
     protected $module;
+
+    /** @var $coursebadge */
     protected $coursebadge;
+
+    /** @var $assertion to define json format for Open badge */
     protected $assertion;
 
     /** @var $assertion2 to define json format for Open badge version 2 */
@@ -243,7 +255,7 @@ final class badgeslib_test extends advanced_testcase {
         $relatedsql = 'badgeid = :badgeid OR relatedbadgeid = :relatedbadgeid';
         $relatedparams = array(
             'badgeid' => $this->badgeid,
-            'relatedbadgeid' => $this->badgeid
+            'relatedbadgeid' => $this->badgeid,
         );
         // Badge 1 has 4 related records. 3 where it's the badgeid, 1 where it's the relatedbadgeid.
         $this->assertEquals(4, $DB->count_records_select('badge_related', $relatedsql, $relatedparams));
@@ -283,7 +295,7 @@ final class badgeslib_test extends advanced_testcase {
         $criteriaoverall->save(array(
                 'agg' => BADGE_CRITERIA_AGGREGATION_ALL,
                 'description' => 'Overall description',
-                'descriptionformat' => FORMAT_HTML
+                'descriptionformat' => FORMAT_HTML,
         ));
 
         $criteriaprofile = \award_criteria::build(array('criteriatype' => BADGE_CRITERIA_TYPE_PROFILE, 'badgeid' => $this->badgeid));
@@ -291,7 +303,7 @@ final class badgeslib_test extends advanced_testcase {
                 'agg' => BADGE_CRITERIA_AGGREGATION_ALL,
                 'field_address' => 'address',
                 'description' => 'Description',
-                'descriptionformat' => FORMAT_HTML
+                'descriptionformat' => FORMAT_HTML,
         );
         $criteriaprofile->save($params);
 
@@ -343,7 +355,7 @@ final class badgeslib_test extends advanced_testcase {
     }
 
     /**
-     * Test the {@link badges_get_user_badges()} function in lib/badgeslib.php
+     * Test the {@see badges_get_user_badges()} function in lib/badgeslib.php
      */
     public function test_badges_get_user_badges(): void {
         global $DB;
@@ -489,32 +501,32 @@ final class badgeslib_test extends advanced_testcase {
             array(
                 'This is a message with no variables',
                 array(), // no params
-                'This is a message with no variables'
+                'This is a message with no variables',
             ),
             array(
                 'This is a message with %amissing% variables',
                 array(), // no params
-                'This is a message with %amissing% variables'
+                'This is a message with %amissing% variables',
             ),
             array(
                 'This is a message with %one% variable',
                 array('one' => 'a single'),
-                'This is a message with a single variable'
+                'This is a message with a single variable',
             ),
             array(
                 'This is a message with %one% %two% %three% variables',
                 array('one' => 'more', 'two' => 'than', 'three' => 'one'),
-                'This is a message with more than one variables'
+                'This is a message with more than one variables',
             ),
             array(
                 'This is a message with %three% %two% %one%',
                 array('one' => 'variables', 'two' => 'ordered', 'three' => 'randomly'),
-                'This is a message with randomly ordered variables'
+                'This is a message with randomly ordered variables',
             ),
             array(
                 'This is a message with %repeated% %one% %repeated% of variables',
                 array('one' => 'and', 'repeated' => 'lots'),
-                'This is a message with lots and lots of variables'
+                'This is a message with lots and lots of variables',
             ),
         );
     }
@@ -1199,7 +1211,7 @@ final class badgeslib_test extends advanced_testcase {
                 true, 'test@test.com', null,
             ],
             'Only backpack password is defined (no mail is given)' => [
-                true, null, '1234'
+                true, null, '1234',
             ],
         ];
     }
@@ -1433,7 +1445,7 @@ final class badgeslib_test extends advanced_testcase {
         $data3 = array_merge($data2, [
             'userid' => $user->id,
             'externalbackpackid' => $backpack2,
-            'backpackemail' => 'test2@test.com'
+            'backpackemail' => 'test2@test.com',
         ]);
         // In the following case, the id returned below equals backpack2. So we aren't storing it.
         badges_save_backpack_credentials((object) $data3);
@@ -1474,7 +1486,7 @@ final class badgeslib_test extends advanced_testcase {
         $data3 = array_merge($data2, [
             'userid' => $user->id,
             'externalbackpackid' => $backpack2,
-            'backpackemail' => 'test2@test.com'
+            'backpackemail' => 'test2@test.com',
         ]);
         // In the following case, the id returned below equals backpack2. So we aren't storing it.
         badges_save_backpack_credentials((object) $data3);
@@ -1652,13 +1664,13 @@ final class badgeslib_test extends advanced_testcase {
     public function badgr_open_url_generator() {
         return [
             'Badgr Assertion URL test' => [
-                OPEN_BADGES_V2_TYPE_ASSERTION, "https://api.ca.badgr.io/public/assertions/123455"
+                OPEN_BADGES_V2_TYPE_ASSERTION, "https://api.ca.badgr.io/public/assertions/123455",
             ],
             'Badgr Issuer URL test' => [
-                OPEN_BADGES_V2_TYPE_ISSUER, "https://api.ca.badgr.io/public/issuers/123455"
+                OPEN_BADGES_V2_TYPE_ISSUER, "https://api.ca.badgr.io/public/issuers/123455",
             ],
             'Badgr Badge URL test' => [
-                OPEN_BADGES_V2_TYPE_BADGE, "https://api.ca.badgr.io/public/badges/123455"
+                OPEN_BADGES_V2_TYPE_BADGE, "https://api.ca.badgr.io/public/badges/123455",
             ]
         ];
     }
@@ -1699,19 +1711,19 @@ final class badgeslib_test extends advanced_testcase {
     public function badges_external_get_mapping_provider() {
         return [
             "Get the site backpack value" => [
-                1234, 4321, 'id', 'sitebackpackid'
+                1234, 4321, 'id', 'sitebackpackid',
             ],
             "Get the type of the mapping" => [
-                1234, 4321, OPEN_BADGES_V2_TYPE_BADGE, 'type'
+                1234, 4321, OPEN_BADGES_V2_TYPE_BADGE, 'type',
             ],
             "Get the externalid of the mapping" => [
-                1234, 4321, 4321, 'externalid'
+                1234, 4321, 4321, 'externalid',
             ],
             "Get the externalid of the mapping without providing a param" => [
-                1234, 4321, 4321, null
+                1234, 4321, 4321, null,
             ],
             "Get the internalid of the mapping" => [
-                1234, 4321, 1234, 'internalid'
+                1234, 4321, 1234, 'internalid',
             ]
         ];
     }
