@@ -23,10 +23,7 @@
  */
 namespace assignsubmission_file\privacy;
 
-defined('MOODLE_INTERNAL') || die();
-
-global $CFG;
-require_once($CFG->dirroot . '/mod/assign/tests/privacy/provider_test.php');
+use mod_assign\privacy\tests\mod_assign_provider_testcase;
 
 /**
  * Unit tests for mod/assign/submission/file/classes/privacy/
@@ -34,7 +31,7 @@ require_once($CFG->dirroot . '/mod/assign/tests/privacy/provider_test.php');
  * @copyright  2018 Adrian Greeve <adrian@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-final class provider_test extends \mod_assign\privacy\provider_test {
+final class provider_test extends mod_assign_provider_testcase {
 
     /**
      * Convenience function for creating feedback data.

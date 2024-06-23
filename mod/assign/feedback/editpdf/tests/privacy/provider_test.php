@@ -23,12 +23,7 @@
  */
 namespace assignfeedback_editpdf\privacy;
 
-defined('MOODLE_INTERNAL') || die();
-
-global $CFG;
-require_once($CFG->dirroot . '/mod/assign/locallib.php');
-require_once($CFG->dirroot . '/mod/assign/tests/privacy/provider_test.php');
-
+use mod_assign\privacy\tests\mod_assign_provider_testcase;
 use assignfeedback_editpdf\page_editor;
 use mod_assign\privacy\assign_plugin_request_data;
 
@@ -38,7 +33,7 @@ use mod_assign\privacy\assign_plugin_request_data;
  * @copyright  2018 Adrian Greeve <adrian@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-final class provider_test extends \mod_assign\privacy\provider_test {
+final class provider_test extends mod_assign_provider_testcase {
 
     public function setUp(): void {
         // Skip this test if ghostscript is not supported.
