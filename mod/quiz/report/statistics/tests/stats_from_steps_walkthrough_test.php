@@ -16,6 +16,7 @@
 
 namespace quiz_statistics;
 
+use mod_quiz\test\attempt_walkthrough_from_csv_testcase;
 use question_attempt;
 use question_bank;
 use question_finder;
@@ -24,7 +25,6 @@ use quiz_statistics_report;
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
-require_once($CFG->dirroot . '/mod/quiz/tests/attempt_walkthrough_from_csv_test.php');
 require_once($CFG->dirroot . '/mod/quiz/report/statistics/report.php');
 require_once($CFG->dirroot . '/mod/quiz/report/reportlib.php');
 
@@ -45,14 +45,14 @@ require_once($CFG->dirroot . '/mod/quiz/report/reportlib.php');
  * @author     Jamie Pratt <me@jamiep.org>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-final class stats_from_steps_walkthrough_test extends \mod_quiz\attempt_walkthrough_from_csv_test {
+final class stats_from_steps_walkthrough_test extends attempt_walkthrough_from_csv_testcase {
 
     /**
      * @var quiz_statistics_report object to do stats calculations.
      */
     protected $report;
 
-    protected function get_full_path_of_csv_file(string $setname, string $test): string {
+    protected static function get_full_path_of_csv_file(string $setname, string $test): string {
         // Overridden here so that __DIR__ points to the path of this file.
         return  __DIR__."/fixtures/{$setname}{$test}.csv";
     }
@@ -61,6 +61,27 @@ final class stats_from_steps_walkthrough_test extends \mod_quiz\attempt_walkthro
      * @var string[] names of the files which contain the test data.
      */
     protected $files = ['questions', 'steps', 'results', 'qstats', 'responsecounts'];
+
+    /**
+     * Data provider method for test_walkthrough_from_csv. Called by PHPUnit.
+     *
+     * @return array One array element for each run of the test. Each element contains an array with the params for
+     *                  test_walkthrough_from_csv.
+     */
+    public static function get_data_for_walkthrough(): array {
+        $quizzes = self::load_csv_data_file('quizzes')['quizzes'];
+        $datasets = [];
+        foreach ($quizzes as $quizsettings) {
+            $dataset = [];
+            foreach (self::$files as $file) {
+                if (file_exists(self::get_full_path_of_csv_file($file, $quizsettings['testnumber']))) {
+                    $dataset[$file] = self::load_csv_data_file($file, $quizsettings['testnumber'])[$file];
+                }
+            }
+            $datasets[] = [$quizsettings, $dataset];
+        }
+        return $datasets;
+    }
 
     /**
      * Create a quiz add questions to it, walk through quiz attempts and then check results.
