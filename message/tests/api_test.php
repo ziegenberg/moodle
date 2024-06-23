@@ -21,8 +21,7 @@ use core_message\tests\helper as testhelper;
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
-
-require_once($CFG->dirroot . '/message/tests/messagelib_test.php');
+require_once($CFG->dirroot . '/message/lib.php');
 
 /**
  * Test message API.
@@ -32,18 +31,33 @@ require_once($CFG->dirroot . '/message/tests/messagelib_test.php');
  * @copyright 2016 Mark Nelson <markn@moodle.com>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-final class api_test extends messagelib_test {
+final class api_test extends \advanced_testcase {
+
+    /** @var phpunit_message_sink keep track of messages. */
+    protected $messagesink = null;
+
+    /**
+     * Test set up.
+     *
+     * This is executed before running any test in this file.
+     */
+    public function setUp(): void {
+        parent::setUp();
+        $this->preventResetByRollback(); // Messaging is not compatible with transactions.
+        $this->messagesink = $this->redirectMessages();
+        $this->resetAfterTest();
+    }
 
     public function test_mark_all_read_for_user_touser(): void {
         $sender = $this->getDataGenerator()->create_user(array('firstname' => 'Test1', 'lastname' => 'User1'));
         $recipient = $this->getDataGenerator()->create_user(array('firstname' => 'Test2', 'lastname' => 'User2'));
 
-        $this->send_fake_message($sender, $recipient, 'Notification', 1);
-        $this->send_fake_message($sender, $recipient, 'Notification', 1);
-        $this->send_fake_message($sender, $recipient, 'Notification', 1);
-        $this->send_fake_message($sender, $recipient);
-        $this->send_fake_message($sender, $recipient);
-        $this->send_fake_message($sender, $recipient);
+        testhelper::send_fake_message($sender, $recipient, 'Notification', 1);
+        testhelper::send_fake_message($sender, $recipient, 'Notification', 1);
+        testhelper::send_fake_message($sender, $recipient, 'Notification', 1);
+        testhelper::send_fake_message($sender, $recipient);
+        testhelper::send_fake_message($sender, $recipient);
+        testhelper::send_fake_message($sender, $recipient);
 
         $this->assertEquals(1, api::count_unread_conversations($recipient));
 
@@ -59,18 +73,18 @@ final class api_test extends messagelib_test {
         $sender2 = $this->getDataGenerator()->create_user(array('firstname' => 'Test3', 'lastname' => 'User3'));
         $recipient = $this->getDataGenerator()->create_user(array('firstname' => 'Test2', 'lastname' => 'User2'));
 
-        $this->send_fake_message($sender1, $recipient, 'Notification', 1);
-        $this->send_fake_message($sender1, $recipient, 'Notification', 1);
-        $this->send_fake_message($sender1, $recipient, 'Notification', 1);
-        $this->send_fake_message($sender1, $recipient);
-        $this->send_fake_message($sender1, $recipient);
-        $this->send_fake_message($sender1, $recipient);
-        $this->send_fake_message($sender2, $recipient, 'Notification', 1);
-        $this->send_fake_message($sender2, $recipient, 'Notification', 1);
-        $this->send_fake_message($sender2, $recipient, 'Notification', 1);
-        $this->send_fake_message($sender2, $recipient);
-        $this->send_fake_message($sender2, $recipient);
-        $this->send_fake_message($sender2, $recipient);
+        testhelper::send_fake_message($sender1, $recipient, 'Notification', 1);
+        testhelper::send_fake_message($sender1, $recipient, 'Notification', 1);
+        testhelper::send_fake_message($sender1, $recipient, 'Notification', 1);
+        testhelper::send_fake_message($sender1, $recipient);
+        testhelper::send_fake_message($sender1, $recipient);
+        testhelper::send_fake_message($sender1, $recipient);
+        testhelper::send_fake_message($sender2, $recipient, 'Notification', 1);
+        testhelper::send_fake_message($sender2, $recipient, 'Notification', 1);
+        testhelper::send_fake_message($sender2, $recipient, 'Notification', 1);
+        testhelper::send_fake_message($sender2, $recipient);
+        testhelper::send_fake_message($sender2, $recipient);
+        testhelper::send_fake_message($sender2, $recipient);
 
         $this->assertEquals(2, api::count_unread_conversations($recipient));
 
@@ -657,11 +671,11 @@ final class api_test extends messagelib_test {
         $time = 1;
         testhelper::send_fake_message_to_conversation($user1, $sc->id, 'Test message to self!', $time);
         testhelper::send_fake_message_to_conversation($user1, $gc->id, 'My hero!', $time + 1);
-        $this->send_fake_message($user3, $user1, 'Don\'t block me.', 0, $time + 2);
-        $this->send_fake_message($user1, $user2, 'Yo!', 0, $time + 3);
-        $this->send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 4);
-        $this->send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 5);
-        $this->send_fake_message($user2, $user1, 'Word.', 0, $time + 6);
+        testhelper::send_fake_message($user3, $user1, 'Don\'t block me.', 0, $time + 2);
+        testhelper::send_fake_message($user1, $user2, 'Yo!', 0, $time + 3);
+        testhelper::send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 4);
+        testhelper::send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 5);
+        testhelper::send_fake_message($user2, $user1, 'Word.', 0, $time + 6);
 
         $convid = api::get_conversation_between_users([$user1->id, $user2->id]);
         $conv2id = api::get_conversation_between_users([$user1->id, $user3->id]);
@@ -759,19 +773,19 @@ final class api_test extends messagelib_test {
 
         // Create some conversations for user1.
         $time = 1;
-        $this->send_fake_message($user1, $user2, 'Yo!', 0, $time + 1);
-        $this->send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 2);
-        $this->send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 3);
-        $messageid1 = $this->send_fake_message($user2, $user1, 'Word.', 0, $time + 4);
+        testhelper::send_fake_message($user1, $user2, 'Yo!', 0, $time + 1);
+        testhelper::send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 2);
+        testhelper::send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 3);
+        testhelper::send_fake_message($user2, $user1, 'Word.', 0, $time + 4);
 
-        $this->send_fake_message($user1, $user3, 'Booyah', 0, $time + 5);
-        $this->send_fake_message($user3, $user1, 'Whaaat?', 0, $time + 6);
-        $this->send_fake_message($user1, $user3, 'Nothing.', 0, $time + 7);
-        $messageid2 = $this->send_fake_message($user3, $user1, 'Cool.', 0, $time + 8);
+        testhelper::send_fake_message($user1, $user3, 'Booyah', 0, $time + 5);
+        testhelper::send_fake_message($user3, $user1, 'Whaaat?', 0, $time + 6);
+        testhelper::send_fake_message($user1, $user3, 'Nothing.', 0, $time + 7);
+        testhelper::send_fake_message($user3, $user1, 'Cool.', 0, $time + 8);
 
-        $this->send_fake_message($user1, $user4, 'Hey mate, you see the new messaging UI in Moodle?', 0, $time + 9);
-        $this->send_fake_message($user4, $user1, 'Yah brah, it\'s pretty rad.', 0, $time + 10);
-        $messageid3 = $this->send_fake_message($user1, $user4, 'Dope.', 0, $time + 11);
+        testhelper::send_fake_message($user1, $user4, 'Hey mate, you see the new messaging UI in Moodle?', 0, $time + 9);
+        testhelper::send_fake_message($user4, $user1, 'Yah brah, it\'s pretty rad.', 0, $time + 10);
+        testhelper::send_fake_message($user1, $user4, 'Dope.', 0, $time + 11);
 
         // Favourite the first 2 conversations for user1.
         $convoids = [];
@@ -818,19 +832,19 @@ final class api_test extends messagelib_test {
 
         // Create some conversations for user1.
         $time = 1;
-        $this->send_fake_message($user1, $user2, 'Yo!', 0, $time + 1);
-        $this->send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 2);
-        $this->send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 3);
-        $messageid1 = $this->send_fake_message($user2, $user1, 'Word.', 0, $time + 4);
+        testhelper::send_fake_message($user1, $user2, 'Yo!', 0, $time + 1);
+        testhelper::send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 2);
+        testhelper::send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 3);
+        testhelper::send_fake_message($user2, $user1, 'Word.', 0, $time + 4);
 
-        $this->send_fake_message($user1, $user3, 'Booyah', 0, $time + 5);
-        $this->send_fake_message($user3, $user1, 'Whaaat?', 0, $time + 6);
-        $this->send_fake_message($user1, $user3, 'Nothing.', 0, $time + 7);
-        $messageid2 = $this->send_fake_message($user3, $user1, 'Cool.', 0, $time + 8);
+        testhelper::send_fake_message($user1, $user3, 'Booyah', 0, $time + 5);
+        testhelper::send_fake_message($user3, $user1, 'Whaaat?', 0, $time + 6);
+        testhelper::send_fake_message($user1, $user3, 'Nothing.', 0, $time + 7);
+        testhelper::send_fake_message($user3, $user1, 'Cool.', 0, $time + 8);
 
-        $this->send_fake_message($user1, $user4, 'Hey mate, you see the new messaging UI in Moodle?', 0, $time + 9);
-        $this->send_fake_message($user4, $user1, 'Yah brah, it\'s pretty rad.', 0, $time + 10);
-        $messageid3 = $this->send_fake_message($user1, $user4, 'Dope.', 0, $time + 11);
+        testhelper::send_fake_message($user1, $user4, 'Hey mate, you see the new messaging UI in Moodle?', 0, $time + 9);
+        testhelper::send_fake_message($user4, $user1, 'Yah brah, it\'s pretty rad.', 0, $time + 10);
+        testhelper::send_fake_message($user1, $user4, 'Dope.', 0, $time + 11);
 
         // Favourite the all conversations for user1.
         $convoids = [];
@@ -865,15 +879,15 @@ final class api_test extends messagelib_test {
 
         // Send some messages back and forth, have some different conversations with different users.
         $time = 1;
-        $this->send_fake_message($user1, $user2, 'Yo!', 0, $time + 1);
-        $this->send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 2);
-        $this->send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 3);
-        $this->send_fake_message($user2, $user1, 'Word.', 0, $time + 4);
+        testhelper::send_fake_message($user1, $user2, 'Yo!', 0, $time + 1);
+        testhelper::send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 2);
+        testhelper::send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 3);
+        testhelper::send_fake_message($user2, $user1, 'Word.', 0, $time + 4);
 
-        $this->send_fake_message($user1, $user3, 'Booyah', 0, $time + 5);
-        $this->send_fake_message($user3, $user1, 'Whaaat?', 0, $time + 6);
-        $this->send_fake_message($user1, $user3, 'Nothing.', 0, $time + 7);
-        $this->send_fake_message($user3, $user1, 'Cool.', 0, $time + 8);
+        testhelper::send_fake_message($user1, $user3, 'Booyah', 0, $time + 5);
+        testhelper::send_fake_message($user3, $user1, 'Whaaat?', 0, $time + 6);
+        testhelper::send_fake_message($user1, $user3, 'Nothing.', 0, $time + 7);
+        testhelper::send_fake_message($user3, $user1, 'Cool.', 0, $time + 8);
 
         // Favourite the all conversations for user1.
         $convoids = [];
@@ -911,15 +925,15 @@ final class api_test extends messagelib_test {
 
         // Send some messages back and forth, have some different conversations with different users.
         $time = 1;
-        $this->send_fake_message($user1, $user2, 'Yo!', 0, $time + 1);
-        $this->send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 2);
-        $this->send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 3);
-        $this->send_fake_message($user2, $user1, 'Word.', 0, $time + 4);
+        testhelper::send_fake_message($user1, $user2, 'Yo!', 0, $time + 1);
+        testhelper::send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 2);
+        testhelper::send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 3);
+        testhelper::send_fake_message($user2, $user1, 'Word.', 0, $time + 4);
 
-        $this->send_fake_message($user1, $user3, 'Booyah', 0, $time + 5);
-        $this->send_fake_message($user3, $user1, 'Whaaat?', 0, $time + 6);
-        $this->send_fake_message($user1, $user3, 'Nothing.', 0, $time + 7);
-        $this->send_fake_message($user3, $user1, 'Cool.', 0, $time + 8);
+        testhelper::send_fake_message($user1, $user3, 'Booyah', 0, $time + 5);
+        testhelper::send_fake_message($user3, $user1, 'Whaaat?', 0, $time + 6);
+        testhelper::send_fake_message($user1, $user3, 'Nothing.', 0, $time + 7);
+        testhelper::send_fake_message($user3, $user1, 'Cool.', 0, $time + 8);
 
         // Favourite the first conversation as user 1.
         $conversationid1 = api::get_conversation_between_users([$user1->id, $user2->id]);
@@ -960,15 +974,15 @@ final class api_test extends messagelib_test {
 
         // Send some messages back and forth, have some different conversations with different users.
         $time = 1;
-        $this->send_fake_message($user1, $user2, 'Yo!', 0, $time + 1);
-        $this->send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 2);
-        $this->send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 3);
-        $this->send_fake_message($user2, $user1, 'Word.', 0, $time + 4);
+        testhelper::send_fake_message($user1, $user2, 'Yo!', 0, $time + 1);
+        testhelper::send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 2);
+        testhelper::send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 3);
+        testhelper::send_fake_message($user2, $user1, 'Word.', 0, $time + 4);
 
-        $this->send_fake_message($user1, $user3, 'Booyah', 0, $time + 5);
-        $this->send_fake_message($user3, $user1, 'Whaaat?', 0, $time + 6);
-        $this->send_fake_message($user1, $user3, 'Nothing.', 0, $time + 7);
-        $this->send_fake_message($user3, $user1, 'Cool.', 0, $time + 8);
+        testhelper::send_fake_message($user1, $user3, 'Booyah', 0, $time + 5);
+        testhelper::send_fake_message($user3, $user1, 'Whaaat?', 0, $time + 6);
+        testhelper::send_fake_message($user1, $user3, 'Nothing.', 0, $time + 7);
+        testhelper::send_fake_message($user3, $user1, 'Cool.', 0, $time + 8);
 
         // Try to favourite the first conversation as user 3, who is not a member.
         $conversationid1 = api::get_conversation_between_users([$user1->id, $user2->id]);
@@ -987,15 +1001,15 @@ final class api_test extends messagelib_test {
 
         // Send some messages back and forth, have some different conversations with different users.
         $time = 1;
-        $this->send_fake_message($user1, $user2, 'Yo!', 0, $time + 1);
-        $this->send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 2);
-        $this->send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 3);
-        $this->send_fake_message($user2, $user1, 'Word.', 0, $time + 4);
+        testhelper::send_fake_message($user1, $user2, 'Yo!', 0, $time + 1);
+        testhelper::send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 2);
+        testhelper::send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 3);
+        testhelper::send_fake_message($user2, $user1, 'Word.', 0, $time + 4);
 
-        $this->send_fake_message($user1, $user3, 'Booyah', 0, $time + 5);
-        $this->send_fake_message($user3, $user1, 'Whaaat?', 0, $time + 6);
-        $this->send_fake_message($user1, $user3, 'Nothing.', 0, $time + 7);
-        $this->send_fake_message($user3, $user1, 'Cool.', 0, $time + 8);
+        testhelper::send_fake_message($user1, $user3, 'Booyah', 0, $time + 5);
+        testhelper::send_fake_message($user3, $user1, 'Whaaat?', 0, $time + 6);
+        testhelper::send_fake_message($user1, $user3, 'Nothing.', 0, $time + 7);
+        testhelper::send_fake_message($user3, $user1, 'Cool.', 0, $time + 8);
 
         // Favourite the first conversation as user 1 and the second as user 3.
         $conversationid1 = api::get_conversation_between_users([$user1->id, $user2->id]);
@@ -1029,10 +1043,10 @@ final class api_test extends messagelib_test {
 
         // Send some messages back and forth, have some different conversations with different users.
         $time = 1;
-        $this->send_fake_message($user1, $user2, 'Yo!', 0, $time + 1);
-        $this->send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 2);
-        $this->send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 3);
-        $this->send_fake_message($user2, $user1, 'Word.', 0, $time + 4);
+        testhelper::send_fake_message($user1, $user2, 'Yo!', 0, $time + 1);
+        testhelper::send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 2);
+        testhelper::send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 3);
+        testhelper::send_fake_message($user2, $user1, 'Word.', 0, $time + 4);
 
         // Now try to unfavourite the conversation as user 1.
         $conversationid1 = api::get_conversation_between_users([$user1->id, $user2->id]);
@@ -2115,7 +2129,7 @@ final class api_test extends messagelib_test {
             $subject    = $messagedata['subject'];
 
             if (isset($messagedata['state']) && $messagedata['state'] == 'unread') {
-                $messageid = $this->send_fake_message($from, $to, $subject);
+                $messageid = testhelper::send_fake_message($from, $to, $subject);
             } else {
                 // If there is no state, or the state is not 'unread', assume the message is read.
                 $messageid = message_post_message($from, $to, $subject, FORMAT_PLAIN);
@@ -2727,10 +2741,10 @@ final class api_test extends messagelib_test {
 
         // Send some messages back and forth.
         $time = 1;
-        $this->send_fake_message($user1, $user2, 'Yo!', 0, $time + 1);
-        $this->send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 2);
-        $this->send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 3);
-        $this->send_fake_message($user2, $user1, 'Word.', 0, $time + 4);
+        testhelper::send_fake_message($user1, $user2, 'Yo!', 0, $time + 1);
+        testhelper::send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 2);
+        testhelper::send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 3);
+        testhelper::send_fake_message($user2, $user1, 'Word.', 0, $time + 4);
 
         $conversationid = api::get_conversation_between_users([$user1->id, $user2->id]);
 
@@ -2763,10 +2777,10 @@ final class api_test extends messagelib_test {
 
         // Send some messages back and forth.
         $time = 1;
-        $this->send_fake_message($user1, $user2, 'Yo!', 0, $time + 1);
-        $this->send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 2);
-        $this->send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 3);
-        $this->send_fake_message($user2, $user1, 'Word.', 0, $time + 4);
+        testhelper::send_fake_message($user1, $user2, 'Yo!', 0, $time + 1);
+        testhelper::send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 2);
+        testhelper::send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 3);
+        testhelper::send_fake_message($user2, $user1, 'Word.', 0, $time + 4);
 
         $conversationid = api::get_conversation_between_users([$user1->id, $user2->id]);
 
@@ -2802,10 +2816,10 @@ final class api_test extends messagelib_test {
 
         // Send some messages back and forth.
         $time = 1;
-        $m1id = $this->send_fake_message($user1, $user2, 'Yo!', 0, $time + 1);
-        $m2id = $this->send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 2);
-        $m3id = $this->send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 3);
-        $m4id = $this->send_fake_message($user2, $user1, 'Word.', 0, $time + 4);
+        $m1id = testhelper::send_fake_message($user1, $user2, 'Yo!', 0, $time + 1);
+        $m2id = testhelper::send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 2);
+        $m3id = testhelper::send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 3);
+        $m4id = testhelper::send_fake_message($user2, $user1, 'Word.', 0, $time + 4);
         $m5id = testhelper::send_fake_message_to_conversation($user1, $sc1->id, 'Hi to myself!', $time + 5);
         $m6id = testhelper::send_fake_message_to_conversation($user2, $sc2->id, 'I am talking with myself', $time + 6);
 
@@ -2877,19 +2891,19 @@ final class api_test extends messagelib_test {
         $this->setUser($user1);
 
         // Send some messages back and forth, have some different conversations with different users.
-        $this->send_fake_message($user1, $user2, 'Yo!');
-        $this->send_fake_message($user2, $user1, 'Sup mang?');
-        $this->send_fake_message($user1, $user2, 'Writing PHPUnit tests!');
-        $this->send_fake_message($user2, $user1, 'Word.');
+        testhelper::send_fake_message($user1, $user2, 'Yo!');
+        testhelper::send_fake_message($user2, $user1, 'Sup mang?');
+        testhelper::send_fake_message($user1, $user2, 'Writing PHPUnit tests!');
+        testhelper::send_fake_message($user2, $user1, 'Word.');
 
-        $this->send_fake_message($user1, $user3, 'Booyah');
-        $this->send_fake_message($user3, $user1, 'Whaaat?');
-        $this->send_fake_message($user1, $user3, 'Nothing.');
-        $this->send_fake_message($user3, $user1, 'Cool.');
+        testhelper::send_fake_message($user1, $user3, 'Booyah');
+        testhelper::send_fake_message($user3, $user1, 'Whaaat?');
+        testhelper::send_fake_message($user1, $user3, 'Nothing.');
+        testhelper::send_fake_message($user3, $user1, 'Cool.');
 
-        $this->send_fake_message($user1, $user4, 'Hey mate, you see the new messaging UI in Moodle?');
-        $this->send_fake_message($user4, $user1, 'Yah brah, it\'s pretty rad.');
-        $this->send_fake_message($user1, $user4, 'Dope.');
+        testhelper::send_fake_message($user1, $user4, 'Hey mate, you see the new messaging UI in Moodle?');
+        testhelper::send_fake_message($user4, $user1, 'Yah brah, it\'s pretty rad.');
+        testhelper::send_fake_message($user1, $user4, 'Dope.');
 
         // Check the amount for the current user.
         $this->assertEquals(3, api::count_unread_conversations());
@@ -2914,19 +2928,19 @@ final class api_test extends messagelib_test {
         $this->setUser($user1);
 
         // Send some messages back and forth, have some different conversations with different users.
-        $this->send_fake_message($user1, $user2, 'Yo!');
-        $this->send_fake_message($user2, $user1, 'Sup mang?');
-        $this->send_fake_message($user1, $user2, 'Writing PHPUnit tests!');
-        $this->send_fake_message($user2, $user1, 'Word.');
+        testhelper::send_fake_message($user1, $user2, 'Yo!');
+        testhelper::send_fake_message($user2, $user1, 'Sup mang?');
+        testhelper::send_fake_message($user1, $user2, 'Writing PHPUnit tests!');
+        testhelper::send_fake_message($user2, $user1, 'Word.');
 
-        $this->send_fake_message($user1, $user3, 'Booyah');
-        $this->send_fake_message($user3, $user1, 'Whaaat?');
-        $this->send_fake_message($user1, $user3, 'Nothing.');
-        $this->send_fake_message($user3, $user1, 'Cool.');
+        testhelper::send_fake_message($user1, $user3, 'Booyah');
+        testhelper::send_fake_message($user3, $user1, 'Whaaat?');
+        testhelper::send_fake_message($user1, $user3, 'Nothing.');
+        testhelper::send_fake_message($user3, $user1, 'Cool.');
 
-        $this->send_fake_message($user1, $user4, 'Hey mate, you see the new messaging UI in Moodle?');
-        $this->send_fake_message($user4, $user1, 'Yah brah, it\'s pretty rad.');
-        $this->send_fake_message($user1, $user4, 'Dope.');
+        testhelper::send_fake_message($user1, $user4, 'Hey mate, you see the new messaging UI in Moodle?');
+        testhelper::send_fake_message($user4, $user1, 'Yah brah, it\'s pretty rad.');
+        testhelper::send_fake_message($user1, $user4, 'Dope.');
 
         // Let's disable the last conversation.
         $conversationid = api::get_conversation_between_users([$user1->id, $user4->id]);
@@ -3256,7 +3270,7 @@ final class api_test extends messagelib_test {
             api::MESSAGE_CONVERSATION_TYPE_INDIVIDUAL,
             [
                 $user1->id,
-                $user2->id
+                $user2->id,
             ]
         );
 
@@ -3266,7 +3280,7 @@ final class api_test extends messagelib_test {
             [
                 $user1->id,
                 $user2->id,
-                $user3->id
+                $user3->id,
             ]
         );
 
@@ -3313,7 +3327,7 @@ final class api_test extends messagelib_test {
             api::MESSAGE_CONVERSATION_TYPE_INDIVIDUAL,
             [
                 $user1->id,
-                $user2->id
+                $user2->id,
             ]
         );
 
@@ -3323,7 +3337,7 @@ final class api_test extends messagelib_test {
             [
                 $user1->id,
                 $user2->id,
-                $user3->id
+                $user3->id,
             ]
         );
 
@@ -3361,7 +3375,7 @@ final class api_test extends messagelib_test {
             api::MESSAGE_CONVERSATION_TYPE_INDIVIDUAL,
             [
                 $user1->id,
-                $user2->id
+                $user2->id,
             ]
         );
 
@@ -3371,7 +3385,7 @@ final class api_test extends messagelib_test {
             [
                 $user1->id,
                 $user2->id,
-                $user3->id
+                $user3->id,
             ]
         );
 
@@ -3414,7 +3428,7 @@ final class api_test extends messagelib_test {
             api::MESSAGE_CONVERSATION_TYPE_INDIVIDUAL,
             [
                 $user1->id,
-                $user2->id
+                $user2->id,
             ]
         );
 
@@ -3424,7 +3438,7 @@ final class api_test extends messagelib_test {
             [
                 $user1->id,
                 $user2->id,
-                $user3->id
+                $user3->id,
             ]
         );
 
@@ -3451,7 +3465,7 @@ final class api_test extends messagelib_test {
             api::MESSAGE_CONVERSATION_TYPE_INDIVIDUAL,
             [
                 $user1->id,
-                $user2->id
+                $user2->id,
             ]
         );
 
@@ -3461,7 +3475,7 @@ final class api_test extends messagelib_test {
             [
                 $user1->id,
                 $user2->id,
-                $user3->id
+                $user3->id,
             ]
         );
 
@@ -3497,7 +3511,7 @@ final class api_test extends messagelib_test {
             api::MESSAGE_CONVERSATION_TYPE_INDIVIDUAL,
             [
                 $user1->id,
-                $user2->id
+                $user2->id,
             ]
         );
 
@@ -3507,7 +3521,7 @@ final class api_test extends messagelib_test {
             [
                 $user1->id,
                 $user2->id,
-                $user3->id
+                $user3->id,
             ]
         );
 
@@ -3799,10 +3813,10 @@ final class api_test extends messagelib_test {
         $user1 = self::getDataGenerator()->create_user();
         $user2 = self::getDataGenerator()->create_user();
 
-        $this->send_fake_message($user1, $user2);
-        $m2id = $this->send_fake_message($user1, $user2);
-        $this->send_fake_message($user2, $user1);
-        $m4id = $this->send_fake_message($user2, $user1);
+        testhelper::send_fake_message($user1, $user2);
+        $m2id = testhelper::send_fake_message($user1, $user2);
+        testhelper::send_fake_message($user2, $user1);
+        $m4id = testhelper::send_fake_message($user2, $user1);
 
         $m2 = $DB->get_record('messages', ['id' => $m2id]);
         $m4 = $DB->get_record('messages', ['id' => $m4id]);
@@ -3839,10 +3853,10 @@ final class api_test extends messagelib_test {
         $user1 = self::getDataGenerator()->create_user();
         $user2 = self::getDataGenerator()->create_user();
 
-        $this->send_fake_message($user1, $user2, 'Notification 1', 1);
-        $n2id = $this->send_fake_message($user1, $user2, 'Notification 2', 1);
-        $this->send_fake_message($user2, $user1, 'Notification 3', 1);
-        $n4id = $this->send_fake_message($user2, $user1, 'Notification 4', 1);
+        testhelper::send_fake_message($user1, $user2, 'Notification 1', 1);
+        $n2id = testhelper::send_fake_message($user1, $user2, 'Notification 2', 1);
+        testhelper::send_fake_message($user2, $user1, 'Notification 3', 1);
+        $n4id = testhelper::send_fake_message($user2, $user1, 'Notification 4', 1);
 
         $n2 = $DB->get_record('notifications', ['id' => $n2id]);
         $n4 = $DB->get_record('notifications', ['id' => $n4id]);
@@ -3888,7 +3902,7 @@ final class api_test extends messagelib_test {
             api::MESSAGE_CONVERSATION_TYPE_INDIVIDUAL,
             [
                 $user1->id,
-                $user2->id
+                $user2->id,
             ]
         );
         $conversationid = $conversation->id;
@@ -3909,7 +3923,7 @@ final class api_test extends messagelib_test {
             api::MESSAGE_CONVERSATION_TYPE_INDIVIDUAL,
             [
                 $user1->id,
-                $user2->id
+                $user2->id,
             ]
         );
         $conversationid = $conversation->id;
@@ -3930,7 +3944,7 @@ final class api_test extends messagelib_test {
             api::MESSAGE_CONVERSATION_TYPE_GROUP,
             [
                 $user1->id,
-                $user2->id
+                $user2->id,
             ]
         );
         $conversationid = $conversation->id;
@@ -3962,7 +3976,7 @@ final class api_test extends messagelib_test {
             api::MESSAGE_CONVERSATION_TYPE_GROUP,
             [
                 $user1->id,
-                $user2->id
+                $user2->id,
             ]
         );
         $conversationid = $conversation->id;
@@ -3984,7 +3998,7 @@ final class api_test extends messagelib_test {
             api::MESSAGE_CONVERSATION_TYPE_GROUP,
             [
                 $user1->id,
-                $user2->id
+                $user2->id,
             ]
         );
         $conversationid = $conversation->id;
@@ -4008,7 +4022,7 @@ final class api_test extends messagelib_test {
             api::MESSAGE_CONVERSATION_TYPE_GROUP,
             [
                 $user1->id,
-                $user2->id
+                $user2->id,
             ]
         );
         $conversationid = $conversation->id;
@@ -4030,7 +4044,7 @@ final class api_test extends messagelib_test {
             api::MESSAGE_CONVERSATION_TYPE_GROUP,
             [
                 $user1->id,
-                $user2->id
+                $user2->id,
             ]
         );
         $conversationid = $conversation->id;
@@ -4052,7 +4066,7 @@ final class api_test extends messagelib_test {
             api::MESSAGE_CONVERSATION_TYPE_INDIVIDUAL,
             [
                 $user1->id,
-                $user2->id
+                $user2->id,
             ]
         );
         $conversationid = $conversation->id;
@@ -4072,7 +4086,7 @@ final class api_test extends messagelib_test {
             api::MESSAGE_CONVERSATION_TYPE_GROUP,
             [
                 $user1->id,
-                $user2->id
+                $user2->id,
             ]
         );
         $conversationid = $conversation->id;
@@ -4104,7 +4118,7 @@ final class api_test extends messagelib_test {
             api::MESSAGE_CONVERSATION_TYPE_GROUP,
             [
                 $user1->id,
-                $user2->id
+                $user2->id,
             ]
         );
         $conversationid = $conversation->id;
@@ -4127,7 +4141,7 @@ final class api_test extends messagelib_test {
             api::MESSAGE_CONVERSATION_TYPE_GROUP,
             [
                 $user1->id,
-                $user2->id
+                $user2->id,
             ]
         );
         $conversationid = $conversation->id;
@@ -4151,7 +4165,7 @@ final class api_test extends messagelib_test {
             api::MESSAGE_CONVERSATION_TYPE_GROUP,
             [
                 $user1->id,
-                $user2->id
+                $user2->id,
             ]
         );
         $conversationid = $conversation->id;
@@ -4175,7 +4189,7 @@ final class api_test extends messagelib_test {
             api::MESSAGE_CONVERSATION_TYPE_GROUP,
             [
                 $user1->id,
-                $user2->id
+                $user2->id,
             ]
         );
         $conversationid = $conversation->id;
@@ -4450,7 +4464,7 @@ final class api_test extends messagelib_test {
             api::MESSAGE_CONVERSATION_TYPE_INDIVIDUAL,
             [
                 $user1->id,
-                $user2->id
+                $user2->id,
             ]
         );
         $conversationid = $conversation->id;
@@ -4481,7 +4495,7 @@ final class api_test extends messagelib_test {
             api::MESSAGE_CONVERSATION_TYPE_INDIVIDUAL,
             [
                 $user1->id,
-                $user2->id
+                $user2->id,
             ]
         );
         $conversationid = $conversation->id;
@@ -4503,7 +4517,7 @@ final class api_test extends messagelib_test {
             api::MESSAGE_CONVERSATION_TYPE_INDIVIDUAL,
             [
                 $user1->id,
-                $user2->id
+                $user2->id,
             ]
         );
         $conversationid = $conversation->id;
@@ -6109,8 +6123,8 @@ final class api_test extends messagelib_test {
 
         // Send 3 messages to a group conversation.
         $mgid1 = testhelper::send_fake_message_to_conversation($teacher, $convgroup->id);
-        $mgid2 = testhelper::send_fake_message_to_conversation($student1, $convgroup->id);
-        $mgid3 = testhelper::send_fake_message_to_conversation($student2, $convgroup->id);
+        testhelper::send_fake_message_to_conversation($student1, $convgroup->id);
+        testhelper::send_fake_message_to_conversation($student2, $convgroup->id);
 
         // Delete message 1 for all users.
         api::delete_message_for_all_users($mgid1);
@@ -6155,7 +6169,7 @@ final class api_test extends messagelib_test {
 
         // Send 2 messages in a individual conversation.
         $mid1 = testhelper::send_fake_message_to_conversation($teacher, $convindividual->id);
-        $mid2 = testhelper::send_fake_message_to_conversation($student1, $convindividual->id);
+        testhelper::send_fake_message_to_conversation($student1, $convindividual->id);
 
         // Delete the first message for all users.
         api::delete_message_for_all_users($mid1);

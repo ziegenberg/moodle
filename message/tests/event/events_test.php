@@ -25,11 +25,9 @@
 
 namespace core_message\event;
 
-defined('MOODLE_INTERNAL') || die();
+use advanced_testcase;
+use core_message\tests\helper as testhelper;
 
-global $CFG;
-
-require_once($CFG->dirroot . '/message/tests/messagelib_test.php');
 
 /**
  * Class containing the tests for message related events.
@@ -39,7 +37,7 @@ require_once($CFG->dirroot . '/message/tests/messagelib_test.php');
  * @copyright 2014 Mark Nelson <markn@moodle.com>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-final class events_test extends \core_message\messagelib_test {
+final class events_test extends advanced_testcase {
 
     /**
      * Test set up.
@@ -48,6 +46,7 @@ final class events_test extends \core_message\messagelib_test {
      */
     public function setUp(): void {
         parent::setUp();
+        $this->preventResetByRollback(); // Messaging is not compatible with transactions.
         $this->resetAfterTest();
     }
 
@@ -336,7 +335,7 @@ final class events_test extends \core_message\messagelib_test {
         $user1 = $this->getDataGenerator()->create_user();
         $user2 = $this->getDataGenerator()->create_user();
 
-        $messageid = $this->send_fake_message($user1, $user2);
+        $messageid = testhelper::send_fake_message($user1, $user2);
 
         // Trigger and capture the event.
         $sink = $this->redirectEvents();
@@ -370,7 +369,7 @@ final class events_test extends \core_message\messagelib_test {
         $user1 = $this->getDataGenerator()->create_user();
         $user2 = $this->getDataGenerator()->create_user();
 
-        $messageid = $this->send_fake_message($user1, $user2);
+        $messageid = testhelper::send_fake_message($user1, $user2);
 
         // Trigger and capture the event.
         $sink = $this->redirectEvents();
@@ -392,7 +391,7 @@ final class events_test extends \core_message\messagelib_test {
         $this->setUser($user1);
 
         // Create a read message.
-        $messageid = $this->send_fake_message($user1, $user2);
+        $messageid = testhelper::send_fake_message($user1, $user2);
         $m = $DB->get_record('messages', ['id' => $messageid]);
         \core_message\api::mark_message_as_read($user2->id, $m);
 
@@ -430,14 +429,14 @@ final class events_test extends \core_message\messagelib_test {
         // Send some messages back and forth.
         $time = 1;
         $messages = [];
-        $messages[] = $this->send_fake_message($user1, $user2, 'Yo!', 0, $time + 1);
-        $messages[] = $this->send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 2);
-        $messages[] = $this->send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 3);
-        $messages[] = $this->send_fake_message($user2, $user1, 'Word.', 0, $time + 4);
-        $messages[] = $this->send_fake_message($user1, $user2, 'You doing much?', 0, $time + 5);
-        $messages[] = $this->send_fake_message($user2, $user1, 'Nah', 0, $time + 6);
-        $messages[] = $this->send_fake_message($user1, $user2, 'You nubz0r!', 0, $time + 7);
-        $messages[] = $this->send_fake_message($user2, $user1, 'Ouch.', 0, $time + 8);
+        $messages[] = testhelper::send_fake_message($user1, $user2, 'Yo!', 0, $time + 1);
+        $messages[] = testhelper::send_fake_message($user2, $user1, 'Sup mang?', 0, $time + 2);
+        $messages[] = testhelper::send_fake_message($user1, $user2, 'Writing PHPUnit tests!', 0, $time + 3);
+        $messages[] = testhelper::send_fake_message($user2, $user1, 'Word.', 0, $time + 4);
+        $messages[] = testhelper::send_fake_message($user1, $user2, 'You doing much?', 0, $time + 5);
+        $messages[] = testhelper::send_fake_message($user2, $user1, 'Nah', 0, $time + 6);
+        $messages[] = testhelper::send_fake_message($user1, $user2, 'You nubz0r!', 0, $time + 7);
+        $messages[] = testhelper::send_fake_message($user2, $user1, 'Ouch.', 0, $time + 8);
 
         // Mark the last 4 messages as read.
         $m5 = $DB->get_record('messages', ['id' => $messages[4]]);
@@ -497,7 +496,7 @@ final class events_test extends \core_message\messagelib_test {
         $user2 = $this->getDataGenerator()->create_user();
 
         // Send a notification.
-        $notificationid = $this->send_fake_message($user1, $user2, 'Hello world!', 1);
+        $notificationid = testhelper::send_fake_message($user1, $user2, 'Hello world!', 1);
 
         // Containing courseid.
         $event = \core\event\notification_sent::create_from_ids($user1->id, $user2->id, $notificationid, $course->id);
@@ -547,7 +546,7 @@ final class events_test extends \core_message\messagelib_test {
         $user2 = $this->getDataGenerator()->create_user();
 
         // Send a notification.
-        $notificationid = $this->send_fake_message($user1, $user2, 'Hello world!', 1);
+        $notificationid = testhelper::send_fake_message($user1, $user2, 'Hello world!', 1);
 
         // Trigger and capture the event.
         $sink = $this->redirectEvents();

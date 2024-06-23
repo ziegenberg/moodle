@@ -33,9 +33,6 @@ require_once($CFG->dirroot . '/message/lib.php');
  */
 final class messagelib_test extends \advanced_testcase {
 
-    /** @var phpunit_message_sink keep track of messages. */
-    protected $messagesink = null;
-
     /**
      * Test set up.
      *
@@ -44,75 +41,7 @@ final class messagelib_test extends \advanced_testcase {
     public function setUp(): void {
         parent::setUp();
         $this->preventResetByRollback(); // Messaging is not compatible with transactions.
-        $this->messagesink = $this->redirectMessages();
         $this->resetAfterTest();
-    }
-
-    /**
-     * Send a fake message.
-     *
-     * {@link message_send()} does not support transaction, this function will simulate a message
-     * sent from a user to another. We should stop using it once {@link message_send()} will support
-     * transactions. This is not clean at all, this is just used to add rows to the table.
-     *
-     * @param \stdClass $userfrom user object of the one sending the message.
-     * @param \stdClass $userto user object of the one receiving the message.
-     * @param string $message message to send.
-     * @param int $notification if the message is a notification.
-     * @param int $time the time the message was sent
-     * @return int the id of the message
-     */
-    protected function send_fake_message($userfrom, $userto, $message = 'Hello world!', $notification = 0, $time = 0) {
-        global $DB;
-
-        if (empty($time)) {
-            $time = time();
-        }
-
-        if ($notification) {
-            $record = new \stdClass();
-            $record->useridfrom = $userfrom->id;
-            $record->useridto = $userto->id;
-            $record->subject = 'No subject';
-            $record->fullmessage = $message;
-            $record->smallmessage = $message;
-            $record->timecreated = $time;
-
-            return $DB->insert_record('notifications', $record);
-        }
-
-        if ($userfrom->id == $userto->id) {
-            // It's a self conversation.
-            $conversation = \core_message\api::get_self_conversation($userfrom->id);
-            if (empty($conversation)) {
-                $conversation = \core_message\api::create_conversation(
-                    \core_message\api::MESSAGE_CONVERSATION_TYPE_SELF,
-                    [$userfrom->id]
-                );
-            }
-            $conversationid = $conversation->id;
-        } else if (!$conversationid = \core_message\api::get_conversation_between_users([$userfrom->id, $userto->id])) {
-            // It's an individual conversation between two different users.
-            $conversation = \core_message\api::create_conversation(
-                \core_message\api::MESSAGE_CONVERSATION_TYPE_INDIVIDUAL,
-                [
-                    $userfrom->id,
-                    $userto->id
-                ]
-            );
-            $conversationid = $conversation->id;
-        }
-
-        // Ok, send the message.
-        $record = new \stdClass();
-        $record->useridfrom = $userfrom->id;
-        $record->conversationid = $conversationid;
-        $record->subject = 'No subject';
-        $record->fullmessage = $message;
-        $record->smallmessage = $message;
-        $record->timecreated = $time;
-
-        return $DB->insert_record('messages', $record);
     }
 
     /**
