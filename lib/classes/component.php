@@ -120,7 +120,7 @@ class component {
         \Firebase\JWT::class => 'lib/php-jwt/src',
         \ZipStream::class => 'lib/zipstream/src/',
         \MyCLabs\Enum::class => 'lib/php-enum/src',
-        \PhpXmlRpc::class => 'lib/phpxmlrpc',
+        \PhpXmlRpc::class => 'lib/phpxmlrpc/src',
         \Psr\Http\Client::class => 'lib/psr/http-client/src',
         \Psr\Http\Message::class => [
             'lib/psr/http-message/src',
