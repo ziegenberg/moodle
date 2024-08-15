@@ -14,44 +14,33 @@ STEPS:
         "phpoffice/phpspreadsheet": "^X.YY"
     },
     "replace": {
-        "ezyang/htmlpurifier": "*",
         "maennchen/zipstream-php": "*",
-        "myclabs/php-enum": "*",
-        "symfony/polyfill-mbstring": "*"
+        "psr/http-client": "*",
+        "psr/http-factory": "*",
+        "psr/simple-cache": "*"
     }
 }
  * Execute `composer require phpoffice/phpspreadsheet`
  * Check to make sure the following directories haven't been created
-   - /vendor/ezyang/htmlpurifier
    - /vendor/maennchen/*
-   - /vendor/myclabs/*
-   - /vendor/symfony/polyfill-mbstring
+   - /vendor/psr/*
  * If it has pulled these through, remove them from the required packages and run composer again.
  * Check any new libraries that have been added and make sure they do not exist in Moodle already.
  * If the following exist, remove the following folders (and their content):
+   - vendor/markbaker/matrix/examples
    - vendor/phpoffice/phpspreadsheet/bin
    - vendor/phpoffice/phpspreadsheet/docs
    - vendor/phpoffice/phpspreadsheet/samples
  * Remove all the hidden folders and files in vendor/phpoffice/phpspreadsheet/ (find . -name ".*"):
-   - .DS_Store
-   - .gitattributes
-   - .gitignore
-   - .php_cs.dist
-   - .sami.php
-   - .scrutinizer.yml
-   - .travis.yml
-   - .phpcs.xml.dist
-   - .php-cs-fixer.dist.php
-   - vendor/psr/simple-cache/.editorconfig
-   - vendor/psr/http-factory/.gitignore
-   - vendor/psr/http-factory/.pullapprove.yml
-   - vendor/markbaker/matrix/.github
    - vendor/markbaker/complex/.github
+   - vendor/markbaker/matrix/.github
+   - vendor/phpoffice/phpspreadsheet/.php-cs-fixer.dist.php
+   - vendor/phpoffice/phpspreadsheet/.phpcs.xml.dist
+   - vendor/phpoffice/phpspreadsheet/.readthedocs.yaml
  * Remove the next files in related to external testing/analysis that we don't need matrix/:
    - vendor/markbaker/matrix/infection.json.dist (PHP mutation testing framework configuration file)
    - vendor/markbaker/matrix/phpstan.neon (PHP static analyzer configuration file)
    - vendor/phpoffice/phpspreadsheet/phpstan-baseline.neon
-   - vendor/phpoffice/phpspreadsheet/phpstan-conditional.php
    - vendor/phpoffice/phpspreadsheet/phpstan.neon.dist
  * Shared/OLE has been removed because OLE is not DFSG compliant and is not being used in core code.
    Remove the files/folders (placed in vendor/phpoffice/phpspreadsheet/src/):
@@ -65,8 +54,10 @@ STEPS:
    - PhpSpreadsheet/Shared/Xls.php
    - PhpSpreadsheet/Writer/Xls.php
    - PhpSpreadsheet/Writer/Xls/*
- * Remove the old 'vendor' directory in lib/phpspreadsheet/
- * Copy contents of 'vendor' directory
+ * Remove the old 'markbaker' directory in lib/phpspreadsheet/
+ * Copy the 'vendor/markbaker' directory to lib/phpspreadsheet/
+ * Remove the old 'phpspreadsheet' directory in lib/phpspreadsheet/
+ * Copy the 'vendor/phpoffice/phpspreadsheet' directory to lib/phpspreadsheet/
  * Create a commit with only the library changes
  * Update lib/thirdpartylibs.xml
  * Apply the modifications described in the CHANGES section
