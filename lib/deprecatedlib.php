@@ -965,3 +965,48 @@ function check_igbinary322_version(environment_results $result) {
     \core\deprecation::emit_deprecation_if_present(__FUNCTION__);
     return null;
 }
+
+/**
+ * Encodes file serving url
+ *
+ * @deprecated use moodle_url factory methods instead
+ *
+ * @todo MDL-31071 deprecate this function
+ * @param string $urlbase
+ * @param string $path /filearea/itemid/dir/dir/file.exe
+ * @param bool $forcedownload
+ * @param bool $https https url required
+ * @return string encoded file url
+ */
+#[\core\attribute\deprecated(
+    replacement: 'core\url factory methods',
+    since: '5.0',
+    mdl: 'MDL-31071'
+)]
+function file_encode_url($urlbase, $path, $forcedownload=false, $https=false) {
+    \core\deprecation::emit_deprecation_if_present(__FUNCTION__);
+
+    global $CFG;
+
+    if ($CFG->slasharguments) {
+        $parts = explode('/', $path);
+        $parts = array_map('rawurlencode', $parts);
+        $path  = implode('/', $parts);
+        $return = $urlbase.$path;
+        if ($forcedownload) {
+            $return .= '?forcedownload=1';
+        }
+    } else {
+        $path = rawurlencode($path);
+        $return = $urlbase.'?file='.$path;
+        if ($forcedownload) {
+            $return .= '&amp;forcedownload=1';
+        }
+    }
+
+    if ($https) {
+        $return = str_replace('http://', 'https://', $return);
+    }
+
+    return $return;
+}
