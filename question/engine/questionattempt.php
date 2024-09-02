@@ -595,14 +595,15 @@ class question_attempt {
      * @return string the URL of that file.
      */
     public function get_response_file_url(stored_file $file) {
-        return file_encode_url(new moodle_url('/pluginfile.php'), '/' . implode('/', array(
-                $file->get_contextid(),
-                $file->get_component(),
-                $file->get_filearea(),
-                $this->usageid,
-                $this->slot,
-                $file->get_itemid())) .
-                $file->get_filepath() . $file->get_filename(), true);
+        return \core\url::make_pluginfile_url(
+            $file->get_contextid(),
+            $file->get_component(),
+            $file->get_filearea(),
+            implode('/', [$this->usageid, $this->slot, $file->get_itemid()]),
+            $file->get_filepath(),
+            $file->get_filename(),
+            true
+        )->out();
     }
 
     /**
