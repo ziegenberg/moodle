@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+use core\output\html_writer;
+
 /**
  * Class picture field for database activity
  *
@@ -21,7 +23,6 @@
  * @copyright  2005 Martin Dougiamas
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 class data_field_picture extends data_field_base {
     var $type = 'picture';
     var $previewwidth  = 50;
@@ -98,8 +99,16 @@ class data_field_picture extends data_field_base {
         }
         $str .= '<noscript>';
         if ($file) {
-            $src = file_encode_url($CFG->wwwroot.'/pluginfile.php/', $this->context->id.'/mod_data/content/'.$content->id.'/'.$file->get_filename());
-            $str .= '<img width="'.s($this->previewwidth).'" height="'.s($this->previewheight).'" src="'.$src.'" alt="" />';
+            $src = \core\url::make_pluginfile_url(
+                $this->context->id,
+                'mod_data',
+                'content',
+                $content->id,
+                '/',
+                '',
+                $file->get_filename()
+            );
+            $str .= html_writer::img($src->out(), '', ['width' => $this->previewwidth, 'height' => $this->previewheight]);
         }
         $str .= '</noscript>';
 

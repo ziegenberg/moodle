@@ -21,6 +21,7 @@
  */
 
 use mod_forum\local\entities\forum as forum_entity;
+use core\url;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -2594,7 +2595,7 @@ function forum_print_attachments($post, $cm, $type) {
                             'style' => 'max-width: 24px; max-height: 24px; vertical-align: middle;',
                     ]
             );
-            $path = file_encode_url($CFG->wwwroot.'/pluginfile.php', '/'.$context->id.'/mod_forum/attachment/'.$post->id.'/'.$filename);
+            $path = url::make_pluginfile_url($context->id, 'mod_forum', 'attachment', $post->id, '/', $filename)->out();
 
             if ($type == 'html') {
                 $output .= "<a href=\"$path\">$iconimage</a> ";
