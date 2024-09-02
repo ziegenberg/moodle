@@ -409,12 +409,20 @@ function page_export_contents($cm, $baseurl) {
     $fs = get_file_storage();
     $files = $fs->get_area_files($context->id, 'mod_page', 'content', 0, 'sortorder DESC, id ASC', false);
     foreach ($files as $fileinfo) {
-        $file = array();
+        $file = [];
         $file['type']         = 'file';
         $file['filename']     = $fileinfo->get_filename();
         $file['filepath']     = $fileinfo->get_filepath();
         $file['filesize']     = $fileinfo->get_filesize();
-        $file['fileurl']      = file_encode_url("$CFG->wwwroot/" . $baseurl, '/'.$context->id.'/mod_page/content/'.$page->revision.$fileinfo->get_filepath().$fileinfo->get_filename(), true);
+        $file['fileurl']      = \core\url::make_webservice_pluginfile_url(
+                                    $context->id,
+                                    'mod_page',
+                                    'content',
+                                    $page->revision,
+                                    $fileinfo->get_filepath(),
+                                    $fileinfo->get_filename(),
+                                    true
+                                )->out();
         $file['timecreated']  = $fileinfo->get_timecreated();
         $file['timemodified'] = $fileinfo->get_timemodified();
         $file['sortorder']    = $fileinfo->get_sortorder();
@@ -431,12 +439,20 @@ function page_export_contents($cm, $baseurl) {
 
     // page html conent
     $filename = 'index.html';
-    $pagefile = array();
+    $pagefile = [];
     $pagefile['type']         = 'file';
     $pagefile['filename']     = $filename;
     $pagefile['filepath']     = '/';
     $pagefile['filesize']     = 0;
-    $pagefile['fileurl']      = file_encode_url("$CFG->wwwroot/" . $baseurl, '/'.$context->id.'/mod_page/content/' . $filename, true);
+    $pagefile['fileurl']      = \core\url::make_webservice_pluginfile_url(
+                                    $context->id,
+                                    'mod_page',
+                                    'content',
+                                    null,
+                                    '/',
+                                    $filename,
+                                    true
+                                )->out();
     $pagefile['timecreated']  = null;
     $pagefile['timemodified'] = $page->timemodified;
     // make this file as main file

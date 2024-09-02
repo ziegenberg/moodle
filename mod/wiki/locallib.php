@@ -1484,7 +1484,8 @@ function wiki_print_upload_table($context, $filearea, $fileitemid, $deleteupload
 
             $checkbox .= " />";
 
-            $htmltable->data[] = array($checkbox, '<a href="' . file_encode_url($CFG->wwwroot . '/pluginfile.php', '/' . $context->id . '/wiki_upload/' . $fileitemid . '/' . $file->get_filename()) . '">' . $file->get_filename() . '</a>', "");
+            $url = \core\url::make_pluginfile_url($context->id, 'wiki_upload', '', $fileitemid, '/', $file->get_filename());
+            $htmltable->data[] = [$checkbox, '<a href="' . $url->out() . '">' . $file->get_filename() . '</a>', ""];
         }
     }
 

@@ -182,7 +182,11 @@ class file_info_stored extends file_info {
         } else {
             $path = '/'.$contextid.'/'.$component.'/'.$filearea.$filepath.$filename;
         }
-        return file_encode_url($this->urlbase, $path, $forcedownload, $https);
+        $url = \core\url::make_file_url($this->urlbase, $path, $forcedownload);
+        if ($https) {
+            $url->set_scheme('https');
+        }
+        return $url->out();
     }
 
     /**
