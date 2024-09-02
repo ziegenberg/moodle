@@ -98,7 +98,15 @@ class data_field_picture extends data_field_base {
         }
         $str .= '<noscript>';
         if ($file) {
-            $src = file_encode_url($CFG->wwwroot.'/pluginfile.php/', $this->context->id.'/mod_data/content/'.$content->id.'/'.$file->get_filename());
+            $src = \core\url::make_pluginfile_url(
+                $this->context->id,
+                'mod_data',
+                'content',
+                $content->id,
+                '/',
+                '',
+                $file->get_filename()
+            )->out();
             $str .= '<img width="'.s($this->previewwidth).'" height="'.s($this->previewheight).'" src="'.$src.'" alt="" />';
         }
         $str .= '</noscript>';
