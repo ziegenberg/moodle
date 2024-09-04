@@ -261,14 +261,26 @@ class redis extends handler {
                     }
                 }
 
-                if ($this->sslopts && !$this->connection->ping()) {
-                    /*
-                     * In case of a TLS connection, if phpredis client does not
-                     * communicate immediately with the server the connection hangs.
-                     * See https://github.com/phpredis/phpredis/issues/2332 .
-                     */
-                    throw new \RedisException("Ping failed");
+                // Check the server version.
+                // The session handler requires a version of Redis server with support for SET command options (at least 2.6.12).
+                // Note: In the case of a TLS connection, the connection will hang if the phpredis client does not communicate
+                // with the server immediately after connect(). See https://github.com/phpredis/phpredis/issues/2332.
+                // This version check satisfies that requirement.
+                try {
+                    $serverversion = $this->connection->info('server')['redis_version'];
+                } catch (RedisException $e) {
+                    // Some proxies e.g envoy or twemproxy lack support of INFO command. So just assume we meet the minimum
+                    // version requirement.
+                    $serverversion = self::REDIS_SERVER_MIN_VERSION;
                 }
+                if (version_compare($serverversion, self::REDIS_SERVER_MIN_VERSION) < 0) {
+                    throw new RedisException(sprintf(
+                        "Version %s is not supported. The minimum version required is %s.",
+                        $serverversion,
+                        self::REDIS_SERVER_MIN_VERSION,
+                    ));
+                }
+
 
                 if ($this->database !== 0) {
                     if (!$this->connection->select($this->database)) {
@@ -276,12 +288,6 @@ class redis extends handler {
                     }
                 }
 
-                // The session handler requires a version of Redis server with support for SET command options (at least 2.6.12).
-                $serverversion = $this->connection->info('server')['redis_version'];
-                if (version_compare($serverversion, self::REDIS_SERVER_MIN_VERSION) <= 0) {
-                    throw new exception('sessionhandlerproblem', 'error', '', null,
-                        'redis server version must be at least ' . self::REDIS_SERVER_MIN_VERSION);
-                }
                 return true;
             } catch (RedisException $e) {
                 $logstring = "Failed to connect (try {$counter} out of {$maxnumberofretries}) to redis ";
