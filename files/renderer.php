@@ -1,7 +1,7 @@
 <?php
 ///////////////////////////////////////////////////////////////////////////
 //                                                                       //
-// This file is part of Moodle - http://moodle.org/                      //
+// This file is part of Moodle - https://moodle.org/                      //
 // Moodle - Modular Object-Oriented Dynamic Learning Environment         //
 //                                                                       //
 // Moodle is free software: you can redistribute it and/or modify        //
