@@ -148,6 +148,7 @@ class component {
         \Invoker::class => 'lib/php-di/invoker/src',
         \FastRoute::class => 'lib/nikic/fast-route/src',
         \Slim::class => 'lib/slim/slim/Slim',
+        \ParagonIE\ConstantTime::class => 'lib/paragonie/constant_time_encoding/src',
     ];
 
     /**
