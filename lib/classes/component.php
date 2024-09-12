@@ -118,7 +118,6 @@ class component {
         \RedeyeVentures\GeoPattern::class => 'lib/geopattern-php/GeoPattern',
         \Firebase\JWT::class => 'lib/php-jwt/src',
         \ZipStream::class => 'lib/zipstream/src/',
-        \MyCLabs\Enum::class => 'lib/php-enum/src',
         \PhpXmlRpc::class => 'lib/phpxmlrpc',
         \Psr\Http\Client::class => 'lib/psr/http-client/src',
         \Psr\Http\Message::class => [
