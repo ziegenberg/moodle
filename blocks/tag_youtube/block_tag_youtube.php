@@ -14,6 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+use Google\Client;
+use Google\Service\Youtube;
+use Google\Service\Exception;
+use Google\Service\YouTube\SearchListResponse;
+
 /**
  * Tag youtube block
  *
@@ -21,15 +26,17 @@
  * @copyright  1999 onwards Martin Dougiamas (http://dougiamas.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-define('DEFAULT_NUMBER_OF_VIDEOS', 5);
-
 class block_tag_youtube extends block_base {
 
     /**
-     * @var Google_Service_Youtube
+     * @var int Default number of videos to display.
      */
-    protected $service = null;
+    const DEFAULT_NUMBER_OF_VIDEOS = 5;
+
+    /**
+     * @var Youtube
+     */
+    private ?Youtube $service = null;
 
     function init() {
         $this->title = get_string('pluginname','block_tag_youtube');
@@ -102,7 +109,7 @@ class block_tag_youtube extends block_base {
             return $this->get_error_message();
         }
 
-        $numberofvideos = DEFAULT_NUMBER_OF_VIDEOS;
+        $numberofvideos = self::DEFAULT_NUMBER_OF_VIDEOS;
         if( !empty($this->config->numberofvideos)) {
             $numberofvideos = $this->config->numberofvideos;
         }
@@ -112,7 +119,7 @@ class block_tag_youtube extends block_base {
                 'playlistId' => $this->config->playlist,
                 'maxResults' => $numberofvideos
             ));
-        } catch (Google_Service_Exception $e) {
+        } catch (Exception $e) {
             debugging('Google service exception: ' . $e->getMessage(), DEBUG_DEVELOPER);
             return $this->get_error_message(get_string('requesterror', 'block_tag_youtube'));
         }
@@ -142,7 +149,7 @@ class block_tag_youtube extends block_base {
 
         $querytag = urlencode($tagobject->name);
 
-        $numberofvideos = DEFAULT_NUMBER_OF_VIDEOS;
+        $numberofvideos = self::DEFAULT_NUMBER_OF_VIDEOS;
         if ( !empty($this->config->numberofvideos) ) {
             $numberofvideos = $this->config->numberofvideos;
         }
@@ -153,7 +160,7 @@ class block_tag_youtube extends block_base {
                 'type' => 'video',
                 'maxResults' => $numberofvideos
             ));
-        } catch (Google_Service_Exception $e) {
+        } catch (Exception $e) {
             debugging('Google service exception: ' . $e->getMessage(), DEBUG_DEVELOPER);
             return $this->get_error_message(get_string('requesterror', 'block_tag_youtube'));
         }
@@ -183,19 +190,19 @@ class block_tag_youtube extends block_base {
 
         $querytag = urlencode($tagobject->name);
 
-        $numberofvideos = DEFAULT_NUMBER_OF_VIDEOS;
+        $numberofvideos = self::DEFAULT_NUMBER_OF_VIDEOS;
         if( !empty($this->config->numberofvideos)) {
             $numberofvideos = $this->config->numberofvideos;
         }
 
         try {
-            $response = $service->search->listSearch('id,snippet', array(
+            $response = $service->search->listSearch('id,snippet', [
                 'q' => $querytag,
                 'type' => 'video',
                 'maxResults' => $numberofvideos,
-                'videoCategoryId' => $this->config->category
-            ));
-        } catch (Google_Service_Exception $e) {
+                'videoCategoryId' => $this->config->category,
+            ]);
+        } catch (Exception $e) {
             debugging('Google service exception: ' . $e->getMessage(), DEBUG_DEVELOPER);
             return $this->get_error_message(get_string('requesterror', 'block_tag_youtube'));
         }
@@ -254,10 +261,8 @@ class block_tag_youtube extends block_base {
 
     /**
      * Gets the youtube service object.
-     *
-     * @return Google_Service_YouTube
      */
-    protected function get_service() {
+    protected function get_service(): Youtube {
         global $CFG;
 
         if (!$apikey = get_config('block_tag_youtube', 'apikey')) {
@@ -266,11 +271,10 @@ class block_tag_youtube extends block_base {
 
         // Wrapped in an if in case we call different get_videos_* multiple times.
         if (!isset($this->service)) {
-            require_once($CFG->libdir . '/google/lib.php');
-            $client = get_google_client();
+            $client = new Client(['application_name' => 'Moodle ' . $CFG->release]);
             $client->setDeveloperKey($apikey);
-            $client->setScopes(array(Google_Service_YouTube::YOUTUBE_READONLY));
-            $this->service = new Google_Service_YouTube($client);
+            $client->setScopes([YouTube::YOUTUBE_READONLY]);
+            $this->service = new Youtube($client);
         }
 
         return $this->service;
@@ -279,12 +283,11 @@ class block_tag_youtube extends block_base {
     /**
      * Renders the list of items.
      *
-     * @param stdClass $videosdata
      * @return string HTML
      */
-    protected function render_items($videosdata) {
+    protected function render_items(SearchListResponse $videosdata): string {
 
-        if (!$videosdata || empty($videosdata->items)) {
+        if (!$videosdata || empty($videosdata->getItems())) {
             if (!empty($videosdata->error)) {
                 debugging('Error fetching data from youtube: ' . $videosdata->error->message, DEBUG_DEVELOPER);
             }
@@ -295,10 +298,10 @@ class block_tag_youtube extends block_base {
         $service = $this->get_service();
 
         $text = html_writer::start_tag('ul', array('class' => 'yt-video-entry unlist img-text'));
-        foreach ($videosdata->items as $video) {
+        foreach ($videosdata->getItems() as $video) {
 
             // Link to the video included in the playlist if listing a playlist.
-            if (!empty($video->snippet->resourceId)) {
+            if (!empty($video->getSnippet()->resourceId)) {
                 $id = $video->snippet->resourceId->videoId;
                 $playlist = '&list=' . $video->snippet->playlistId;
             } else {
@@ -306,7 +309,7 @@ class block_tag_youtube extends block_base {
                 $playlist = '';
             }
 
-            $thumbnail = $video->snippet->getThumbnails()->getDefault();
+            $thumbnail = $video->getSnippet()->getThumbnails()->getDefault();
             $url = 'http://www.youtube.com/watch?v=' . $id . $playlist;
 
             $videodetails = $service->videos->listVideos('id,contentDetails', array('id' => $id));
@@ -344,7 +347,7 @@ class block_tag_youtube extends block_base {
      *
      * @return array The array containing the relevant video categories
      * @throws moodle_exception If the API key is not set
-     * @throws Google_Service_Exception If an error occurs while obtaining the categories through the API call
+     * @throws GS_Exception If an error occurs while obtaining the categories through the API call
      */
     public function get_categories() {
         // Get the default categories and it's translations.
