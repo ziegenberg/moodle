@@ -22,7 +22,13 @@
  * @copyright  2010 Dongsheng Cai {@link http://dongsheng.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/repository/lib.php');
+
+use Google\Client;
+use Google\Service\YouTube;
+use Google\Service\Exception;
 
 /**
  * repository_youtube class
@@ -32,7 +38,6 @@ require_once($CFG->dirroot . '/repository/lib.php');
  * @copyright  2009 Dongsheng Cai {@link http://dongsheng.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 class repository_youtube extends repository {
     /** @var int maximum number of thumbs per page */
     const YOUTUBE_THUMBS_PER_PAGE = 27;
@@ -45,15 +50,15 @@ class repository_youtube extends repository {
 
     /**
      * Google Client.
-     * @var Google_Client
+     * @var Client
      */
-    private $client = null;
+    private ?Client $client = null;
 
     /**
      * YouTube Service.
-     * @var Google_Service_YouTube
+     * @var YouTube
      */
-    private $service = null;
+    private ?YouTube $service = null;
 
     /**
      * Search keyword text.
@@ -90,11 +95,10 @@ class repository_youtube extends repository {
         global $CFG;
 
         if (!isset($this->service)) {
-            require_once($CFG->libdir . '/google/lib.php');
-            $this->client = get_google_client();
-            $this->client->setDeveloperKey($this->apikey);
-            $this->client->setScopes(array(Google_Service_YouTube::YOUTUBE_READONLY));
-            $this->service = new Google_Service_YouTube($this->client);
+            $client = new Client(['application_name' => 'Moodle ' . $CFG->release]);
+            $client->setDeveloperKey($this->apikey);
+            $client->setScopes([YouTube::YOUTUBE_READONLY]);
+            $this->service = new YouTube($this->client);
         }
     }
 
@@ -175,14 +179,14 @@ class repository_youtube extends repository {
 
     /**
      * Private method to get youtube search results
+     * 
      * @param string $keyword
      * @param int $start
      * @param int $max max results
      * @param string $sort
      * @throws moodle_exception If the google API returns an error.
-     * @return array
      */
-    private function _get_collection($keyword, $start, $max, $sort) {
+    private function _get_collection($keyword, $start, $max, $sort): array {
         global $SESSION;
 
         // The new API doesn't use "page" numbers for browsing through results.
@@ -194,41 +198,42 @@ class repository_youtube extends repository {
             $pagetoken = $SESSION->{$sesspagetoken};
         }
 
-        $list = array();
+        $list = [];
         $error = null;
         try {
             $this->init_youtube_service(); // About to use the service, ensure it's loaded.
-            $response = $this->service->search->listSearch('id,snippet', array(
+            $response = $this->service->search->listSearch('id,snippet', [
                 'q' => $keyword,
                 'maxResults' => $max,
                 'order' => $sort,
                 'pageToken' => $pagetoken,
                 'type' => 'video',
                 'videoEmbeddable' => 'true',
-            ));
+            ]);
 
             // Track the next page token for the next request (when a user
             // scrolls down in the file picker for more videos).
-            $SESSION->{$sesspagetoken} = $response['nextPageToken'];
+            $SESSION->{$sesspagetoken} = $response->getNextPageToken();
 
-            foreach ($response['items'] as $result) {
-                $title = $result->snippet->title;
-                $source = 'http://www.youtube.com/v/' . $result->id->videoId . '#' . $title;
-                $thumb = $result->snippet->getThumbnails()->getDefault();
+            foreach ($response->getItems() as $result) {
+                $snippet = $result->getSnippet();
+                $title = $snippet->getTitle();
+                $source = 'https://www.youtube.com/v/' . $result->getId()->getVideoId() . '#' . $title;
+                $thumb = $snippet->getThumbnails()->getDefault();
 
-                $list[] = array(
+                $list[] = [
                     'shorttitle' => $title,
-                    'thumbnail_title' => $result->snippet->description,
+                    'thumbnail_title' => $snippet->getDescription(),
                     'title' => $title.'.avi', // This is a hack so we accept this file by extension.
-                    'thumbnail' => $thumb->url,
-                    'thumbnail_width' => (int)$thumb->width,
-                    'thumbnail_height' => (int)$thumb->height,
+                    'thumbnail' => $thumb->getUrl(),
+                    'thumbnail_width' => (int)$thumb->getWidth(),
+                    'thumbnail_height' => (int)$thumb->getHeight(),
                     'size' => '',
                     'date' => '',
                     'source' => $source,
-                );
+                ];
             }
-        } catch (Google_Service_Exception $e) {
+        } catch (Exception $e) {
             // If we throw the google exception as-is, we may expose the apikey
             // to end users. The full message in the google exception includes
             // the apikey param, so we take just the part pertaining to the
