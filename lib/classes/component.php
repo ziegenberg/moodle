@@ -149,6 +149,7 @@ class component {
         \FastRoute::class => 'lib/nikic/fast-route/src',
         \Slim::class => 'lib/slim/slim/Slim',
         \ParagonIE\ConstantTime::class => 'lib/paragonie/constant_time_encoding/src',
+        \Monolog::class => 'lib/monolog/monolog/src/Monolog',
         \Google\Service::class => 'lib/google/apiclient-services/src',
         \Google\Auth::class => 'lib/google/auth/src',
         \Google::class => 'lib/google/apiclient/src',
