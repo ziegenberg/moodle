@@ -14,27 +14,32 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+require_once($CFG->libdir.'/portfolio/plugin.php');
+
+use core\url;
+use Google\Client;
+use Google\Service\Drive;
+use Google\Service\Drive\DriveFile;
+use Google\Service\Exception;
 /**
  * Google Documents Portfolio Plugin
  *
+ * @package portfolio_googledocs
  * @author Dan Poltawski <talktodan@gmail.com>
  * @license http://www.gnu.org/copyleft/gpl.html GNU Public License
  */
-require_once($CFG->libdir.'/portfolio/plugin.php');
-require_once($CFG->libdir . '/google/lib.php');
-
 class portfolio_plugin_googledocs extends portfolio_plugin_push_base {
     /**
      * Google Client.
-     * @var Google_Client
+     * @var Client
      */
-    private $client = null;
+    private ?Client $client = null;
 
     /**
      * Google Drive Service.
-     * @var Google_Service_Drive
+     * @var Drive
      */
-    private $service = null;
+    private ?Drive $service = null;
 
     /**
      * URL to redirect Google to.
@@ -105,10 +110,10 @@ class portfolio_plugin_googledocs extends portfolio_plugin_push_base {
                     // This directory hasn't been created yet so let's go ahead and create it.
                     $parents = !is_null($parentpath) ? [$directoryids[$parentpath]] : [];
                     try {
-                        $filemetadata = new Google_Service_Drive_DriveFile([
+                        $filemetadata = new DriveFile([
                             'title' => $directory,
                             'mimeType' => 'application/vnd.google-apps.folder',
-                            'parents' => $parents
+                            'parents' => $parents,
                         ]);
 
                         $drivefile = $this->service->files->insert($filemetadata, ['fields' => 'id']);
@@ -189,7 +194,7 @@ class portfolio_plugin_googledocs extends portfolio_plugin_push_base {
         // Get the authentication code send by Google.
         $code = isset($params['oauth2code']) ? $params['oauth2code'] : null;
         // Try to authenticate (throws exception which is catched higher).
-        $this->client->authenticate($code);
+        $this->client->fetchAccessTokenWithAuthCode($code);
         // Make sure we accually have access token at this time
         // ...and store it for further use.
         if ($accesstoken = $this->client->getAccessToken()) {
@@ -228,9 +233,14 @@ class portfolio_plugin_googledocs extends portfolio_plugin_push_base {
         $mform->addRule('secret', $strrequired, 'required', null, 'client');
     }
 
-    private function initialize_oauth() {
-        $redirecturi = new moodle_url(self::REDIRECTURL);
-        $returnurl = new moodle_url('/portfolio/add.php');
+    /**
+     * Initialize Google OAuth.
+     */
+    private function initialize_oauth(): void {
+        global $CFG;
+
+        $redirecturi = new url(self::REDIRECTURL);
+        $returnurl = new url('/portfolio/add.php');
         $returnurl->param('postcontrol', 1);
         $returnurl->param('id', $this->exporter->get('id'));
         $returnurl->param('sesskey', sesskey());
@@ -239,16 +249,17 @@ class portfolio_plugin_googledocs extends portfolio_plugin_push_base {
         $secret = $this->get_config('secret');
 
         // Setup Google client.
-        $this->client = get_google_client();
-        $this->client->setClientId($clientid);
-        $this->client->setClientSecret($secret);
-        $this->client->setScopes(array(Google_Service_Drive::DRIVE_FILE));
-        $this->client->setRedirectUri($redirecturi->out(false));
-        // URL to be called when redirecting from authentication.
-        $this->client->setState($returnurl->out_as_local_url(false));
-        // Setup drive upload service.
-        $this->service = new Google_Service_Drive($this->client);
-
+        if (!isset($this->service)) {
+            $this->client = new Client(['application_name' => 'Moodle ' . $CFG->release]);
+            $this->client->setClientId($clientid);
+            $this->client->setClientSecret($secret);
+            $this->client->setScopes([Drive::DRIVE_FILE]);
+            $this->client->setRedirectUri($redirecturi->out(false));
+            // URL to be called when redirecting from authentication.
+            $this->client->setState($returnurl->out_as_local_url(false));
+            // Setup drive upload service.
+            $this->service = new Drive($this->client);
+        }
     }
 
     public function instance_sanity_check() {
