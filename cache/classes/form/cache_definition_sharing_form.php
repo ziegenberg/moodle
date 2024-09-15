@@ -52,7 +52,7 @@ class cache_definition_sharing_form extends moodleform {
         $form->addGroup($group, 'sharing', get_string('sharing', 'cache'), '<br />');
         $form->setType('sharing', PARAM_INT);
 
-        $form->addElement('text', 'userinputsharingkey', get_string('userinputsharingkey', 'cache'));
+        $form->addElement('passwordunmask', 'userinputsharingkey', get_string('userinputsharingkey', 'cache'));
         $form->addHelpButton('userinputsharingkey', 'userinputsharingkey', 'cache');
         $form->disabledIf('userinputsharingkey', 'sharing[' . definition::SHARING_INPUT . ']', 'notchecked');
         $form->setType('userinputsharingkey', PARAM_ALPHANUMEXT);
