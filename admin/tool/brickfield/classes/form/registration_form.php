@@ -60,12 +60,12 @@ class registration_form  extends moodleform {
         $hash = $registration->get_secret_key();
 
         $mform->addElement('header', 'activationheader', get_string('activationheader', manager::PLUGINNAME));
-        $mform->addElement('text', 'key', get_string('secretkey', manager::PLUGINNAME));
+        $mform->addElement('passwordunmask', 'key', get_string('secretkey', manager::PLUGINNAME));
         $mform->setType('key', PARAM_TEXT);
         $mform->setDefault('key', !empty($key) ? $key : '');
         $mform->addHelpButton('key', 'secretkey', manager::PLUGINNAME);
 
-        $mform->addElement('text', 'hash', get_string('sitehash', manager::PLUGINNAME));
+        $mform->addElement('passwordunmask', 'hash', get_string('sitehash', manager::PLUGINNAME));
         $mform->setType('hash', PARAM_TEXT);
         $mform->setDefault('hash', !empty($hash) ? $hash : '');
         $mform->addHelpButton('hash', 'sitehash', manager::PLUGINNAME);
