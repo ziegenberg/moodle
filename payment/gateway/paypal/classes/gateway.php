@@ -58,7 +58,7 @@ class gateway extends \core_payment\gateway {
         $mform->setType('clientid', PARAM_TEXT);
         $mform->addHelpButton('clientid', 'clientid', 'paygw_paypal');
 
-        $mform->addElement('text', 'secret', get_string('secret', 'paygw_paypal'));
+        $mform->addElement('passwordunmask', 'secret', get_string('secret', 'paygw_paypal'));
         $mform->setType('secret', PARAM_TEXT);
         $mform->addHelpButton('secret', 'secret', 'paygw_paypal');
 
