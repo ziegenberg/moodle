@@ -300,9 +300,9 @@ class repository_s3 extends repository {
             "s3-ap-northeast-1.amazonaws.com" => "s3-ap-northeast-1.amazonaws.com",
             "s3-sa-east-1.amazonaws.com" => "s3-sa-east-1.amazonaws.com"
         );
-        $mform->addElement('text', 'access_key', get_string('access_key', 'repository_s3'));
+        $mform->addElement('passwordunmask', 'access_key', get_string('access_key', 'repository_s3'));
         $mform->setType('access_key', PARAM_RAW_TRIMMED);
-        $mform->addElement('text', 'secret_key', get_string('secret_key', 'repository_s3'));
+        $mform->addElement('passwordunmask', 'secret_key', get_string('secret_key', 'repository_s3'));
         $mform->setType('secret_key', PARAM_RAW_TRIMMED);
         $mform->addElement('select', 'endpoint', get_string('endpoint', 'repository_s3'), $endpointselect);
         $mform->setDefault('endpoint', 's3.amazonaws.com'); // Default to US Endpoint.

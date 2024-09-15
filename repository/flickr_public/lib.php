@@ -563,7 +563,7 @@ class repository_flickr_public extends repository {
         }
         $strrequired = get_string('required');
 
-        $mform->addElement('text', 'api_key', get_string('apikey', 'repository_flickr_public'), array('value'=>$api_key,'size' => '40'));
+        $mform->addElement('passwordunmask', 'api_key', get_string('apikey', 'repository_flickr_public'), array('value'=>$api_key,'size' => '40'));
         $mform->setType('api_key', PARAM_RAW_TRIMMED);
         $mform->addRule('api_key', $strrequired, 'required', null, 'client');
 
