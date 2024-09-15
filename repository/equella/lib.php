@@ -299,7 +299,7 @@ class repository_equella extends repository {
         $mform->setType('equella_shareid', PARAM_RAW);
         $mform->addRule('equella_shareid', $strrequired, 'required', null, 'client');
 
-        $mform->addElement('text', 'equella_sharedsecret', get_string('sharedsecrets', 'repository_equella'));
+        $mform->addElement('passwordunmask', 'equella_sharedsecret', get_string('sharedsecrets', 'repository_equella'));
         $mform->setType('equella_sharedsecret', PARAM_RAW);
         $mform->addRule('equella_sharedsecret', $strrequired, 'required', null, 'client');
 

@@ -328,7 +328,7 @@ class repository_youtube extends repository {
             $apikey = '';
         }
 
-        $mform->addElement('text', 'apikey', get_string('apikey', 'repository_youtube'), array('value' => $apikey, 'size' => '40'));
+        $mform->addElement('passwordunmask', 'apikey', get_string('apikey', 'repository_youtube'), array('value' => $apikey, 'size' => '40'));
         $mform->setType('apikey', PARAM_RAW_TRIMMED);
         $mform->addRule('apikey', get_string('required'), 'required', null, 'client');
 
