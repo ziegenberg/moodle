@@ -321,14 +321,19 @@ class repository_youtube extends repository {
      * @param object $mform
      * @param string $classname
      */
-    public static function type_config_form($mform, $classname = 'repository') {
+    public static function type_config_form($mform, $classname = 'repository'): void {
         parent::type_config_form($mform, $classname);
         $apikey = get_config('youtube', 'apikey');
         if (empty($apikey)) {
             $apikey = '';
         }
 
-        $mform->addElement('passwordunmask', 'apikey', get_string('apikey', 'repository_youtube'), array('value' => $apikey, 'size' => '40'));
+        $mform->addElement(
+            'passwordunmask',
+            'apikey',
+            get_string('apikey', 'repository_youtube'),
+            ['value' => $apikey, 'size' => '40']
+        );
         $mform->setType('apikey', PARAM_RAW_TRIMMED);
         $mform->addRule('apikey', get_string('required'), 'required', null, 'client');
 

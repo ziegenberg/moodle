@@ -312,13 +312,13 @@ class repository_flickr extends repository {
      * Add Plugin settings input to Moodle form
      * @param object $mform
      */
-    public static function type_config_form($mform, $classname = 'repository') {
+    public static function type_config_form($mform, $classname = 'repository'): void {
         global $CFG;
-        $api_key = get_config('flickr', 'api_key');
+        $apikey = get_config('flickr', 'api_key');
         $secret = get_config('flickr', 'secret');
 
-        if (empty($api_key)) {
-            $api_key = '';
+        if (empty($apikey)) {
+            $apikey = '';
         }
         if (empty($secret)) {
             $secret = '';
@@ -327,15 +327,24 @@ class repository_flickr extends repository {
         parent::type_config_form($mform);
 
         $strrequired = get_string('required');
-        $mform->addElement('passwordunmask', 'api_key', get_string('apikey', 'repository_flickr'), array('value'=>$api_key,'size' => '40'));
+        $mform->addElement(
+            'passwordunmask',
+            'api_key',
+            get_string('apikey', 'repository_flickr'),
+            ['value' => $apikey, 'size' => '40']
+        );
         $mform->setType('api_key', PARAM_RAW_TRIMMED);
-        $mform->addElement('passwordunmask', 'secret', get_string('secret', 'repository_flickr'), array('value'=>$secret,'size' => '40'));
+        $mform->addElement(
+            'passwordunmask',
+            'secret',
+            get_string('secret', 'repository_flickr'),
+            ['value' => $secret, 'size' => '40']
+        );
         $mform->setType('secret', PARAM_RAW_TRIMMED);
 
-        //retrieve the flickr instances
-        $params = array();
-        $params['context'] = array();
-        //$params['currentcontext'] = $this->context;
+        // Retrieve the flickr instances.
+        $params = [];
+        $params['context'] = [];
         $params['onlyvisible'] = false;
         $params['type'] = 'flickr';
         $instances = repository::get_instances($params);

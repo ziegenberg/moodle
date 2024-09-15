@@ -151,14 +151,19 @@ class repository_merlot extends repository {
      *
      * @param object $mform
      */
-    public static function type_config_form($mform, $classname = 'repository') {
+    public static function type_config_form($mform, $classname = 'repository'): void {
         parent::type_config_form($mform);
         $licensekey = get_config('merlot', 'licensekey');
         if (empty($licensekey)) {
             $licensekey = '';
         }
         $strrequired = get_string('required');
-        $mform->addElement('passwordunmask', 'licensekey', get_string('licensekey', 'repository_merlot'), array('value'=>$licensekey,'size' => '40'));
+        $mform->addElement(
+            'passwordunmask',
+            'licensekey',
+            get_string('licensekey', 'repository_merlot'),
+            ['value' => $licensekey, 'size' => '40']
+        );
         $mform->setType('licensekey', PARAM_RAW_TRIMMED);
         $mform->addRule('licensekey', $strrequired, 'required', null, 'client');
     }

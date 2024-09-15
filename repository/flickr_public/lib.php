@@ -556,18 +556,23 @@ class repository_flickr_public extends repository {
      * Add Plugin settings input to Moodle form
      * @param object $mform
      */
-    public static function type_config_form($mform, $classname = 'repository') {
-        $api_key = get_config('flickr_public', 'api_key');
-        if (empty($api_key)) {
-            $api_key = '';
+    public static function type_config_form($mform, $classname = 'repository'): void {
+        $apikey = get_config('flickr_public', 'api_key');
+        if (empty($apikey)) {
+            $apikey = '';
         }
         $strrequired = get_string('required');
 
-        $mform->addElement('passwordunmask', 'api_key', get_string('apikey', 'repository_flickr_public'), array('value'=>$api_key,'size' => '40'));
+        $mform->addElement(
+            'passwordunmask',
+            'api_key',
+            get_string('apikey', 'repository_flickr_public'),
+            ['value' => $apikey, 'size' => '40']
+        );
         $mform->setType('api_key', PARAM_RAW_TRIMMED);
         $mform->addRule('api_key', $strrequired, 'required', null, 'client');
 
-        $mform->addElement('static', null, '',  get_string('information','repository_flickr_public'));
+        $mform->addElement('static', null, '',  get_string('information', 'repository_flickr_public'));
     }
 
     /**
