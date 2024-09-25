@@ -18,7 +18,7 @@ namespace core;
 
 use coding_exception;
 use core_php_time_limit;
-use moodle_exception;
+use core\exception\moodle_exception;
 use stdClass;
 
 // Disable the moodle.PHP.ForbiddenFunctions.FoundWithAlternative sniff for this file.
@@ -166,7 +166,7 @@ class cron {
      *
      * @param   int       $startruntime The time this run started.
      * @param   null|int  $startprocesstime The time the process that owns this runner started.
-     * @throws \moodle_exception
+     * @throws moodle_exception
      */
     public static function run_scheduled_tasks(
         int $startruntime,
@@ -228,7 +228,7 @@ class cron {
      * @param   null|int $startprocesstime The time this process started.
      * @param   int|null $maxtasks Limit number of tasks to run`
      * @param   null|string $classname Run only tasks of this class
-     * @throws \moodle_exception
+     * @throws moodle_exception
      */
     public static function run_adhoc_tasks(
         int $startruntime,
@@ -341,8 +341,11 @@ class cron {
      */
     public static function run_adhoc_task(int $taskid): void {
         $task = \core\task\manager::get_adhoc_task($taskid);
+        if (!$task) {
+            throw new moodle_exception('couldnotobtainlockforadhoctask', '', '', $taskid);
+        }
         if (!$task->get_fail_delay() && $task->get_next_run_time() > time()) {
-            throw new \moodle_exception('wontrunfuturescheduledtask');
+            throw new moodle_exception('wontrunfuturescheduledtask');
         }
 
         self::run_inner_adhoc_task($task);

@@ -339,6 +339,7 @@ $string['copyrightnotice'] = 'Copyright notice';
 $string['coresystem'] = 'System';
 $string['cost'] = 'Cost';
 $string['costdefault'] = 'Default cost';
+$string['couldnotobtainlockforadhoctask'] = 'Could not obtain lock for adhoc task with id \'{$a}\'';
 $string['counteditems'] = '{$a->count} {$a->items}';
 $string['country'] = 'Country';
 $string['course'] = 'Course';
