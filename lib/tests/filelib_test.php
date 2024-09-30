@@ -2021,6 +2021,7 @@ EOF;
      */
     public function test_file_encode_url(string $urlbase, string $path, bool $forcedownload, bool $https, string $expected): void {
         $actual = file_encode_url($urlbase, $path, $forcedownload, $https);
+        $this->assertDebuggingCalled('Deprecation: file_encode_url has been deprecated since 5.0. Use core\url factory methods instead. See MDL-31071 for more information.');
         $this->assertSame($expected, $actual);
     }
 
