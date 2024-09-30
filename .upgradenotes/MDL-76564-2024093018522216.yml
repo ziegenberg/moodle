@@ -1,0 +1,27 @@
+issueNumber: MDL-76564
+notes:
+  tool_behat:
+    - message: |
+        The following Behat step defintions have been finally removed:
+         - i_hover_over_today_in_the_calendar
+         - i_add_to_section
+         - i_add_to_section_and_i_fill_the_form_with
+         - i_click_away_from_student_and_grade_feedback
+         - i_should_see_feedback_field
+         - i_should_not_see_feedback_field
+         - get_student_and_grade_feedback_selector
+         - i_click_on_student_and_grade_item
+         - i_click_away_from_student_and_grade_value
+         - the_grade_should_match
+         - i_should_see_grade_field
+         - i_should_not_see_grade_field
+         - get_grade_item_id
+         - i_give_the_feedback
+         - select_in_gradebook_tabs
+         - prefixed_tablenode_transformations
+         - i_add_a_field_to_database_and_i_fill_the_form_with
+         - i_add_an_entry_to_database_with
+        The following methods have been finally removed:
+         - get_student_and_grade_cell_selector
+         - get_student_and_grade_value_selector
+      type: removed

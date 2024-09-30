@@ -240,14 +240,6 @@ class behat_grade extends behat_base {
     }
 
     /**
-     * @deprecated since 4.0 - use behat_forms::i_set_the_field_to() instead.
-     */
-    #[\core\attribute\deprecated('behat_forms::i_set_the_field_to', since: '4.0', final: true)]
-    protected function select_in_gradebook_tabs() {
-        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
-    }
-
-    /**
      * Navigates to the course gradebook and selects the specified item from the general grade navigation selector.
      *
      * Examples:
@@ -302,11 +294,4 @@ class behat_grade extends behat_base {
         $this->execute('behat_forms::i_set_the_field_to', [get_string('exportas', 'grades'), $gradeexportoption]);
     }
 
-    /**
-     * @deprecated since 4.1 - use behat_forms::i_set_the_field_to() instead.
-     */
-    #[\core\attribute\deprecated('behat_forms::i_set_the_field_to', since: '4.1', final: true)]
-    protected function select_in_gradebook_navigation_selector() {
-        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
-    }
 }
