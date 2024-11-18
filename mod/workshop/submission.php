@@ -303,7 +303,7 @@ if ($isreviewer) {
     echo $output->render($assessment);
 
     if ($workshop->phase == workshop::PHASE_CLOSED) {
-        if (strlen(trim($userassessment->feedbackreviewer)) > 0) {
+        if (strlen(trim($userassessment->feedbackreviewer ?? "")) > 0) {
             echo $output->render(new workshop_feedback_reviewer($userassessment));
         }
     }
@@ -337,7 +337,7 @@ if (has_capability('mod/workshop:viewallassessments', $workshop->context) or ($o
         echo $output->render($displayassessment);
 
         if ($workshop->phase == workshop::PHASE_CLOSED and has_capability('mod/workshop:viewallassessments', $workshop->context)) {
-            if (strlen(trim($assessment->feedbackreviewer)) > 0) {
+            if (strlen(trim($assessment->feedbackreviewer ?? "")) > 0) {
                 echo $output->render(new workshop_feedback_reviewer($assessment));
             }
         }
