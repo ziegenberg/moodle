@@ -26,13 +26,17 @@
 
 // NOTE: no MOODLE_INTERNAL test here, this file may be required by behat before including /config.php.
 
-require_once(__DIR__ . '/../../../../../lib/behat/behat_base.php');
+require_once(__DIR__ . '/../../../../../lib/behat/behat_deprecated_base.php');
 require_once(__DIR__ . '/../../../../../lib/behat/behat_field_manager.php');
 
 use Behat\Mink\Exception\ExpectationException as ExpectationException;
 
 /**
- * Steps definitions related with admin presets.
+ * Steps definitions that are now deprecated and will be removed in the next releases.
+ *
+ * This file only contains the steps that previously were in the behat_*.php files in the SAME DIRECTORY.
+ * When deprecating steps from other components or plugins, create a behat_COMPONENT_deprecated.php
+ * file in the same directory where the steps were defined.
  *
  * @package   tool_admin_presets
  * @category  test
@@ -40,7 +44,7 @@ use Behat\Mink\Exception\ExpectationException as ExpectationException;
  * @author    Sylvain Revenu | Pimenko
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class behat_admin_presets extends behat_base {
+class behat_admin_presets extends behat_deprecated_base {
 
     /**
      * Downloads the file from a specific link on the page and checks the size is in a given range.
@@ -60,9 +64,13 @@ class behat_admin_presets extends behat_base {
      * @param int $maxexpectedsize the maximum expected file size in bytes.
      * @return void
      * @throws ExpectationException
+     * @deprecated since 5.0
      */
     final public function following_in_the_should_download_between_and_bytes(string $link, string $selectortype,
         string $nodeelement, string $nodeselectortype, int $minexpectedsize, int $maxexpectedsize): void {
+
+        $this->deprecated_message("behat_download::following_in_element_should_download_a_file_that");
+
         // If the minimum is greater than the maximum then swap the values.
         if ((int) $minexpectedsize > (int) $maxexpectedsize) {
             list($minexpectedsize, $maxexpectedsize) = [$maxexpectedsize, $minexpectedsize];
@@ -105,9 +113,13 @@ class behat_admin_presets extends behat_base {
      * @param string $nodeselectortype The type of selector where we look in
      * @param string $nodeelement Element we look in
      * @return string the content of the downloaded file.
+     * @deprecated since 5.0
      */
     final public function download_file_from_link_within_node(string $selectortype, string $link,
         string $nodeselectortype, string $nodeelement): string {
+
+        $this->deprecated_message("behat_download::following_in_element_should_download_a_file_that");
+
         // Find the link from ur specific node.
         $linknode = $this->get_node_in_container($selectortype, $link, $nodeselectortype, $nodeelement);
         $this->ensure_node_is_visible($linknode);
