@@ -1,0 +1,5 @@
+issueNumber: MDL-84310
+notes:
+  core_enrol:
+    - message: Remove enrol_mnet plugin from core in Moodle 5.0
+      type: removed
