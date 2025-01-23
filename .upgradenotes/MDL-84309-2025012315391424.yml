@@ -1,0 +1,5 @@
+issueNumber: MDL-84309
+notes:
+  core_block:
+    - message: Remove block_mnet_hosts plugin from core in Moodle 5.0
+      type: removed

@@ -1382,5 +1382,14 @@ function xmldb_main_upgrade($oldversion) {
         upgrade_main_savepoint(true, 2025011700.02);
     }
 
+    // Remove block_mnet_hosts.
+    if ($oldversion < 2025012400.01) {
+        if (!file_exists($CFG->dirroot . "/blocks/mnet_hosts/version.php")) {
+            uninstall_plugin('block', 'mnet_hosts');
+        }
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2025012400.01);
+    }
+
     return true;
 }
