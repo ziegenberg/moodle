@@ -1353,5 +1353,14 @@ function xmldb_main_upgrade($oldversion) {
         upgrade_main_savepoint(true, 2024121900.01);
     }
 
+    // Remove mnetservice_enrol.
+    if ($oldversion < 2025011700.01) {
+        if (!file_exists($CFG->dirroot . "/mnetservice/enrol/version.php")) {
+            uninstall_plugin('mnetservice', 'enrol');
+        }
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2025011700.01);
+    }
+
     return true;
 }
