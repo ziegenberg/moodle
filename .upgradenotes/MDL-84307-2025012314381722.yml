@@ -1,0 +1,5 @@
+issueNumber: MDL-84307
+notes:
+  core_auth:
+    - message: Remove auth_mnet plugin from core in Moodle 5.0
+      type: removed
