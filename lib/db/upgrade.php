@@ -1412,5 +1412,14 @@ function xmldb_main_upgrade($oldversion) {
         upgrade_main_savepoint(true, 2025013100.01);
     }
 
+    // Remove portfolio_mahara.
+    if ($oldversion < 2025022100.01) {
+        if (!file_exists($CFG->dirroot . "/portfolio/mahara/version.php")) {
+            uninstall_plugin('portfolio', 'mahara');
+        }
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2025022100.01);
+    }
+
     return true;
 }

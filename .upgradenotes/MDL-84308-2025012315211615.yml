@@ -1,0 +1,5 @@
+issueNumber: MDL-84308
+notes:
+  core_portfolio:
+    - message: Remove portfolio_mahara plugin from core in Moodle 5.0
+      type: removed
