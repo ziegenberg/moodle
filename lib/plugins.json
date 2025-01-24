@@ -63,7 +63,6 @@
             "ldap",
             "lti",
             "manual",
-            "mnet",
             "nologin",
             "none",
             "oauth2",
@@ -579,6 +578,7 @@
         "auth": [
             "fc",
             "imap",
+            "mnet",
             "nntp",
             "pam",
             "pop3",
