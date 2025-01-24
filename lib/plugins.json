@@ -340,8 +340,7 @@
         "portfolio": [
             "download",
             "flickr",
-            "googledocs",
-            "mahara"
+            "googledocs"
         ],
         "profilefield": [
             "checkbox",
@@ -626,6 +625,7 @@
         ],
         "portfolio": [
             "boxnet",
+            "mahara",
             "picasa"
         ],
         "qformat": [
