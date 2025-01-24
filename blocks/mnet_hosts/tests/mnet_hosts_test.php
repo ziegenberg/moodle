@@ -54,6 +54,10 @@ final class mnet_hosts_test extends advanced_testcase {
         $block = new block_mnet_hosts();
         $pluginclass = \core_plugin_manager::resolve_plugininfo_class('auth');
 
+        if (!exists_auth_plugin('mnet')) {
+            $this->markTestSkipped('Auth plugin mnet not installed');
+        }
+
         // If mnet authentication is enabled, the method should return true.
         $pluginclass::enable_plugin('mnet', 1);
         $this->assertTrue($block->can_block_be_added($page));
