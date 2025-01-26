@@ -202,7 +202,6 @@
             "lti",
             "manual",
             "meta",
-            "mnet",
             "paypal",
             "self"
         ],
@@ -600,7 +599,8 @@
             "tinymce"
         ],
         "enrol": [
-            "authorize"
+            "authorize",
+            "mnet"
         ],
         "filter": [
             "censor",
