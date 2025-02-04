@@ -171,6 +171,7 @@ class component {
         \SimplePie::class => 'lib/simplepie/src',
         \Slim::class => 'lib/slim/slim/Slim',
         \Spatie\Cloneable::class => 'lib/spatie/php-cloneable/src',
+        \Symfony\Component\Filesystem::class => 'lib/symfony/filesystem',
         \ZipStream::class => 'lib/zipstream/src',
     ];
 
