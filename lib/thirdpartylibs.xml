@@ -354,7 +354,7 @@ All rights reserved.</copyright>
     <location>scssphp</location>
     <name>scssphp</name>
     <description>scssphp is a compiler for SCSS written in PHP.</description>
-    <version>1.12.1</version>
+    <version>2.0.1</version>
     <license>MIT</license>
     <repository>https://github.com/scssphp/scssphp/</repository>
     <copyrights>
