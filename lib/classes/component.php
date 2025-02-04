@@ -129,6 +129,7 @@ class component {
         \Invoker::class => 'lib/php-di/invoker/src',
         \JmesPath::class => 'lib/jmespath/src',
         \Kevinrob\GuzzleCache::class => 'lib/guzzlehttp/kevinrob/guzzlecache/src',
+        \League\Uri::class => 'lib/league/uri/src',
         \Laravel\SerializableClosure::class => 'lib/laravel/serializable-closure/src',
         \lbuchs\WebAuthn::class => 'lib/webauthn/src',
         \libphonenumber::class => 'lib/giggsey/libphonenumber-for-php-lite/src',
