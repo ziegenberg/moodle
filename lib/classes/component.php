@@ -132,6 +132,10 @@ class component {
         \Kevinrob\GuzzleCache::class => 'lib/guzzlehttp/kevinrob/guzzlecache/src',
         \Laravel\SerializableClosure::class => 'lib/laravel/serializable-closure/src',
         \lbuchs\WebAuthn::class => 'lib/webauthn/src',
+        \League\Uri::class => [
+            'lib/thephpleague/uri',
+            'lib/thephpleague/uri-interfaces',
+        ],
         \libphonenumber::class => 'lib/giggsey/libphonenumber-for-php-lite/src',
         \Matrix::class => 'lib/phpspreadsheet/markbaker/matrix/classes/src',
         \MatthiasMullie\Minify::class => 'lib/minify/matthiasmullie-minify/src',
