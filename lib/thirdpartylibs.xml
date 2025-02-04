@@ -378,14 +378,26 @@ All rights reserved.</copyright>
     </copyrights>
   </library>
   <library>
-    <location>scssphp</location>
+    <location>scssphp/scssphp</location>
     <name>scssphp</name>
     <description>scssphp is a compiler for SCSS written in PHP.</description>
-    <version>1.12.1</version>
+    <version>2.0.1</version>
     <license>MIT</license>
     <repository>https://github.com/scssphp/scssphp/</repository>
     <copyrights>
       <copyright>2015 Leaf Corcoran</copyright>
+    </copyrights>
+    <customised/>
+  </library>
+  <library>
+    <location>scssphp/source-span</location>
+    <name>SourceSpan</name>
+    <description>scssphp/source-span is a library for tracking locations in source code.</description>
+    <version>1.0.0</version>
+    <license>MIT</license>
+    <repository>https://github.com/scssphp/source-span/</repository>
+    <copyrights>
+      <copyright>2024 Scssphp project authors</copyright>
     </copyrights>
     <customised/>
   </library>
