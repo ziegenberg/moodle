@@ -1,0 +1,5 @@
+issueNumber: MDL-79086
+notes:
+  tool_moodlenet:
+    - message: 'Final removal of share_activity(), use share_resource instead'
+      type: removed
