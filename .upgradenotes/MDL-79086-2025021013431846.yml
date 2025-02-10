@@ -1,0 +1,5 @@
+issueNumber: MDL-79086
+notes:
+  core:
+    - message: 'Final removal of share_activity(), use share_resource instead'
+      type: removed
