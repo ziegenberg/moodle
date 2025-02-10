@@ -1,0 +1,13 @@
+issueNumber: MDL-82194
+notes:
+  core:
+    - message: >+
+        The following files and their contents have been removed:
+          - `lib/soaplib.php
+          - `lib/tokeniserlib.php`
+
+        The lib `soaplib.php` was just a thin wrapper around the native PHP
+        SoapClient. Update your code to use that directly. Looking at the old
+        code might give you hints how to do that.
+
+      type: removed
