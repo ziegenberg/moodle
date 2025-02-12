@@ -1,0 +1,29 @@
+issueNumber: MDL-77307
+notes:
+  core_grades:
+    - message: >-
+        The previously deprecate methods have been removed:
+          - grade_structure::get_grade_analysis_icon
+          - grade_structure::get_reset_icon
+          - grade_structure::get_edit_icon
+          - grade_structure::get_hiding_icon
+          - grade_structure::get_locking_icon
+          - grade_structure::get_calculation_icon
+      type: removed
+    - message: >-
+        The following lang strings are now deprecated:
+          - editverbose,core_grades
+          - showverbose,core_grades
+          - hideverbose,core_grades
+          - hiddenuntildate,core_grades
+          - unlockverbose,core_grades
+          - lockverbose,core_grades
+          - locktimedate,core_grades
+          - editcalculationverbose,core_grades
+      type: deprecated
+    - message: >-
+        The previously deprecated methods have been removed:
+          - grade_report_grader::get_left_icons_row
+          - grade_report_grader::get_right_icons_row
+          - grade_report_grader::get_icons
+      type: removed
