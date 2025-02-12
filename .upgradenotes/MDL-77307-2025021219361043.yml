@@ -27,3 +27,17 @@ notes:
           - grade_report_grader::get_right_icons_row
           - grade_report_grader::get_icons
       type: removed
+    - message: >-
+        Removed the old syntax style class constructors:
+          - grade_plugin_return::grade_plugin_return
+          - grade_seq::grade_seq
+          - grade_tree::grade_tree
+      type: removed
+    - message: Removed old function print_graded_users_selector() from Moodle 2 era
+      type: removed
+    - message: >-
+        Removed old methods from Moodle 2 era:
+          - grade_report_grader::get_toggles_html
+          - grade_report_grader::print_toggle
+          - grade_report_grader::get_collapsing_icon
+      type: removed
