@@ -403,22 +403,14 @@ class graded_users_iterator {
 /**
  * Print a selection popup form of the graded users in a course.
  *
- * @deprecated since 2.0
- *
+ * @param string $report name of the report
  * @param int    $course id of the course
- * @param string $actionpage The page receiving the data from the popoup form
  * @param int    $userid   id of the currently selected user (or 'all' if they are all selected)
  * @param int    $groupid id of requested group, 0 means all
- * @param int    $includeall bool include all option
- * @param bool   $return If true, will return the HTML, otherwise, will print directly
- * @return null
+ * @param bool   $includeall bool include all option
+ * @return \core\output\single_select
  */
-function print_graded_users_selector($course, $actionpage, $userid=0, $groupid=0, $includeall=true, $return=false) {
-    global $CFG, $USER, $OUTPUT;
-    return $OUTPUT->render(grade_get_graded_users_select(substr($actionpage, 0, strpos($actionpage, '/')), $course, $userid, $groupid, $includeall));
-}
-
-function grade_get_graded_users_select($report, $course, $userid, $groupid, $includeall) {
+function grade_get_graded_users_select(string $report, $course, int $userid, int $groupid, bool $includeall) {
     global $USER, $CFG;
 
     if (is_null($userid)) {
@@ -1098,16 +1090,6 @@ class grade_plugin_return {
                 $this->groupid = groups_get_course_group($course, true);
             }
         }
-    }
-
-    /**
-     * Old syntax of class constructor. Deprecated in PHP7.
-     *
-     * @deprecated since Moodle 3.1
-     */
-    public function grade_plugin_return($params = null) {
-        debugging('Use of class name as constructor is deprecated', DEBUG_DEVELOPER);
-        self::__construct($params);
     }
 
     /**
@@ -2317,16 +2299,6 @@ class grade_seq extends grade_structure {
     }
 
     /**
-     * Old syntax of class constructor. Deprecated in PHP7.
-     *
-     * @deprecated since Moodle 3.1
-     */
-    public function grade_seq($courseid, $category_grade_last=false, $nooutcomes=false) {
-        debugging('Use of class name as constructor is deprecated', DEBUG_DEVELOPER);
-        self::__construct($courseid, $category_grade_last, $nooutcomes);
-    }
-
-    /**
      * Static recursive helper - makes the grade_item for category the last children
      *
      * @param array &$element The seed of the recursion
@@ -2509,17 +2481,6 @@ class grade_tree extends grade_structure {
 
         grade_tree::fill_levels($this->levels, $this->top_element, 0);
 
-    }
-
-    /**
-     * Old syntax of class constructor. Deprecated in PHP7.
-     *
-     * @deprecated since Moodle 3.1
-     */
-    public function grade_tree($courseid, $fillers=true, $category_grade_last=false,
-                               $collapsed=null, $nooutcomes=false) {
-        debugging('Use of class name as constructor is deprecated', DEBUG_DEVELOPER);
-        self::__construct($courseid, $fillers, $category_grade_last, $collapsed, $nooutcomes);
     }
 
     /**
