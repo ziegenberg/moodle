@@ -1,0 +1,7 @@
+issueNumber: MDL-79052
+notes:
+  core:
+    - message: >
+        Final deprecation of removing the legacy theme settings. The following method has been removed:
+          - core_useragent::get_device_type_list()
+      type: removed
