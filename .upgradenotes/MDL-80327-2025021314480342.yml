@@ -1,0 +1,7 @@
+issueNumber: MDL-80327
+notes:
+  mod_quiz:
+    - message: >
+        Remove deprecated class callbacks from mod_quiz.
+        Also the following function has been removed: core\hook\manager::is_deprecated_plugin_callback()
+      type: removed
