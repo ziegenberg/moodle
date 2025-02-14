@@ -41,6 +41,6 @@ $string['password'] = 'Password';
 $string['passworddesc'] = 'String of characters used as a password to communicate between the Moodle server and the Python server.';
 $string['secure'] = 'Use HTTPS';
 $string['securedesc'] = 'Whether to use HTTP or HTTPS.';
+$string['tensorboardinfo'] = 'Launch TensorBoard from command line by typing tensorboard --logdir=\'{$a}\' in your web server.';
 $string['useserver'] = 'Use a server';
 $string['useserverdesc'] = 'The machine learning backend Python package is not installed on the web server but on a different server.';
-$string['tensorboardinfo'] = 'Launch TensorBoard from command line by typing tensorboard --logdir=\'{$a}\' in your web server.';
