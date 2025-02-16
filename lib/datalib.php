@@ -1091,30 +1091,19 @@ function _fix_course_cats($children, &$sortorder, $parent, $depth, $path, &$fixc
  * List of remote courses that a user has access to via MNET.
  * Works only on the IDP
  *
- * @global object
- * @global object
  * @param int @userid The user id to get remote courses for
  * @return array Array of {@link $COURSE} of course objects
+ *
+ * @deprecated since 5.0 MDL-84311
+ * @todo MDL-XXXXX Remove this function in Moodle 6.0
  */
+#[\core\attribute\deprecated(
+    null,
+    since: '5.0',
+    reason:'MNet has been deprecated for many years now. The removal of MNet will start with removing MNet plugins.',
+    mdl: 'MDL-84311')]
 function get_my_remotecourses($userid=0) {
-    global $DB, $USER;
-
-    if (empty($userid)) {
-        $userid = $USER->id;
-    }
-
-    // We can not use SELECT DISTINCT + text field (summary) because of MS SQL, subselect used therefore.
-    $sql = "SELECT c.id, c.remoteid, c.shortname, c.fullname,
-                   c.hostid, c.summary, c.summaryformat, c.categoryname AS cat_name,
-                   h.name AS hostname
-              FROM {mnetservice_enrol_courses} c
-              JOIN (SELECT DISTINCT hostid, remotecourseid
-                      FROM {mnetservice_enrol_enrolments}
-                     WHERE userid = ?
-                   ) e ON (e.hostid = c.hostid AND e.remotecourseid = c.remoteid)
-              JOIN {mnet_host} h ON h.id = c.hostid";
-
-    return $DB->get_records_sql($sql, array($userid));
+    return [];
 }
 
 /**
