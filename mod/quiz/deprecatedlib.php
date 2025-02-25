@@ -348,3 +348,11 @@ function quiz_delete_all_overrides($quiz, $log = true) {
     $quizsettings = quiz_settings::create($quiz->id);
     $quizsettings->get_override_manager()->delete_all_overrides(shouldlog: $log);
 }
+
+/**
+ * @deprecated Since Moodle 4.3 MDL-72321
+ */
+#[\core\attribute\deprecated('mod_quiz\structure::add_random_questions()', since: '4.3', mdl: 'MDL-72321', final: true)]
+function quiz_add_random_questions(): void {
+    \core\deprecation::emit_deprecation_if_present(__FUNCTION__);
+}
