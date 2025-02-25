@@ -1882,34 +1882,6 @@ function quiz_update_section_firstslots($quizid, $direction, $afterslot, $before
 }
 
 /**
- * Add a random question to the quiz at a given point.
- * @param stdClass $quiz the quiz settings.
- * @param int $addonpage the page on which to add the question.
- * @param int $categoryid the question category to add the question from.
- * @param int $number the number of random questions to add.
- * @deprecated Since Moodle 4.3 MDL-72321
- * @todo Final deprecation in Moodle 4.7 MDL-78091
- */
-function quiz_add_random_questions(stdClass $quiz, int $addonpage, int $categoryid, int $number): void {
-    debugging(
-        'quiz_add_random_questions is deprecated. Please use mod_quiz\structure::add_random_questions() instead.',
-        DEBUG_DEVELOPER
-    );
-
-    $settings = quiz_settings::create($quiz->id);
-    $structure = structure::create_for_quiz($settings);
-    $structure->add_random_questions($addonpage, $number, [
-        'filter' => [
-            'category' => [
-                'jointype' => condition::JOINTYPE_DEFAULT,
-                'values' => [$categoryid],
-                'filteroptions' => ['includesubcategories' => false],
-            ],
-        ],
-    ]);
-}
-
-/**
  * Mark the activity completed (if required) and trigger the course_module_viewed event.
  *
  * @param  stdClass $quiz       quiz object
