@@ -3669,13 +3669,6 @@ class assign {
     }
 
     /**
-     * @deprecated since 2.7 - Use new events system instead.
-     */
-    public function add_to_log() {
-        throw new coding_exception(__FUNCTION__ . ' has been deprecated, please do not use it any more');
-    }
-
-    /**
      * Lazy load the page renderer and expose the renderer to plugins.
      *
      * @return assign_renderer
@@ -7270,20 +7263,6 @@ class assign {
     )]
     protected function process_save_grading_options() {
         \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
-    }
-
-    /**
-     * @deprecated since 2.7
-     */
-    public function format_grade_for_log() {
-        throw new coding_exception(__FUNCTION__ . ' has been deprecated, please do not use it any more');
-    }
-
-    /**
-     * @deprecated since 2.7
-     */
-    public function format_submission_for_log() {
-        throw new coding_exception(__FUNCTION__ . ' has been deprecated, please do not use it any more');
     }
 
     /**
