@@ -71,3 +71,13 @@ groupevent,core_calendar
 tt_deleteevent,core_calendar
 tt_editevent,core_calendar
 userevent,core_calendar
+controls,core_grades
+editcalculationverbose,core_grades
+editverbose,core_grades
+hiddenuntildate,core_grades
+hideverbose,core_grades
+locktimedate,core_grades
+lockverbose,core_grades
+nonunlockableverbose,core_grades
+showverbose,core_grades
+unlockverbose,core_grades
