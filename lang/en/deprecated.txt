@@ -163,3 +163,12 @@ imagecaption_help,core_badges
 issuername_help,core_badges
 language_help,core_badges
 version_help,core_badges
+editverbose,core_grades
+showverbose,core_grades
+hideverbose,core_grades
+hiddenuntildate,core_grades
+unlockverbose,core_grades
+lockverbose,core_grades
+locktimedate,core_grades
+editcalculationverbose,core_grades
+controls,core_grades
