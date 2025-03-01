@@ -1464,5 +1464,24 @@ function xmldb_main_upgrade($oldversion) {
         upgrade_main_savepoint(true, 2025022100.02);
     }
 
+    if ($oldversion < 2025022700.01) {
+
+        // Create an adhoc task that will process all existing webp files.
+        $task = new class extends \core\task\adhoc_task {
+            /**
+             * Run the adhoc task and update the mime type of webp files.
+             */
+            public function execute() {
+                $db = \core\di::get(moodle_database::class);
+                // Upgrade webp mime type for existing webp files.
+                $db->set_field_select('files', 'mimetype', 'image/webp', $db->sql_like('filename', '?', false), ['%.webp']);
+            }
+        };
+        \core\task\manager::queue_adhoc_task($task, true);
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2025022700.01);
+    }
+
     return true;
 }
