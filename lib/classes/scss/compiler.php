@@ -14,15 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Moodle implementation of SCSS.
- *
- * @package    core
- * @copyright  2016 Frédéric Massart
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+namespace core\scss;
 
-defined('MOODLE_INTERNAL') || die();
+use core\exception\coding_exception;
 
 /**
  * Moodle SCSS compiler class.
@@ -31,32 +25,46 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright  2016 Frédéric Massart
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class core_scss extends \ScssPhp\ScssPhp\Compiler {
+class compiler {
 
     /** @var string The path to the SCSS file. */
     protected $scssfile;
+
     /** @var array Bits of SCSS content to prepend. */
-    protected $scssprepend = array();
+    protected $scssprepend = [];
+
     /** @var array Bits of SCSS content. */
-    protected $scsscontent = array();
+    protected $scsscontent = [];
+
+    /** @var bool */
+    protected $sasscavailable = false;
+
+    /** @var \ScssPhp\ScssPhp\Compiler PHP SCSS Compiler */
+    protected $compiler = null;
+
+    /**
+     * Constructor.
+     */
+    public function __construct() {
+        $this->compiler = new \ScssPhp\ScssPhp\Compiler();
+        $this->compiler->addImporter(new moodle_importer());
+    }
 
     /**
      * Add variables.
      *
      * @param array $scss Associative array of variables and their values.
-     * @return void
      */
-    public function add_variables(array $variables) {
-        $this->setVariables($variables);
+    public function add_variables(array $variables): void {
+        $this->compiler->addVariables($variables);
     }
 
     /**
      * Append raw SCSS to what's to compile.
      *
      * @param string $scss SCSS code.
-     * @return void
      */
-    public function append_raw_scss($scss) {
+    public function append_raw_scss($scss): void {
         $this->scsscontent[] = $scss;
     }
 
@@ -64,9 +72,8 @@ class core_scss extends \ScssPhp\ScssPhp\Compiler {
      * Prepend raw SCSS to what's to compile.
      *
      * @param string $scss SCSS code.
-     * @return void
      */
-    public function prepend_raw_scss($scss) {
+    public function prepend_raw_scss($scss): void {
         $this->scssprepend[] = $scss;
     }
 
@@ -77,11 +84,37 @@ class core_scss extends \ScssPhp\ScssPhp\Compiler {
      * content of a file without messing with the import directories.
      *
      * @param string $filepath The path to the file.
-     * @return void
      */
-    public function set_file($filepath) {
+    public function set_file($filepath): void {
         $this->scssfile = $filepath;
-        $this->setImportPaths([dirname($filepath)]);
+        $this->compiler->setImportPaths(dirname($filepath));
+    }
+
+    /**
+     * Set import paths.
+     *
+     * @param string|array<string|callable(string): (string|null)> $path
+     */
+    public function setImportPaths($path): void {
+        $this->compiler->setImportPaths($path);
+    }
+
+    /**
+     * Enable/disable source maps
+     *
+     * @param self::SOURCE_MAP_* $sourceMap
+     */
+    public function setSourceMap(int $sourceMap): void {
+        $this->compiler->setSourceMap($sourceMap);
+    }
+
+    /**
+     * Set source map options
+     *
+     * @param array{sourceRoot?: string, sourceMapFilename?: string|null, sourceMapURL?: string|null, outputSourceFiles?: bool, sourceMapRootpath?: string, sourceMapBasepath?: string} $sourceMapOptions
+     */
+    public function setSourceMapOptions(array $sourceMapOptions): void {
+        $this->compiler->setSourceMapOptions($sourceMapOptions);
     }
 
     /**
@@ -108,18 +141,18 @@ class core_scss extends \ScssPhp\ScssPhp\Compiler {
      *
      * @return string The compiled CSS.
      */
-    public function compile($code, $path = null) {
+    public function compile($code, $path = null): string {
         global $CFG;
 
         $pathtosassc = trim($CFG->pathtosassc ?? '');
 
         if (!empty($pathtosassc) && is_executable($pathtosassc) && !is_dir($pathtosassc)) {
             $process = proc_open(
-                $pathtosassc . ' -I' . implode(':', $this->importPaths) . ' -s',
+                $pathtosassc . ' -I' . implode(':', [dirname($this->scssfile)]) . ' -s',
                 [
                     ['pipe', 'r'], // Set the process stdin pipe to read mode.
                     ['pipe', 'w'], // Set the process stdout pipe to write mode.
-                    ['pipe', 'w'] // Set the process stderr pipe to write mode.
+                    ['pipe', 'w'], // Set the process stderr pipe to write mode.
                 ],
                 $pipes // Pipes become available in $pipes (pass by reference).
             );
@@ -134,7 +167,7 @@ class core_scss extends \ScssPhp\ScssPhp\Compiler {
                 fclose($pipes[2]);
 
                 // The proc_close function returns the process exit status. Anything other than 0 is bad.
-                if (proc_close($process) !== 0) {
+                if (proc_close($process) !== 0 || $stdout === false) {
                     throw new coding_exception($stderr);
                 }
 
@@ -143,65 +176,11 @@ class core_scss extends \ScssPhp\ScssPhp\Compiler {
             }
         }
 
-        return $this->compileString($code, $path)->getCss();
-    }
-
-    /**
-     * Compile child; returns a value to halt execution
-     *
-     * @param array $child
-     * @param \ScssPhp\ScssPhp\Formatter\OutputBlock $out
-     *
-     * @return array|null
-     */
-    protected function compileChild($child, \ScssPhp\ScssPhp\Formatter\OutputBlock $out) {
-        switch($child[0]) {
-            case \ScssPhp\ScssPhp\Type::T_SCSSPHP_IMPORT_ONCE:
-            case \ScssPhp\ScssPhp\Type::T_IMPORT:
-                list(, $rawpath) = $child;
-                $rawpath = $this->reduce($rawpath);
-                $path = $this->compileStringContent($rawpath);
-
-                // We need to find the import path relative to the directory of the currently processed file.
-                $currentdirectory = new ReflectionProperty(\ScssPhp\ScssPhp\Compiler::class, 'currentDirectory');
-
-                if ($path = $this->findImport($path, $currentdirectory->getValue($this))) {
-                    if ($this->is_valid_file($path)) {
-                        return parent::compileChild($child, $out);
-                    } else {
-                        // Sneaky stuff, don't let non scss file in.
-                        debugging("Can't import scss file - " . $path, DEBUG_DEVELOPER);
-                    }
-                }
-                break;
-            default:
-                return parent::compileChild($child, $out);
-        }
-    }
-
-    /**
-     * Is the given file valid for import ?
-     *
-     * @param $path
-     * @return bool
-     */
-    protected function is_valid_file($path) {
-        global $CFG;
-
-        $realpath = realpath($path);
-
-        // Additional theme directory.
-        $addthemedirectory = core_component::get_plugin_types()['theme'];
-        $addrealroot = realpath($addthemedirectory);
-
-        // Original theme directory.
-        $themedirectory = $CFG->dirroot . "/theme";
-        $realroot = realpath($themedirectory);
-
-        // File should end in .scss and must be in sites theme directory, else ignore it.
-        $pathvalid = $realpath !== false;
-        $pathvalid = $pathvalid && (substr($path, -5) === '.scss');
-        $pathvalid = $pathvalid && (strpos($realpath, $realroot) === 0 || strpos($realpath, $addrealroot) === 0);
-        return $pathvalid;
+        return $this->compiler->compileString($code)->getCss();
     }
 }
+
+// Alias this class to the old name.
+// This file will be autoloaded by the legacyclasses autoload system.
+// In future all uses of this class will be corrected and the legacy references will be removed.
+class_alias(compiler::class, \core_scss::class);

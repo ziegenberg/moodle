@@ -16,7 +16,8 @@
 
 namespace core;
 
-use core_scss;
+use core\component;
+use core\scss\compiler;
 
 /**
  * This file contains the unittests for core scss.
@@ -33,7 +34,7 @@ final class scss_test extends \advanced_testcase {
      * @return array
      */
     public static function is_valid_file_provider(): array {
-        $themedirectory = \core_component::get_component_directory('theme_boost');
+        $themedirectory = component::get_component_directory('theme_boost');
         $realroot = realpath($themedirectory);
         return [
             "File import 1" => [
@@ -122,8 +123,8 @@ CSS
      * @dataProvider is_valid_file_provider
      */
     public function test_is_valid_file($path, $valid): void {
-        $scss = new \core_scss();
-        $pathvalid = \phpunit_util::call_internal_method($scss, 'is_valid_file', [$path], \core_scss::class);
+        $scss = new compiler();
+        $pathvalid = \phpunit_util::call_internal_method($scss, 'is_valid_file', [$path], compiler::class);
         $this->assertSame($valid, $pathvalid);
     }
 
@@ -141,7 +142,7 @@ CSS
 
         $this->resetAfterTest();
         set_config('pathtosassc', PHPUNIT_PATH_TO_SASSC);
-        $compiler = new core_scss();
+        $compiler = new compiler();
         $this->assertSame($compiler->compile($scss), $expected);
     }
 }
