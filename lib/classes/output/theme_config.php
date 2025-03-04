@@ -24,7 +24,7 @@ use core_cssparser;
 use core_minify;
 use core_php_time_limit;
 use core_rtlcss;
-use core_scss;
+use core\scss\compiler;
 use core_useragent;
 use core\context\system as context_system;
 use core\exception\coding_exception;
@@ -782,7 +782,7 @@ class theme_config {
         }
 
         if (!empty($filenames)) {
-            $compiler = new core_scss();
+            $compiler = new compiler();
 
             foreach ($filenames as $filename) {
                 $compiler->set_file("{$dir}/scss/{$filename}.scss");
@@ -1253,7 +1253,7 @@ class theme_config {
         }
 
         // Set-up the compiler.
-        $compiler = new core_scss($cacheoptions);
+        $compiler = new compiler($cacheoptions);
 
         if ($this->supports_source_maps($themedesigner)) {
             // Enable source maps.
@@ -1261,7 +1261,7 @@ class theme_config {
                 'sourceMapBasepath' => str_replace('\\', '/', $CFG->dirroot),
                 'sourceMapRootpath' => $CFG->wwwroot . '/',
             ]);
-            $compiler->setSourceMap($compiler::SOURCE_MAP_INLINE);
+            $compiler->setSourceMap(\ScssPhp\ScssPhp\Compiler::SOURCE_MAP_INLINE);
         }
 
         $compiler->prepend_raw_scss($this->get_pre_scss_code());
