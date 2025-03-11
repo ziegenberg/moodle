@@ -1,0 +1,9 @@
+issueNumber: MDL-84676
+notes:
+  core_form:
+    - message: |
+        Final removal of long-standing emitting methods:
+          - MoodleQuickForm::setShowAdvanced
+          - MoodleQuickForm::getShowAdvanced
+          - moodleform::save_files
+      type: deprecated

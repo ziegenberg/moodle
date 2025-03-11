@@ -1,0 +1,9 @@
+issueNumber: MDL-84676
+notes:
+  theme_boost:
+    - message: |
+        Final removal of the long-standing emitting class:
+          - theme_boost\autoprefixer
+        Final removal of the long-standing emitting function:
+          - theme_boost_css_tree_post_processor.
+      type: deprecated

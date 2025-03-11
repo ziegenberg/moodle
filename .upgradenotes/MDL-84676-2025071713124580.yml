@@ -1,0 +1,8 @@
+issueNumber: MDL-84676
+notes:
+  core_course:
+    - message: |
+        Final removal of long-standing emitting methods:
+          - core_course_renderer::course_category_tree
+          - core_course_renderer::course_category_tree_category
+      type: deprecated

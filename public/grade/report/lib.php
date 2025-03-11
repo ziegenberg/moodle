@@ -639,21 +639,16 @@ abstract class grade_report {
     }
 
     /**
-     * Optionally blank out course/category totals if they contain any hidden items
      * @deprecated since Moodle 2.8 - Call blank_hidden_total_and_adjust_bounds instead.
-     * @param string $courseid the course id
-     * @param string $course_item an instance of grade_item
-     * @param string $finalgrade the grade for the course_item
-     * @return string The new final grade
      */
+    #[\core\attribute\deprecated(
+        'grade_report::blank_hidden_total_and_adjust_bounds()',
+        since: '2.8',
+        mdl: 'MDL-35984',
+        final: true
+    )]
     protected function blank_hidden_total($courseid, $course_item, $finalgrade) {
-        // Note it is flawed to call this function directly because
-        // the aggregated grade does not make sense without the updated min and max information.
-
-        debugging('grade_report::blank_hidden_total() is deprecated.
-                   Call grade_report::blank_hidden_total_and_adjust_bounds instead.', DEBUG_DEVELOPER);
-        $result = $this->blank_hidden_total_and_adjust_bounds($courseid, $course_item, $finalgrade);
-        return $result['grade'];
+        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 
     /**

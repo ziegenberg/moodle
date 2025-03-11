@@ -1,0 +1,9 @@
+issueNumber: MDL-84676
+notes:
+  mod_feedback:
+    - message: |
+        Final removal of long-standing emitting methods:
+          - mod_feedback\event\course_module_viewed::can_view
+          - mod_feedback\event\response_deleted::can_view
+          - mod_feedback\event\response_submitted::can_view
+      type: deprecated

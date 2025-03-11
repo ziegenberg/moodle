@@ -1,0 +1,7 @@
+issueNumber: MDL-84676
+notes:
+  core_webservice:
+    - message: |
+        Final removal of long-standing emitting methods:
+          - webservice::get_user_capabilities
+      type: deprecated

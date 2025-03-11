@@ -755,18 +755,11 @@ abstract class moodleform {
     }
 
     /**
-     * Save verified uploaded files into directory. Upload process can be customised from definition()
-     *
      * @deprecated since Moodle 2.0
-     * @todo MDL-31294 remove this api
-     * @see moodleform::save_stored_file()
-     * @see moodleform::save_file()
-     * @param string $destination path where file should be stored
-     * @return bool Always false
      */
+    #[\core\attribute\deprecated('save_stored_file() or save_file()', since: '2.0', mdl: 'MDL-30974', final: true)]
     function save_files($destination) {
-        debugging('Not used anymore, please fix code! Use save_stored_file() or save_file() instead');
-        return false;
+        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 
     /**
@@ -1945,27 +1938,22 @@ class MoodleQuickForm extends HTML_QuickForm_DHTMLRulesTableless {
         }
     }
 
+    // phpcs:disable moodle.NamingConventions.ValidFunctionName.LowercaseMethod,moodle.NamingConventions.ValidVariableName.VariableNameLowerCase
     /**
-     * This function has been deprecated. Show advanced has been replaced by
-     * "Show more.../Show less..." in the shortforms javascript module.
-     *
      * @deprecated since Moodle 2.5
-     * @param bool $showadvancedNow if true will show advanced elements.
-      */
-    function setShowAdvanced($showadvancedNow = null){
-        debugging('Call to deprecated function setShowAdvanced. See "Show more.../Show less..." in shortforms yui module.');
+     */
+    #[\core\attribute\deprecated(null, since: '2.5', mdl: 'MDL-30637', final: true)]
+    public function setShowAdvanced($showadvancedNow = null) {
+        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
+    // phpcs:enable moodle.NamingConventions.ValidFunctionName.LowercaseMethod,moodle.NamingConventions.ValidVariableName.VariableNameLowerCase
 
     /**
-     * This function has been deprecated. Show advanced has been replaced by
-     * "Show more.../Show less..." in the shortforms javascript module.
-     *
      * @deprecated since Moodle 2.5
-     * @return bool (Always false)
-      */
-    function getShowAdvanced(){
-        debugging('Call to deprecated function setShowAdvanced. See "Show more.../Show less..." in shortforms yui module.');
-        return false;
+     */
+    #[\core\attribute\deprecated(null, since: '2.5', mdl: 'MDL-30637', final: true)]
+    public function getShowAdvanced() { // phpcs:ignore moodle.NamingConventions.ValidFunctionName.LowercaseMethod
+        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 
     /**

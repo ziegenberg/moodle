@@ -951,22 +951,16 @@ abstract class repository implements cacheable_object {
     }
 
     /**
-     * Append a suffix to filename.
-     *
-     * @static
-     * @param string $filename
-     * @return string
-     * @deprecated since 2.5
+     * @deprecated since 2.5 MDL-37641
      */
+    #[\core\attribute\deprecated(
+        'repository::get_unused_filename',
+        since:'3.0',
+        mdl: 'MDL-37641',
+        final: true,
+    )]
     public static function append_suffix($filename) {
-        debugging('The function repository::append_suffix() has been deprecated. Use repository::get_unused_filename() instead.',
-            DEBUG_DEVELOPER);
-        $pathinfo = pathinfo($filename);
-        if (empty($pathinfo['extension'])) {
-            return $filename . RENAME_SUFFIX;
-        } else {
-            return $pathinfo['filename'] . RENAME_SUFFIX . '.' . $pathinfo['extension'];
-        }
+        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 
     /**
@@ -1194,20 +1188,16 @@ abstract class repository implements cacheable_object {
     }
 
     /**
-     * Scan file, throws exception in case of infected file.
-     *
-     * Please note that the scanning engine must be able to access the file,
-     * permissions of the file are not modified here!
-     *
-     * @static
      * @deprecated since Moodle 3.0
-     * @param string $thefile
-     * @param string $filename name of the file
-     * @param bool $deleteinfected
      */
+    #[\core\attribute\deprecated(
+        '\core\antivirus\manager::scan_file',
+        since:'3.0',
+        mdl: 'MDL-50887',
+        final: true,
+    )]
     public static function antivir_scan_file($thefile, $filename, $deleteinfected) {
-        debugging('Please upgrade your code to use \core\antivirus\manager::scan_file instead', DEBUG_DEVELOPER);
-        \core\antivirus\manager::scan_file($thefile, $filename, $deleteinfected);
+        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 
     /**
@@ -2804,14 +2794,11 @@ abstract class repository implements cacheable_object {
     }
 
     /**
-     * Helper function to indicate if this repository uses post requests for uploading files.
-     *
      * @deprecated since Moodle 3.2, 3.1.1, 3.0.5
-     * @return bool
      */
+    #[\core\attribute\deprecated(null, since: '3.0', mdl: 'MDL-54785', final: true)]
     public function uses_post_requests() {
-        debugging('The method repository::uses_post_requests() is deprecated and must not be used anymore.', DEBUG_DEVELOPER);
-        return false;
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
     }
 
     /**

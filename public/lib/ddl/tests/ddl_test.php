@@ -1752,10 +1752,9 @@ final class ddl_test extends \database_driver_testcase {
         $dbman->create_temp_table($table1);
         $this->assertTrue($dbman->table_exists('test_table1'));
 
-        // Make sure it can be dropped using deprecated drop_temp_table().
-        $dbman->drop_temp_table($table1);
+        // Make sure it can be dropped using deprecated drop_table().
+        $dbman->drop_table($table1);
         $this->assertFalse($dbman->table_exists('test_table1'));
-        $this->assertDebuggingCalled();
 
         // Try join with normal tables - MS SQL may use incompatible collation.
         $table1 = new xmldb_table('test_table');

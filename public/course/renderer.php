@@ -125,30 +125,19 @@ class core_course_renderer extends plugin_renderer_base {
     }
 
     /**
-     * Renderers a structured array of courses and categories into a nice XHTML tree structure.
-     *
      * @deprecated since 2.5
-     *
-     * @param array $ignored argument ignored
-     * @return string
      */
+    #[\core\attribute\deprecated('frontpage_combo_list()', since: '2.5', mdl: 'MDL-37009', final: true)]
     final public function course_category_tree(array $ignored) {
-        debugging('Function core_course_renderer::course_category_tree() is deprecated, please use frontpage_combo_list()', DEBUG_DEVELOPER);
-        return $this->frontpage_combo_list();
+        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 
     /**
-     * Renderers a category for use with course_category_tree
-     *
      * @deprecated since 2.5
-     *
-     * @param array $category
-     * @param int $depth
-     * @return string
      */
+    #[\core\attribute\deprecated(null, since: '2.5', mdl: 'MDL-37009', final: true)]
     final protected function course_category_tree_category(stdClass $category, $depth=1) {
-        debugging('Function core_course_renderer::course_category_tree_category() is deprecated', DEBUG_DEVELOPER);
-        return '';
+        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 
     /**
