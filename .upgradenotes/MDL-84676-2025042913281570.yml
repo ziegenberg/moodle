@@ -1,0 +1,8 @@
+issueNumber: MDL-84676
+notes:
+  core:
+    - message: |
+        Final removal of long-standing emitting methods:
+          - database_manager::drop_temp_table
+          - database_manager::change_field_unsigned
+      type: deprecated

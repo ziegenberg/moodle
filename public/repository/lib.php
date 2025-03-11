@@ -2804,14 +2804,11 @@ abstract class repository implements cacheable_object {
     }
 
     /**
-     * Helper function to indicate if this repository uses post requests for uploading files.
-     *
      * @deprecated since Moodle 3.2, 3.1.1, 3.0.5
-     * @return bool
      */
+    #[\core\attribute\deprecated(null, since: '3.0', mdl: 'MDL-54785', final: true)]
     public function uses_post_requests() {
-        debugging('The method repository::uses_post_requests() is deprecated and must not be used anymore.', DEBUG_DEVELOPER);
-        return false;
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
     }
 
     /**

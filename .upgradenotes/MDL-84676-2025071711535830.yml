@@ -1,0 +1,7 @@
+issueNumber: MDL-84676
+notes:
+  tool_usertours:
+    - message: |
+        Final removal of long-standing emitting methods:
+          - tool_usertours\step::get_string_from_input
+      type: deprecated

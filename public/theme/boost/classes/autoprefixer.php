@@ -99,19 +99,17 @@ class autoprefixer {
     ];
 
     /**
-     * Constructor.
-     *
-     * @param Document $tree The CSS tree.
+     * @deprecated since 3.10 MDL-69117. Required prefixes for Bootstrap are now in theme/boost/scss/moodle/prefixes.scss
      */
+    #[\core\attribute\deprecated(
+        null,
+        since: '3.10',
+        reason: 'Required prefixes for Bootstrap are now in theme/boost/scss/moodle/prefixes.scss',
+        mdl: 'MDL-69117',
+        final: true
+    )]
     public function __construct(Document $tree) {
-        debugging('theme_boost\autoprefixer() is deprecated. Required prefixes for Bootstrap ' .
-            'are now in theme/boost/scss/moodle/prefixes.scss', DEBUG_DEVELOPER);
-        $this->tree = $tree;
-
-        $pseudos = array_map(function($pseudo) {
-            return '(' . preg_quote($pseudo) . ')';
-        }, array_keys(self::$pseudos));
-        $this->pseudosregex = '(' . implode('|', $pseudos) . ')';
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
     }
 
     /**

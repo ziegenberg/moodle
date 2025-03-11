@@ -625,32 +625,16 @@ class webservice {
     }
 
     /**
-     * Get user capabilities (with context)
-     * Only useful for documentation purpose
-     * WARNING: do not use this "broken" function. It was created in the goal to display some capabilities
-     * required by users. In theory we should not need to display this kind of information
-     * as the front end does not display it itself. In pratice,
-     * admins would like the info, for more info you can follow: MDL-29962
-     *
      * @deprecated since Moodle 3.11 in MDL-67748 without a replacement.
-     * @todo MDL-70187 Please delete this method completely in Moodle 4.3, thank you.
-     * @param int $userid user id
-     * @return array
      */
+    #[\core\attribute\deprecated(
+        null,
+        '3.11',
+        'MDL-67748',
+        final: true
+    )]
     public function get_user_capabilities($userid) {
-        global $DB;
-
-        debugging('webservice::get_user_capabilities() has been deprecated.', DEBUG_DEVELOPER);
-
-        //retrieve the user capabilities
-        $sql = "SELECT DISTINCT rc.id, rc.capability FROM {role_capabilities} rc, {role_assignments} ra
-            WHERE rc.roleid=ra.roleid AND ra.userid= ? AND rc.permission = ?";
-        $dbusercaps = $DB->get_records_sql($sql, array($userid, CAP_ALLOW));
-        $usercaps = array();
-        foreach ($dbusercaps as $usercap) {
-            $usercaps[$usercap->capability] = true;
-        }
-        return $usercaps;
+        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 
     /**

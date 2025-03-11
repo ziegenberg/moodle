@@ -1,0 +1,7 @@
+issueNumber: MDL-84676
+notes:
+  core_repository:
+    - message: |
+        Final removal of long-standing emitting methods:
+          - repository::uses_post_requests
+      type: deprecated

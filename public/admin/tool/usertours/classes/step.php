@@ -787,17 +787,11 @@ class step {
     }
 
     /**
-     * Attempt to fetch any matching langstring if the string is in the
-     * format identifier,component.
-     *
      * @deprecated since Moodle 4.0 MDL-72783. Please use helper::get_string_from_input() instead.
-     * @param   string  $string
-     * @return  string
      */
+    #[\core\attribute\deprecated('helper::get_string_from_input()', since: '4.0', mdl: 'MDL-72783', final: true)]
     public static function get_string_from_input($string) {
-        debugging('Use of ' . __FUNCTION__ .
-            '() have been deprecated, please update your code to use helper::get_string_from_input()', DEBUG_DEVELOPER);
-        return helper::get_string_from_input($string);
+        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 
     /**

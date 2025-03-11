@@ -1,0 +1,10 @@
+issueNumber: MDL-84676
+notes:
+  repository_googledocs:
+    - message: |
+        Final removal of long-standing emitting methods:
+          - repository_googledocs::build_breadcrumb
+          - repository_googledocs::build_node_path
+          - repository_googledocs::explode_node_path
+          - repository_googledocs::query
+      type: deprecated

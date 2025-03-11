@@ -179,82 +179,42 @@ class repository_googledocs extends repository {
     }
 
     /**
-     * Build the breadcrumb from a path.
-     *
      * @deprecated since Moodle 3.11.
-     * @param string $path to create a breadcrumb from.
-     * @return array containing name and path of each crumb.
      */
+    #[\core\attribute\deprecated(
+        'googledocs_content::get_navigation()',
+        since: '3.11',
+        mdl: 'MDL-61768',
+        final: true
+    )]
     protected function build_breadcrumb($path) {
-        debugging('The function build_breadcrumb() is deprecated, please use get_navigation() from the ' .
-            'googledocs repository content classes instead.', DEBUG_DEVELOPER);
-
-        $bread = explode('/', $path);
-        $crumbtrail = '';
-        foreach ($bread as $crumb) {
-            list($id, $name) = $this->explode_node_path($crumb);
-            $name = empty($name) ? $id : $name;
-            $breadcrumb[] = array(
-                'name' => $name,
-                'path' => $this->build_node_path($id, $name, $crumbtrail)
-            );
-            $tmp = end($breadcrumb);
-            $crumbtrail = $tmp['path'];
-        }
-        return $breadcrumb;
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
     }
 
     /**
-     * Generates a safe path to a node.
-     *
-     * Typically, a node will be id|Name of the node.
-     *
      * @deprecated since Moodle 3.11.
-     * @param string $id of the node.
-     * @param string $name of the node, will be URL encoded.
-     * @param string $root to append the node on, must be a result of this function.
-     * @return string path to the node.
      */
+    #[\core\attribute\deprecated(
+        'repository_googledocs\helper::build_node_path()',
+        since: '3.11',
+        mdl: 'MDL-61768',
+        final: true
+    )]
     protected function build_node_path($id, $name = '', $root = '') {
-        debugging('The function build_node_path() is deprecated, please use ' .
-            '\repository_googledocs\helper::build_node_path() instead.', DEBUG_DEVELOPER);
-
-        $path = $id;
-        if (!empty($name)) {
-            $path .= '|' . urlencode($name);
-        }
-        if (!empty($root)) {
-            $path = trim($root, '/') . '/' . $path;
-        }
-        return $path;
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
     }
 
     /**
-     * Returns information about a node in a path.
-     *
      * @deprecated since Moodle 3.11.
-     * @see self::build_node_path()
-     * @param string $node to extrat information from.
-     * @return array about the node.
      */
+    #[\core\attribute\deprecated(
+        'repository_googledocs\helper::explode_node_path()',
+        since: '3.11',
+        mdl: 'MDL-61768',
+        final: true
+    )]
     protected function explode_node_path($node) {
-        debugging('The function explode_node_path() is deprecated, please use ' .
-            '\repository_googledocs\helper::explode_node_path() instead.', DEBUG_DEVELOPER);
-
-        if (strpos($node, '|') !== false) {
-            list($id, $name) = explode('|', $node, 2);
-            $name = urldecode($name);
-        } else {
-            $id = $node;
-            $name = '';
-        }
-        $id = urldecode($id);
-        return array(
-            0 => $id,
-            1 => $name,
-            'id' => $id,
-            'name' => $name
-        );
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
     }
 
     /**
@@ -340,148 +300,16 @@ class repository_googledocs extends repository {
     }
 
     /**
-     * Query Google Drive for files and folders using a search query.
-     *
-     * Documentation about the query format can be found here:
-     *   https://developers.google.com/drive/search-parameters
-     *
-     * This returns a list of files and folders with their details as they should be
-     * formatted and returned by functions such as get_listing() or search().
-     *
      * @deprecated since Moodle 3.11.
-     * @param string $q search query as expected by the Google API.
-     * @param string $path parent path of the current files, will not be used for the query.
-     * @param int $page page.
-     * @return array of files and folders.
      */
+    #[\core\attribute\deprecated(
+        'repository_googledocs\googledocs_content::get_content_nodes()',
+        since: '3.11',
+        mdl: 'MDL-61768',
+        final: true
+    )]
     protected function query($q, $path = null, $page = 0) {
-        debugging('The function query() is deprecated, please use get_content_nodes() from the ' .
-            'googledocs repository content classes instead.', DEBUG_DEVELOPER);
-
-        global $OUTPUT;
-
-        $files = array();
-        $folders = array();
-        $config = get_config('googledocs');
-        $fields = "files(id,name,mimeType,webContentLink,webViewLink,fileExtension,modifiedTime,size,thumbnailLink,iconLink)";
-        $params = array('q' => $q, 'fields' => $fields, 'spaces' => 'drive');
-
-        try {
-            // Retrieving files and folders.
-            $client = $this->get_user_oauth_client();
-            $service = new repository_googledocs\rest($client);
-
-            $response = $service->call('list', $params);
-        } catch (Exception $e) {
-            if ($e->getCode() == 403 && strpos($e->getMessage(), 'Access Not Configured') !== false) {
-                // This is raised when the service Drive API has not been enabled on Google APIs control panel.
-                throw new repository_exception('servicenotenabled', 'repository_googledocs');
-            } else {
-                throw $e;
-            }
-        }
-
-        $gfiles = isset($response->files) ? $response->files : array();
-        foreach ($gfiles as $gfile) {
-            if ($gfile->mimeType == 'application/vnd.google-apps.folder') {
-                // This is a folder.
-                $folders[$gfile->name . $gfile->id] = array(
-                    'title' => $gfile->name,
-                    'path' => $this->build_node_path($gfile->id, $gfile->name, $path),
-                    'date' => strtotime($gfile->modifiedTime),
-                    'thumbnail' => $OUTPUT->image_url(file_folder_icon())->out(false),
-                    'thumbnail_height' => 64,
-                    'thumbnail_width' => 64,
-                    'children' => array()
-                );
-            } else {
-                // This is a file.
-                $link = isset($gfile->webViewLink) ? $gfile->webViewLink : '';
-                if (empty($link)) {
-                    $link = isset($gfile->webContentLink) ? $gfile->webContentLink : '';
-                }
-                if (isset($gfile->fileExtension)) {
-                    // The file has an extension, therefore we can download it.
-                    $source = json_encode([
-                        'id' => $gfile->id,
-                        'name' => $gfile->name,
-                        'exportformat' => 'download',
-                        'link' => $link
-                    ]);
-                    $title = $gfile->name;
-                } else {
-                    // The file is probably a Google Doc file, we get the corresponding export link.
-                    // This should be improved by allowing the user to select the type of export they'd like.
-                    $type = str_replace('application/vnd.google-apps.', '', $gfile->mimeType);
-                    $title = '';
-                    $exporttype = '';
-                    $types = get_mimetypes_array();
-
-                    switch ($type){
-                        case 'document':
-                            $ext = $config->documentformat;
-                            $title = $gfile->name . '.gdoc';
-                            if ($ext === 'rtf') {
-                                // Moodle user 'text/rtf' as the MIME type for RTF files.
-                                // Google uses 'application/rtf' for the same type of file.
-                                // See https://developers.google.com/drive/v3/web/manage-downloads.
-                                $exporttype = 'application/rtf';
-                            } else {
-                                $exporttype = $types[$ext]['type'];
-                            }
-                            break;
-                        case 'presentation':
-                            $ext = $config->presentationformat;
-                            $title = $gfile->name . '.gslides';
-                            $exporttype = $types[$ext]['type'];
-                            break;
-                        case 'spreadsheet':
-                            $ext = $config->spreadsheetformat;
-                            $title = $gfile->name . '.gsheet';
-                            $exporttype = $types[$ext]['type'];
-                            break;
-                        case 'drawing':
-                            $ext = $config->drawingformat;
-                            $title = $gfile->name . '.'. $ext;
-                            $exporttype = $types[$ext]['type'];
-                            break;
-                    }
-                    // Skips invalid/unknown types.
-                    if (empty($title)) {
-                        continue;
-                    }
-                    $source = json_encode([
-                        'id' => $gfile->id,
-                        'exportformat' => $exporttype,
-                        'link' => $link,
-                        'name' => $gfile->name
-                    ]);
-                }
-                // Adds the file to the file list. Using the itemId along with the name as key
-                // of the array because Google Drive allows files with identical names.
-                $thumb = '';
-                if (isset($gfile->thumbnailLink)) {
-                    $thumb = $gfile->thumbnailLink;
-                } else if (isset($gfile->iconLink)) {
-                    $thumb = $gfile->iconLink;
-                }
-                $files[$title . $gfile->id] = array(
-                    'title' => $title,
-                    'source' => $source,
-                    'date' => strtotime($gfile->modifiedTime),
-                    'size' => isset($gfile->size) ? $gfile->size : null,
-                    'thumbnail' => $thumb,
-                    'thumbnail_height' => 64,
-                    'thumbnail_width' => 64,
-                );
-            }
-        }
-
-        // Filter and order the results.
-        $files = array_filter($files, array($this, 'filter'));
-        core_collator::ksort($files, core_collator::SORT_NATURAL);
-        core_collator::ksort($folders, core_collator::SORT_NATURAL);
-        return array_merge(array_values($folders), array_values($files));
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
     }
 
     /**
