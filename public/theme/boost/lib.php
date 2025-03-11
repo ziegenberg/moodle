@@ -24,18 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-/**
- * Post process the CSS tree.
- *
- * @param string $tree The CSS tree.
- * @param theme_config $theme The theme config object.
- */
-function theme_boost_css_tree_post_processor($tree, $theme) {
-    error_log('theme_boost_css_tree_post_processor() is deprecated. Required' .
-        'prefixes for Bootstrap are now in theme/boost/scss/moodle/prefixes.scss');
-    $prefixer = new theme_boost\autoprefixer($tree);
-    $prefixer->prefix();
-}
+require_once(__DIR__ . '/deprecatedlib.php');
 
 /**
  * Inject additional SCSS.

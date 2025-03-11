@@ -1,0 +1,10 @@
+issueNumber: MDL-84676
+notes:
+  mod_lesson:
+    - message: |+
+        Deprecated in MDL-49581
+
+        mod_lesson\event\highscore_added
+        mod_lesson\event\highscores_viewed
+
+      type: removed

@@ -1,0 +1,8 @@
+issueNumber: MDL-84676
+notes:
+  core_repository:
+    - message: |
+        Final removal of the long-standing emitting methods:
+          - repository::antivir_scan_file
+          - repository::append_suffix
+      type: deprecated

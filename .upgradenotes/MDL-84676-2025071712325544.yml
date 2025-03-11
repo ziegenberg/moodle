@@ -1,0 +1,10 @@
+issueNumber: MDL-84676
+notes:
+  gradeexport:
+    - message: |
+        Final removal of long-standing emitting methods:
+          - grade_export::deprecated_constructor
+          - grade_export::display_preview
+          - grade_export::print_continue
+          - grade_report::blank_hidden_total
+      type: deprecated

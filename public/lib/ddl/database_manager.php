@@ -470,18 +470,11 @@ class database_manager {
     }
 
     /**
-     * This function will drop the temporary table passed as argument with all its
-     * fields/keys/indexes/sequences, everything based in the XMLDB object
-     *
-     * It is recommended to drop temp table when not used anymore.
-     *
      * @deprecated since 2.3, use drop_table() for all table types
-     * @param xmldb_table $xmldb_table Table object.
-     * @return void
      */
+    #[\core\attribute\deprecated('database_manager::drop_table()', since: '2.3', mdl: 'MDL-32434', final: true)]
     public function drop_temp_table(xmldb_table $xmldb_table) {
-        debugging('database_manager::drop_temp_table() is deprecated, use database_manager::drop_table() instead');
-        $this->drop_table($xmldb_table);
+        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 
     /**
@@ -610,16 +603,11 @@ class database_manager {
     }
 
     /**
-     * This function will change the unsigned/signed of the field in the table passed as arguments
-     *
      * @deprecated since 2.3, only singed numbers are allowed now, migration is automatic
-     * @param xmldb_table $xmldb_table Table object (just the name is mandatory).
-     * @param xmldb_field $xmldb_field Field object (full specs are required).
-     * @return void
      */
+    #[\core\attribute\deprecated(null, since: '2.3', mdl: 'MDL-27982', final: true)]
     public function change_field_unsigned(xmldb_table $xmldb_table, xmldb_field $xmldb_field) {
-        debugging('All unsigned numbers are converted to signed automatically during Moodle upgrade.');
-        $this->change_field_type($xmldb_table, $xmldb_field);
+        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 
     /**

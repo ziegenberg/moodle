@@ -145,13 +145,13 @@ final class reportlib_test extends advanced_testcase {
                                   'aggregationstatus' => 'unknown',
                                   'aggregationweight' => null), $result);
 
-        // Note: we cannot simply hide modules and call $report->blank_hidden_total() again.
-        // It stores grades in a static variable so $report->blank_hidden_total() will return incorrect totals
+        // Note: we cannot simply hide modules and call $report->blank_hidden_total_and_adjust_bounds() again.
+        // It stores grades in a static variable so $report->blank_hidden_total_and_adjust_bounds() will return incorrect totals
         // In practice this isn't a problem. Grade visibility isn't altered mid-request outside of the unit tests.
 
         // Add a second course to test:
         // 1) How a course with no visible activities behaves.
-        // 2) That $report->blank_hidden_total() correctly moves on to the new course.
+        // 2) That $report->blank_hidden_total_and_adjust_bounds() correctly moves on to the new course.
         $course = $this->getDataGenerator()->create_course();
         $coursegradeitem = grade_item::fetch_course_item($course->id);
         $coursecontext = context_course::instance($course->id);

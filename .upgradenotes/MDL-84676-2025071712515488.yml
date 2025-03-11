@@ -1,0 +1,7 @@
+issueNumber: MDL-84676
+notes:
+  core:
+    - message: |
+        Final removal of long-standing emitting methods:
+          - core\event\base::can_view
+      type: deprecated
