@@ -1,0 +1,23 @@
+issueNumber: MDL-84676
+notes:
+  core:
+    - message: |
+        Final remvoal of long-standing emitting methods:
+          - MoodleQuickForm::setShowAdvanced
+          - MoodleQuickForm::getShowAdvanced
+          - moodleform::save_files
+          - tool_usertours\step::get_string_from_input
+          - core_course_renderer::course_category_tree
+          - core_course_renderer::course_category_tree_category
+          - grade_export::deprecated_constructor
+          - grade_export::display_preview
+          - grade_export::print_continue
+          - grade_report::blank_hidden_total
+          - core\event\base::can_view
+          - mod_feedback\event\course_module_viewed::can_view
+          - mod_feedback\event\response_deleted::can_view
+          - mod_feedback\event\response_submitted::can_view
+          - database_manager::drop_temp_table
+          - database_manager::change_field_unsigned
+        Final deprecation of long-standing emitting functions:
+      type: deprecated

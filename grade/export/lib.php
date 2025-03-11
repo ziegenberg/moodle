@@ -73,10 +73,6 @@ abstract class grade_export {
      * @note Exporting as letters will lead to data loss if that exported set it re-imported.
      */
     public function __construct($course, $groupid, $formdata) {
-        if (func_num_args() != 3 || ($formdata != null && get_class($formdata) != "stdClass")) {
-            $args = func_get_args();
-            return call_user_func_array(array($this, "deprecated_constructor"), $args);
-        }
         $this->course = $course;
         $this->groupid = $groupid;
 
@@ -86,14 +82,9 @@ abstract class grade_export {
     }
 
     /**
-     * Old deprecated constructor.
-     *
-     * This deprecated constructor accepts the individual parameters as separate arguments, in
-     * 2.8 this was simplified to just accept the data from the moodle form.
-     *
      * @deprecated since 2.8 MDL-46548. Instead call the shortened constructor which accepts the data
-     * directly from the grade_export_form.
      */
+    #[\core\attribute\deprecated(null, since: '2.8', mdl: 'MDL-46548', final: true)]
     protected function deprecated_constructor($course,
                                               $groupid=0,
                                               $itemlist='',
@@ -103,43 +94,7 @@ abstract class grade_export {
                                               $decimalpoints = 2,
                                               $onlyactive = false,
                                               $usercustomfields = false) {
-
-        debugging('Many argument constructor for class "grade_export" is deprecated. Call the 3 argument version instead.', DEBUG_DEVELOPER);
-
-        $this->course = $course;
-        $this->groupid = $groupid;
-
-        $this->grade_items = grade_item::fetch_all(array('courseid'=>$this->course->id));
-        //Populating the columns here is required by /grade/export/(whatever)/export.php
-        //however index.php, when the form is submitted, will construct the collection here
-        //with an empty $itemlist then reconstruct it in process_form() using $formdata
-        $this->columns = array();
-        if (!empty($itemlist)) {
-            // Check that user selected something.
-            if ($itemlist != self::EXPORT_SELECT_NONE) {
-                $itemids = explode(',', $itemlist);
-                // remove items that are not requested
-                foreach ($itemids as $itemid) {
-                    if (array_key_exists($itemid, $this->grade_items)) {
-                        $this->columns[$itemid] =& $this->grade_items[$itemid];
-                    }
-                }
-            }
-        } else {
-            foreach ($this->grade_items as $itemid=>$unused) {
-                $this->columns[$itemid] =& $this->grade_items[$itemid];
-            }
-        }
-
-        $this->export_feedback = $export_feedback;
-        $this->userkey         = '';
-        $this->previewrows     = false;
-        $this->updatedgradesonly = $updatedgradesonly;
-
-        $this->displaytype = $displaytype;
-        $this->decimalpoints = $decimalpoints;
-        $this->onlyactive = $onlyactive;
-        $this->usercustomfields = $usercustomfields;
+        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 
     /**
@@ -309,99 +264,11 @@ abstract class grade_export {
     abstract public function print_grades();
 
     /**
-     * Prints preview of exported grades on screen as a feedback mechanism
-     * @param bool $require_user_idnumber true means skip users without idnumber
      * @deprecated since 2.8 MDL-46548. Previews are not useful on export.
      */
+    #[\core\attribute\deprecated(null, since: '2.8', mdl: 'MDL-46548', final: true)]
     public function display_preview($require_user_idnumber=false) {
-        global $OUTPUT;
-
-        debugging('function grade_export::display_preview is deprecated.', DEBUG_DEVELOPER);
-
-        $userprofilefields = grade_helper::get_user_profile_fields($this->course->id, $this->usercustomfields);
-        $formatoptions = new stdClass();
-        $formatoptions->para = false;
-
-        echo $OUTPUT->heading(get_string('previewrows', 'grades'));
-
-        echo '<table>';
-        echo '<tr>';
-        foreach ($userprofilefields as $field) {
-            echo '<th>' . $field->fullname . '</th>';
-        }
-        if (!$this->onlyactive) {
-            echo '<th>'.get_string("suspended")."</th>";
-        }
-        foreach ($this->columns as $grade_item) {
-            echo '<th>'.$this->format_column_name($grade_item).'</th>';
-
-            /// add a column_feedback column
-            if ($this->export_feedback) {
-                echo '<th>'.$this->format_column_name($grade_item, true).'</th>';
-            }
-        }
-        echo '</tr>';
-        /// Print all the lines of data.
-        $i = 0;
-        $gui = new graded_users_iterator($this->course, $this->columns, $this->groupid);
-        $gui->require_active_enrolment($this->onlyactive);
-        $gui->allow_user_custom_fields($this->usercustomfields);
-        $gui->init();
-        while ($userdata = $gui->next_user()) {
-            // number of preview rows
-            if ($this->previewrows and $this->previewrows <= $i) {
-                break;
-            }
-            $user = $userdata->user;
-            if ($require_user_idnumber and empty($user->idnumber)) {
-                // some exports require user idnumber so we can match up students when importing the data
-                continue;
-            }
-
-            $gradeupdated = false; // if no grade is update at all for this user, do not display this row
-            $rowstr = '';
-            foreach ($this->columns as $itemid=>$unused) {
-                $gradetxt = $this->format_grade($userdata->grades[$itemid]);
-
-                // get the status of this grade, and put it through track to get the status
-                $g = new grade_export_update_buffer();
-                $grade_grade = new grade_grade(array('itemid'=>$itemid, 'userid'=>$user->id));
-                $status = $g->track($grade_grade);
-
-                if ($this->updatedgradesonly && ($status == 'nochange' || $status == 'unknown')) {
-                    $rowstr .= '<td>'.get_string('unchangedgrade', 'grades').'</td>';
-                } else {
-                    $rowstr .= "<td>$gradetxt</td>";
-                    $gradeupdated = true;
-                }
-
-                if ($this->export_feedback) {
-                    $rowstr .=  '<td>'.$this->format_feedback($userdata->feedbacks[$itemid]).'</td>';
-                }
-            }
-
-            // if we are requesting updated grades only, we are not interested in this user at all
-            if (!$gradeupdated && $this->updatedgradesonly) {
-                continue;
-            }
-
-            echo '<tr>';
-            foreach ($userprofilefields as $field) {
-                $fieldvalue = grade_helper::get_user_field_value($user, $field);
-                // @see profile_field_base::display_data().
-                echo '<td>' . format_text($fieldvalue, FORMAT_MOODLE, $formatoptions) . '</td>';
-            }
-            if (!$this->onlyactive) {
-                $issuspended = ($user->suspendedenrolment) ? get_string('yes') : '';
-                echo "<td>$issuspended</td>";
-            }
-            echo $rowstr;
-            echo "</tr>";
-
-            $i++; // increment the counter
-        }
-        echo '</table>';
-        $gui->close();
+        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 
     /**
@@ -444,43 +311,11 @@ abstract class grade_export {
     }
 
     /**
-     * Either prints a "Export" box, which will redirect the user to the download page,
-     * or prints the URL for the published data.
-     *
-     * @deprecated since 2.8 MDL-46548. Call get_export_url and set the
-     *             action of the grade_export_form instead.
-     * @return void
+     * @deprecated since 2.8 MDL-46548. Call get_export_url and set the action of the grade_export_form instead.
      */
+    #[\core\attribute\deprecated(null, since: '2.8', mdl: 'MDL-46548', final: true)]
     public function print_continue() {
-        global $CFG, $OUTPUT;
-
-        debugging('function grade_export::print_continue is deprecated.', DEBUG_DEVELOPER);
-        $params = $this->get_export_params();
-
-        echo $OUTPUT->heading(get_string('export', 'grades'));
-
-        echo $OUTPUT->container_start('gradeexportlink');
-
-        if (!$this->userkey) {
-            // This button should trigger a download prompt.
-            $url = new moodle_url('/grade/export/'.$this->plugin.'/export.php', $params);
-            echo $OUTPUT->single_button($url, get_string('download', 'admin'));
-
-        } else {
-            $paramstr = '';
-            $sep = '?';
-            foreach($params as $name=>$value) {
-                $paramstr .= $sep.$name.'='.$value;
-                $sep = '&';
-            }
-
-            $link = $CFG->wwwroot.'/grade/export/'.$this->plugin.'/dump.php'.$paramstr.'&key='.$this->userkey;
-
-            echo get_string('download', 'admin').': ' . html_writer::link($link, $link);
-        }
-        echo $OUTPUT->container_end();
-
-        return;
+        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 
     /**

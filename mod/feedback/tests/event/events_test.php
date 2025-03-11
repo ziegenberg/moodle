@@ -126,44 +126,6 @@ final class events_test extends \advanced_testcase {
         $this->assertEquals($this->eventfeedbackcompleted, $event->get_record_snapshot('feedback_completed', $event->objectid));
         $this->assertEquals($this->eventcourse, $event->get_record_snapshot('course', $event->courseid));
         $this->assertEquals($this->eventfeedback, $event->get_record_snapshot('feedback', $event->other['instanceid']));
-
-        // Test can_view() .
-        $this->setUser($this->eventuser);
-        $this->assertFalse($event->can_view());
-        $this->assertDebuggingCalled();
-        $this->setAdminUser();
-        $this->assertTrue($event->can_view());
-        $this->assertDebuggingCalled();
-
-        // Create a response, with anonymous set to no and test can_view().
-        $response = new \stdClass();
-        $response->feedback = $this->eventcm->instance;
-        $response->userid = $this->eventuser->id;
-        $response->anonymous_response = FEEDBACK_ANONYMOUS_NO;
-        $completedid = $DB->insert_record('feedback_completed', $response);
-        $DB->get_record('feedback_completed', array('id' => $completedid), '*', MUST_EXIST);
-        $value = new \stdClass();
-        $value->course_id = $this->eventcourse->id;
-        $value->item = $this->eventfeedbackitem->id;
-        $value->completed = $completedid;
-        $value->value = 25; // User response value.
-        $DB->insert_record('feedback_valuetmp', $value);
-
-        // Save the feedback.
-        $sink = $this->redirectEvents();
-        feedback_delete_completed($completedid);
-        $events = $sink->get_events();
-        $event = array_pop($events); // Response submitted feedback event.
-        $sink->close();
-
-        // Test can_view() .
-        $this->setUser($this->eventuser);
-        $this->assertTrue($event->can_view());
-        $this->assertDebuggingCalled();
-        $this->setAdminUser();
-        $this->assertTrue($event->can_view());
-        $this->assertDebuggingCalled();
-        $this->assertEventContextNotUsed($event);
     }
 
     /**
@@ -226,41 +188,6 @@ final class events_test extends \advanced_testcase {
         $this->assertEquals('feedback_completed', $event->objecttable);
         $this->assertEquals(1, $event->anonymous);
         $this->assertEquals(FEEDBACK_ANONYMOUS_YES, $event->other['anonymous']);
-        $this->setUser($this->eventuser);
-        $this->assertFalse($event->can_view());
-        $this->assertDebuggingCalled();
-        $this->setAdminUser();
-        $this->assertTrue($event->can_view());
-        $this->assertDebuggingCalled();
-
-        // Create a temporary response, with anonymous set to no.
-        $response = new \stdClass();
-        $response->feedback = $this->eventcm->instance;
-        $response->userid = $this->eventuser->id;
-        $response->anonymous_response = FEEDBACK_ANONYMOUS_NO;
-        $completedid = $DB->insert_record('feedback_completedtmp', $response);
-        $completed = $DB->get_record('feedback_completedtmp', array('id' => $completedid), '*', MUST_EXIST);
-        $value = new \stdClass();
-        $value->course_id = $this->eventcourse->id;
-        $value->item = $this->eventfeedbackitem->id;
-        $value->completed = $completedid;
-        $value->value = 25; // User response value.
-        $DB->insert_record('feedback_valuetmp', $value);
-
-        // Save the feedback.
-        $sink = $this->redirectEvents();
-        feedback_save_tmp_values($completed);
-        $events = $sink->get_events();
-        $event = array_pop($events); // Response submitted feedback event.
-        $sink->close();
-
-        // Test can_view().
-        $this->assertTrue($event->can_view());
-        $this->assertDebuggingCalled();
-        $this->setAdminUser();
-        $this->assertTrue($event->can_view());
-        $this->assertDebuggingCalled();
-        $this->assertEventContextNotUsed($event);
     }
 
     /**
