@@ -354,19 +354,11 @@ abstract class base implements \IteratorAggregate {
     }
 
     /**
-     * This method was originally intended for granular
-     * access control on the event level, unfortunately
-     * the proper implementation would be too expensive
-     * in many cases.
-     *
      * @deprecated since 2.7
-     *
-     * @param int|\stdClass $user_or_id ID of the user.
-     * @return bool True if the user can view the event, false otherwise.
      */
+    #[\core\attribute\deprecated(null, since: '2.7', mdl: 'MDL-44107', final: true)]
     public function can_view($user_or_id = null) {
-        debugging('can_view() method is deprecated, use anonymous flag instead if necessary.', DEBUG_DEVELOPER);
-        return is_siteadmin($user_or_id);
+        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 
     /**
