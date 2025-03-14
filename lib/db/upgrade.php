@@ -1592,5 +1592,13 @@ function xmldb_main_upgrade($oldversion) {
         upgrade_main_savepoint(true, 2025030600.08);
     }
 
+    if ($oldversion < 2025031100.01) {
+        // Upgrade webp mime type for existing webp files.
+        create_async_mimetype_upgrade_task('image/webp', ['webp']);
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2025031100.01);
+    }
+
     return true;
 }
