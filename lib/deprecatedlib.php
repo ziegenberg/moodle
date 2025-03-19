@@ -956,8 +956,8 @@ function imagecopybicubic($dst_img, $src_img, $dst_x, $dst_y, $src_x, $src_y, $d
  * Encodes file serving url
  *
  * @deprecated use moodle_url factory methods instead
+ * @todo Final deprecation on Moodle 6.0. See MDL-84939.
  *
- * @todo MDL-31071 deprecate this function
  * @param string $urlbase
  * @param string $path /filearea/itemid/dir/dir/file.exe
  * @param bool $forcedownload
