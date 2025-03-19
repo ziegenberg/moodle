@@ -70,7 +70,14 @@ function imscp_htmllize_item($item, $imscp, $cm) {
             $url = $item['href'];
         } else {
             $context = context_module::instance($cm->id);
-            $url = url::make_pluginfile_url($context->id, 'mod_imscp', 'content', $imscp->revision, '/', $item['href'])->out();
+            $url = url::make_pluginfile_url(
+                contextid: $context->id,
+                component: 'mod_imscp',
+                area: 'content',
+                itemid: $imscp->revision,
+                pathname: '/',
+                filename: $item['href']
+            )->out();
         }
         $result = "<li><a href=\"$url\">".$item['title'].'</a>';
     } else {

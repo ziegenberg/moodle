@@ -415,13 +415,13 @@ function page_export_contents($cm, $baseurl) {
         $file['filepath']     = $fileinfo->get_filepath();
         $file['filesize']     = $fileinfo->get_filesize();
         $file['fileurl']      = \core\url::make_webservice_pluginfile_url(
-                                    $context->id,
-                                    'mod_page',
-                                    'content',
-                                    $page->revision,
-                                    $fileinfo->get_filepath(),
-                                    $fileinfo->get_filename(),
-                                    true
+                                    contextid: $context->id,
+                                    component: 'mod_page',
+                                    area: 'content',
+                                    itemid: $page->revision,
+                                    pathname: $fileinfo->get_filepath(),
+                                    filename: $fileinfo->get_filename(),
+                                    forcedownload: true
                                 )->out();
         $file['timecreated']  = $fileinfo->get_timecreated();
         $file['timemodified'] = $fileinfo->get_timemodified();
@@ -445,13 +445,13 @@ function page_export_contents($cm, $baseurl) {
     $pagefile['filepath']     = '/';
     $pagefile['filesize']     = 0;
     $pagefile['fileurl']      = \core\url::make_webservice_pluginfile_url(
-                                    $context->id,
-                                    'mod_page',
-                                    'content',
-                                    null,
-                                    '/',
-                                    $filename,
-                                    true
+                                    contextid: $context->id,
+                                    component: 'mod_page',
+                                    area: 'content',
+                                    itemid: null,
+                                    pathname: '/',
+                                    filename: $filename,
+                                    forcedownload: true
                                 )->out();
     $pagefile['timecreated']  = null;
     $pagefile['timemodified'] = $page->timemodified;

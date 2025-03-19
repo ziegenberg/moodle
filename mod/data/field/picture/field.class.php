@@ -100,13 +100,12 @@ class data_field_picture extends data_field_base {
         $str .= '<noscript>';
         if ($file) {
             $src = \core\url::make_pluginfile_url(
-                $this->context->id,
-                'mod_data',
-                'content',
-                $content->id,
-                '/',
-                '',
-                $file->get_filename()
+                contextid: $this->context->id,
+                component: 'mod_data',
+                area: 'content',
+                itemid: $content->id,
+                pathname: '/',
+                filename: $file->get_filename()
             );
             $str .= html_writer::img($src->out(), '', ['width' => $this->previewwidth, 'height' => $this->previewheight]);
         }

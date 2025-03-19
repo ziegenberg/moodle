@@ -2595,7 +2595,14 @@ function forum_print_attachments($post, $cm, $type) {
                             'style' => 'max-width: 24px; max-height: 24px; vertical-align: middle;',
                     ]
             );
-            $path = url::make_pluginfile_url($context->id, 'mod_forum', 'attachment', $post->id, '/', $filename)->out();
+            $path = url::make_pluginfile_url(
+                contextid: $context->id,
+                component: 'mod_forum',
+                area: 'attachment',
+                itemid: $post->id,
+                pathname: '/',
+                filename: $filename
+            )->out();
 
             if ($type == 'html') {
                 $output .= "<a href=\"$path\">$iconimage</a> ";

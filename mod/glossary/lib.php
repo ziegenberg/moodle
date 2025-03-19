@@ -1604,12 +1604,12 @@ function glossary_print_attachments($entry, $cm, $type=NULL, $unused = null) {
             $mimetype = $file->get_mimetype();
             $iconimage = $OUTPUT->pix_icon(file_file_icon($file), get_mimetype_description($file), 'moodle', array('class' => 'icon'));
             $path = url::make_pluginfile_url(
-                $context->id,
-                'mod_glossary',
-                'attachment',
-                $entry->id,
-                '/',
-                $filename
+                contextid: $context->id,
+                component: 'mod_glossary',
+                area: 'attachment',
+                itemid: $entry->id,
+                pathname: '/',
+                filename: $filename
             )->out();
 
             if ($type == 'html') {

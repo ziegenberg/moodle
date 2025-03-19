@@ -1487,7 +1487,14 @@ function wiki_print_upload_table($context, $filearea, $fileitemid, $deleteupload
 
             $checkbox .= " />";
 
-            $url = \core\url::make_pluginfile_url($context->id, 'wiki_upload', '', $fileitemid, '/', $file->get_filename());
+            $url = \core\url::make_pluginfile_url(
+                contextid: $context->id,
+                component: 'wiki_upload',
+                area: '',
+                itemid: $fileitemid,
+                pathname: '/',
+                filename: $file->get_filename()
+            );
             $htmltable->data[] = [$checkbox, '<a href="' . $url->out() . '">' . $file->get_filename() . '</a>', ""];
         }
     }

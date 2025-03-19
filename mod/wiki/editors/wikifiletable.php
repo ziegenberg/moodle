@@ -123,12 +123,12 @@ class MoodleQuickForm_wikifiletable extends HTML_QuickForm_element {
                 $icon = file_file_icon($file);
                 $filename = $file->get_filename();
                 $fileurl = url::make_pluginfile_url(
-                    $this->_contextid,
-                    'mod_wiki',
-                    'attachments',
-                    $this->_fileareaitemid,
-                    '/',
-                    $filename
+                    contextid: $this->_contextid,
+                    component: 'mod_wiki',
+                    area: 'attachments',
+                    itemid: $this->_fileareaitemid,
+                    pathname: '/',
+                    filename: $filename
                 )->out();
 
                 $actionicons = "";
@@ -160,7 +160,7 @@ class MoodleQuickForm_wikifiletable extends HTML_QuickForm_element {
                     $actionicons .= '</a>';
                 }
 
-                $htmltable->data[] = [$checkbox, '<a href="'.$fileurl.'">'.$filename.'</a>', $actionicons];
+                $htmltable->data[] = [$checkbox, '<a href="' . $fileurl . '">' . $filename . '</a>', $actionicons];
             }
         }
 

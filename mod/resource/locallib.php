@@ -134,12 +134,12 @@ function resource_display_frame($resource, $cm, $course, $file) {
         $config = get_config('resource');
         $context = context_module::instance($cm->id);
         $fileurl = \core\url::make_pluginfile_url(
-            $context->id,
-            'mod_resource',
-            'content',
-            $resource->revision,
-            $file->get_filepath(),
-            $file->get_filename()
+            contextid: $context->id,
+            component: 'mod_resource',
+            area: 'content',
+            itemid: $resource->revision,
+            pathname: $file->get_filepath(),
+            filename: $file->get_filename()
         )->out();
         $navurl = "$CFG->wwwroot/mod/resource/view.php?id=$cm->id&amp;frameset=top";
         $title = strip_tags(format_string($course->shortname.': '.$resource->name));
@@ -176,12 +176,12 @@ function resource_get_clicktoopen($file, $revision, $extra='') {
 
     $filename = $file->get_filename();
     $fullurl = \core\url::make_pluginfile_url(
-        $file->get_contextid(),
-        'mod_resource',
-        'content',
-        $revision,
-        $file->get_filepath(),
-        $filename
+        contextid: $file->get_contextid(),
+        component: 'mod_resource',
+        area: 'content',
+        itemid: $revision,
+        pathname: $file->get_filepath(),
+        filename: $filename
     )->out();
 
     $string = get_string('clicktoopen2', 'resource', "<a href=\"$fullurl\" $extra>$filename</a>");
@@ -232,12 +232,12 @@ function resource_print_workaround($resource, $cm, $course, $file) {
     switch (resource_get_final_display_type($resource)) {
         case RESOURCELIB_DISPLAY_POPUP:
             $fullurl = \core\url::make_pluginfile_url(
-                $file->get_contextid(),
-                'mod_resource',
-                'content',
-                $resource->revision,
-                $file->get_filepath(),
-                $file->get_filename()
+                contextid: $file->get_contextid(),
+                component: 'mod_resource',
+                area: 'content',
+                itemid: $resource->revision,
+                pathname: $file->get_filepath(),
+                filename: $file->get_filename()
             )->out();
             $options = empty($resource->displayoptions) ? [] : (array) unserialize_array($resource->displayoptions);
             $width  = empty($options['popupwidth'])  ? 620 : $options['popupwidth'];
