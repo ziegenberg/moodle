@@ -24,8 +24,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-use core\url;
 use core\output\html_writer;
+use core\url;
 
 class block_private_files_renderer extends plugin_renderer_base {
 
@@ -83,13 +83,13 @@ class block_private_files_renderer extends plugin_renderer_base {
         foreach ($dir['files'] as $file) {
             $filename = $file->get_filename();
             $url = url::make_pluginfile_url(
-                $tree->context->id,
-                'user',
-                'private',
-                null,
-                $file->get_filepath(),
-                $filename,
-                true
+                contextid: $tree->context->id,
+                component: 'user',
+                area: 'private',
+                itemid: null,
+                pathname: $file->get_filepath(),
+                filename: $filename,
+                forcedownload: true
             )->out();
             $image = $this->output->pix_icon(file_file_icon($file), '');
             $result .= '<li role="treeitem">'.html_writer::link($url, $image.$filename, ['tabindex' => -1]).'</li>';
