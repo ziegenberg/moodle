@@ -1175,7 +1175,14 @@ class blog_entry_attachment implements renderable {
 
         $this->file = $file;
         $this->filename = $file->get_filename();
-        $this->url = \core\url::make_pluginfile_url(SYSCONTEXTID, 'blog', 'attachment', $entryid, '/', $this->filename)->out();
+        $this->url = \core\url::make_pluginfile_url(
+            contextid: SYSCONTEXTID,
+            component: 'blog',
+            area: 'attachment',
+            itemid: $entryid,
+            pathname: '/',
+            filename: $this->filename
+        )->out();
     }
 
 }
