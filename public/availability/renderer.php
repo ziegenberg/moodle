@@ -24,13 +24,4 @@ use core_availability\output\availability_info;
  * @copyright 2014 The Open University
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class core_availability_renderer extends plugin_renderer_base {
-
-    /**
-     * @deprecated since Moodle 4.0 MDL-71691 - please do not use this function any more.
-     */
-    #[\core\attribute\deprecated(availability_info::class, since: '4.0', mdl: 'MDL-71691', final: true)]
-    public function render_core_availability_multiple_messages(): void {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
-    }
-}
+class core_availability_renderer extends plugin_renderer_base {}

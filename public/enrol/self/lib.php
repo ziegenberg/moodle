@@ -426,27 +426,6 @@ class enrol_self_plugin extends enrol_plugin {
     }
 
     /**
-     * Send welcome email to specified user.
-     *
-     * @param stdClass $instance
-     * @param stdClass $user user record
-     * @return void
-     * @deprecated since Moodle 4.4
-     * @see \enrol_plugin::send_course_welcome_message_to_user()
-     * @todo MDL-81185 Final deprecation in Moodle 4.8.
-     */
-    #[\core\attribute\deprecated('enrol_plugin::send_course_welcome_message_to_user', since: '4.4', mdl: 'MDL-4188')]
-    protected function email_welcome_message($instance, $user) {
-        \core\deprecation::emit_deprecation(__FUNCTION__);
-        $this->send_course_welcome_message_to_user(
-            instance: $instance,
-            userid: $user->id,
-            sendoption: $instance->customint4,
-            message: $instance->customtext1,
-        );
-    }
-
-    /**
      * Sync all meta course links.
      *
      * @param progress_trace $trace
@@ -1196,14 +1175,6 @@ class enrol_self_plugin extends enrol_plugin {
             }
         }
         return $roles;
-    }
-
-    /**
-     * @deprecated since Moodle 4.4
-     */
-    #[\core\attribute\deprecated('enrol_plugin::get_welcome_message_contact', since: '4.4', mdl: 'MDL-4188', final: true)]
-    public function get_welcome_email_contact() {
-        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
     }
 
     /**

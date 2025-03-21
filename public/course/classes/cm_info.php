@@ -241,20 +241,6 @@ class cm_info implements IteratorAggregate {
     private $added;
 
     /**
-     * @var int
-     *
-     * This variable is not used and is included here only so it can be documented.
-     * Once the database entry is removed from course_modules, it should be deleted
-     * here too.
-     * @deprecated Do not use this variable
-     */
-    #[\core\attribute\deprecated(
-        since: '2.0',
-        mdl: 'MDL-26781',
-    )]
-    private $score;
-
-    /**
      * Visible setting (0 or 1; if this is 0, students cannot see/access the activity) - from
      * course_modules table
      * @var int
@@ -334,21 +320,6 @@ class cm_info implements IteratorAggregate {
      * 0 = do not show on main page, 1 = show on main page.
      */
     private $showdescription;
-
-    /**
-     * @var string Extra HTML
-     *
-     * Extra HTML that is put in an unhelpful part of the HTML when displaying this module in
-     * course page - from cached data in modinfo field
-     * @deprecated This is crazy, don't use it. Replaced by ->extraclasses and ->onclick
-     */
-    #[\core\attribute\deprecated(
-        replacement: '->extraclasses and ->onclick',
-        since: '2.0',
-        mdl: 'MDL-25981',
-        reason: 'This is crazy, don\'t use it.'
-    )]
-    private $extra;
 
     /**
      * Name of icon to use - from cached data in modinfo field
