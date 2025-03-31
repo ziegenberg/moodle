@@ -2075,7 +2075,7 @@ function upgrade_add_explain_action_to_ai_providers() {
  * @param string[] $extensions a list of file extensions, without the leading dot
  * @return void
  */
-function create_async_mimetype_upgrade_task(string $mimetype, array $extensions): void {
+function upgrade_create_async_mimetype_upgrade_task(string $mimetype, array $extensions): void {
     global $DB;
 
     // Create adhoc task for upgrading of existing files. Due to a code restriction on the upgrade, invoking any core

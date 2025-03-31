@@ -542,16 +542,16 @@ final class upgradelib_test extends \advanced_testcase {
     }
 
     /**
-     * Ensure that the create_async_mimetype_upgrade_task function performs as expected.
+     * Ensure that the upgrade_create_async_mimetype_upgrade_task function performs as expected.
      *
-     * @covers ::create_async_mimetype_upgrade_task
+     * @covers ::upgrade_create_async_mimetype_upgrade_task
      */
-    public function test_create_async_mimetype_upgrade_task(): void {
+    public function test_upgrade_create_async_mimetype_upgrade_task(): void {
         global $DB;
         $this->resetAfterTest();
         $clock = $this->mock_clock_with_frozen();
 
-        create_async_mimetype_upgrade_task('type/subtype', ['extension1', 'extension2']);
+        upgrade_create_async_mimetype_upgrade_task('type/subtype', ['extension1', 'extension2']);
 
         // Ensure that the task was created with correct next runtime.
         $nextruntime = $DB->get_field(

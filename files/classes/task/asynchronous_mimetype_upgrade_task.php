@@ -35,7 +35,7 @@ class asynchronous_mimetype_upgrade_task extends adhoc_task {
     public function execute(): void {
         global $DB;
 
-        // Upgrade webp mime type for existing webp files.
+        // Upgrade mime type for existing files.
         $customdata = $this->get_custom_data();
 
         foreach ($customdata->extensions as $extension) {
@@ -44,7 +44,7 @@ class asynchronous_mimetype_upgrade_task extends adhoc_task {
             $condition = $DB->sql_like('filename', ":extension", false);
             $select = "{$condition} AND mimetype <> :mimetype";
             $params = [
-                'extension' => "%.$extension",
+                'extension' => $DB->sql_like_escape("%.$extension"),
                 'mimetype' => $customdata->mimetype,
             ];
 

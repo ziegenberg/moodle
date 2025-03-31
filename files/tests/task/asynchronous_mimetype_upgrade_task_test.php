@@ -14,9 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace core_files;
-
-use core_files\task\asynchronous_mimetype_upgrade_task;
+namespace core_files\task;
 
 /**
  * Tests for the asynchronous mimetype upgrade task.
@@ -25,6 +23,7 @@ use core_files\task\asynchronous_mimetype_upgrade_task;
  * @category   test
  * @copyright  2025 Daniel Ziegenberg
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @covers     \core_files\task\asynchronous_mimetype_upgrade_task::execute
  */
 final class asynchronous_mimetype_upgrade_task_test extends \advanced_testcase {
 
@@ -100,7 +99,6 @@ final class asynchronous_mimetype_upgrade_task_test extends \advanced_testcase {
      * Test upgrading the mimetype of files.
      *
      * @dataProvider upgrade_mimetype_provider
-     * @covers \core_files\task\asynchronous_mimetype_upgrade_task::execute
      *
      * @param array $files
      * @param string $mimetype
