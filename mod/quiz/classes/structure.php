@@ -183,7 +183,7 @@ class structure {
      *      use isset(...->displaynumber), but this method was not used.
      */
     #[\core\attribute\deprecated('isset(...->displaynumber)()', since: '4.2', mdl: 'MDL-77656', final: true)]
-    public function is_display_number_customised() {
+    public function is_display_number_customised(int $slotid): bool {
         \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 

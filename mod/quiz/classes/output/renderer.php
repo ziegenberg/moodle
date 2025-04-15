@@ -1001,8 +1001,8 @@ class renderer extends plugin_renderer_base {
     /**
      * @deprecated since Moodle 4.0 MDL-71915 - please do not use this function any more.
      */
-    #[\core\attribute\deprecated('quiz_no_questions_message()', since: '4.0', mdl: 'MDL-71915', final: true)]
-    public function no_questions_message() {
+    #[\core\attribute\deprecated('generate_no_questions_message()', since: '4.0', mdl: 'MDL-71915', final: true)]
+    public function no_questions_message($canedit, $editurl) {
         \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 
@@ -1464,23 +1464,23 @@ class renderer extends plugin_renderer_base {
      * @deprecated since Moodle 4.2. Please use render_links_to_other_attempts instead.
      */
     #[\core\attribute\deprecated('render_links_to_other_attempts()', since: '4.2', mdl: 'MDL-76614', final: true)]
-    protected function render_mod_quiz_links_to_other_attempts() {
+    protected function render_mod_quiz_links_to_other_attempts(links_to_other_attempts $links) {
         \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 
     /**
-     * @deprecated since Moodle 4.2. Please use render_links_to_other_attempts instead.
+     * @deprecated since Moodle 4.2. Please use render_navigation_question_button instead.
      */
-    #[\core\attribute\deprecated('render_links_to_other_attempts()', since: '4.2', mdl: 'MDL-76614', final: true)]
-    protected function render_quiz_nav_question_button() {
+    #[\core\attribute\deprecated('render_navigation_question_button()', since: '4.2', mdl: 'MDL-76614', final: true)]
+    protected function render_quiz_nav_question_button(navigation_question_button $button) {
         \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 
     /**
-     * @deprecated since Moodle 4.2. Please use render_links_to_other_attempts instead.
+     * @deprecated since Moodle 4.2. Please use render_navigation_section_heading instead.
      */
-    #[\core\attribute\deprecated('render_links_to_other_attempts()', since: '4.2', mdl: 'MDL-76614', final: true)]
-    protected function render_quiz_nav_section_heading() {
+    #[\core\attribute\deprecated('render_navigation_section_heading()', since: '4.2', mdl: 'MDL-76614', final: true)]
+    protected function render_quiz_nav_section_heading(navigation_section_heading $heading) {
         \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 }

@@ -18,7 +18,7 @@ notes:
       type: removed
     - message: >
        Final deprecations for the quiz. The following methods have been removed:
-          - no_questions_messagemod_quiz\output\renderer::no_questions_message
+          - mod_quiz\output\renderer::no_questions_message
           - mod_quiz\output\renderer::render_mod_quiz_links_to_other_attempts
           - mod_quiz\output\renderer::render_quiz_nav_question_button
           - mod_quiz\output\renderer::render_quiz_nav_section_heading
