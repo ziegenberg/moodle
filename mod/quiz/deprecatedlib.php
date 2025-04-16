@@ -318,6 +318,6 @@ function quiz_delete_all_overrides($quiz, $log = true) {
  * @deprecated Since Moodle 4.3 MDL-72321
  */
 #[\core\attribute\deprecated('mod_quiz\structure::add_random_questions()', since: '4.3', mdl: 'MDL-72321', final: true)]
-function quiz_add_random_questions(): void {
+function quiz_add_random_questions(stdClass $quiz, int $addonpage, int $categoryid, int $number): void {
     \core\deprecation::emit_deprecation_if_present(__FUNCTION__);
 }
