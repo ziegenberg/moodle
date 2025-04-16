@@ -1158,7 +1158,7 @@ class view {
      * @deprecated since Moodle 4.3
      */
     #[\core\attribute\deprecated('display_questions()', since: '4.3', mdl: 'MDL-72321', final: true)]
-    public function display_top_pagnation(): void {
+    public function display_top_pagnation($pagination): void {
         \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 
@@ -1166,7 +1166,7 @@ class view {
      * @deprecated since Moodle 4.3
      */
     #[\core\attribute\deprecated('display_questions()', since: '4.3', mdl: 'MDL-72321', final: true)]
-    public function display_bottom_pagination(): void {
+    public function display_bottom_pagination($pagination, $totalnumber, $perpage, $pageurl): void {
         \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 

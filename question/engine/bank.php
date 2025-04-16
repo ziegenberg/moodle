@@ -662,7 +662,12 @@ class question_finder implements data_source_interface {
      * @deprecated since Moodle 4.3
      */
     #[\core\attribute\deprecated(null, since: '4.3', mdl: 'MDL-72321', final: true)]
-    public function get_questions_from_categories_with_usage_counts(): void {
+    public function get_questions_from_categories_with_usage_counts(
+        $categoryids,
+        qubaid_condition $qubaids,
+        $extraconditions = '',
+        $extraparams = []
+    ) {
         \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 
@@ -670,7 +675,13 @@ class question_finder implements data_source_interface {
      * @deprecated since Moodle 4.3
      */
     #[\core\attribute\deprecated(null, since: '4.3', mdl: 'MDL-72321', final: true)]
-    public function get_questions_from_categories_and_tags_with_usage_counts(): void {
+    public function get_questions_from_categories_and_tags_with_usage_counts(
+        $categoryids,
+        qubaid_condition $qubaids,
+        $extraconditions = '',
+        $extraparams = [],
+        $tagids = []
+    ) {
         \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 

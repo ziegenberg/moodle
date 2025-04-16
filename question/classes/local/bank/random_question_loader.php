@@ -106,7 +106,7 @@ class random_question_loader {
      * @deprecated since Moodle 4.3
      */
     #[\core\attribute\deprecated('get_next_filtered_question_id()', since: '4.3', mdl: 'MDL-72321', final: true)]
-    public function get_next_question_id(): void {
+    public function get_next_question_id($categoryid, $includesubcategories, $tagids = []): ?int {
         \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 
@@ -124,8 +124,8 @@ class random_question_loader {
     /**
      * @deprecated since Moodle 4.3
      */
-    #[\core\attribute\deprecated('get_fitlered_questions_key()', since: '4.3', mdl: 'MDL-72321', final: true)]
-    protected function get_category_key(): void {
+    #[\core\attribute\deprecated('get_filtered_questions_key()', since: '4.3', mdl: 'MDL-72321', final: true)]
+    protected function get_category_key($categoryid, $includesubcategories, $tagids = []): string {
         \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 
@@ -232,7 +232,7 @@ class random_question_loader {
      * @deprecated since Moodle 4.3
      */
     #[\core\attribute\deprecated('ensure_filtered_questions_loaded()', since: '4.3', mdl: 'MDL-72321', final: true)]
-    protected function ensure_questions_for_category_loaded(): void {
+    protected function ensure_questions_for_category_loaded($categoryid, $includesubcategories, $tagids = []): void {
         \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 
@@ -286,7 +286,7 @@ class random_question_loader {
      * @deprecated since Moodle 4.3
      */
     #[\core\attribute\deprecated('get_filtered_question_ids()', since: '4.3', mdl: 'MDL-72321', final: true)]
-    protected function get_question_ids(): void {
+    protected function get_question_ids($categoryid, $includesubcategories, $tagids = []): array {
         \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 
@@ -317,7 +317,7 @@ class random_question_loader {
      * @deprecated since Moodle 4.3
      */
     #[\core\attribute\deprecated('is_filtered_question_available()', since: '4.3', mdl: 'MDL-72321', final: true)]
-    public function is_question_available(): void {
+    public function is_question_available($categoryid, $includesubcategories, $questionid, $tagids = []): bool {
             \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 
@@ -372,7 +372,7 @@ class random_question_loader {
      * @deprecated since Moodle 4.3
      */
     #[\core\attribute\deprecated('get_filtered_questions()', since: '4.3', mdl: 'MDL-72321', final: true)]
-    public function get_questions(): void {
+    public function get_questions($categoryid, $includesubcategories, $tagids = [], $limit = 100, $offset = 0, $fields = []) {
         \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 
@@ -391,7 +391,7 @@ class random_question_loader {
      * @deprecated since Moodle 4.3
      */
     #[\core\attribute\deprecated('count_filtered_questions()', since: '4.3', mdl: 'MDL-72321', final: true)]
-    public function count_questions(): void {
+    public function count_questions($categoryid, $includesubcategories, $tagids = []): int {
         \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
     }
 }
