@@ -74,7 +74,6 @@ class block_course_list extends block_list {
                     $this->content->footer = "<a href=\"$CFG->wwwroot/course/index.php\">".get_string("fulllistofcourses")."</a> ...";
                 }
             }
-            $this->get_remote_courses();
             if ($this->content->items) { // make sure we don't return an empty list
                 return $this->content;
             }
@@ -112,7 +111,6 @@ class block_course_list extends block_list {
                     if ($allcourselink) {
                         $this->content->footer .= "<a href=\"$CFG->wwwroot/course/index.php\">".get_string('fulllistofcourses').'</a> ...';
                     }
-                    $this->get_remote_courses();
                 } else {
 
                     $this->content->icons[] = '';
@@ -120,7 +118,6 @@ class block_course_list extends block_list {
                     if (has_capability('moodle/course:create', context_coursecat::instance($category->id))) {
                         $this->content->footer = '<a href="'.$CFG->wwwroot.'/course/edit.php?category='.$category->id.'">'.get_string("addnewcourse").'</a> ...';
                     }
-                    $this->get_remote_courses();
                 }
                 $this->title = get_string('courses');
             }
@@ -129,44 +126,22 @@ class block_course_list extends block_list {
         return $this->content;
     }
 
-    function get_remote_courses() {
-        global $CFG, $USER, $OUTPUT;
-
-        if (!\core\di::get(\core\authentication::class)->is_enabled('mnet')) {
-            // no need to query anything remote related
-            return;
-        }
-
-        $icon = $OUTPUT->pix_icon('i/mnethost', get_string('host', 'mnet'));
-
-        // shortcut - the rest is only for logged in users!
-        if (!isloggedin() || isguestuser()) {
-            return false;
-        }
-
-        if ($courses = get_my_remotecourses()) {
-            $this->content->items[] = get_string('remotecourses','mnet');
-            $this->content->icons[] = '';
-            foreach ($courses as $course) {
-                $this->content->items[]="<a title=\"" . format_string($course->shortname, true) . "\" ".
-                    "href=\"{$CFG->wwwroot}/auth/mnet/jump.php?hostid={$course->hostid}&amp;wantsurl=/course/view.php?id={$course->remoteid}\">"
-                    .$icon. format_string(get_course_display_name_for_list($course)) . "</a>";
-            }
-            // if we listed courses, we are done
-            return true;
-        }
-
-        if ($hosts = get_my_remotehosts()) {
-            $this->content->items[] = get_string('remotehosts', 'mnet');
-            $this->content->icons[] = '';
-            foreach($USER->mnet_foreign_host_array as $somehost) {
-                $this->content->items[] = $somehost['count'].get_string('courseson','mnet').'<a title="'.$somehost['name'].'" href="'.$somehost['url'].'">'.$icon.$somehost['name'].'</a>';
-            }
-            // if we listed hosts, done
-            return true;
-        }
-
-        return false;
+    /**
+     * Returns the remote courses or remote hosts available via MNet.
+     *
+     * @return null
+     * @deprecated since Moodle 6.0 MDL-84564 - MNet has been deprecated for many years now. It is time to remove related functions.
+     * @todo       MDL-85298 Remove this function and all references to it.
+     */
+    #[\core\attribute\deprecated(
+        null,
+        since: '6.0',
+        reason: 'MNet has been deprecated for many years now. It is time to remove related functions.',
+        mdl: 'MDL-84564'
+    )]
+    public function get_remote_courses() {
+        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
+        return null;
     }
 
     /**

@@ -1206,38 +1206,20 @@ class core_course_renderer extends plugin_renderer_base {
      * Returns HTML to display one remote course
      *
      * @param stdClass $course remote course information, contains properties:
-           id, remoteid, shortname, fullname, hostid, summary, summaryformat, cat_name, hostname
+     *       id, remoteid, shortname, fullname, hostid, summary, summaryformat, cat_name, hostname
      * @return string
+     * @deprecated since Moodle 6.0 MDL-84564 - MNet has been deprecated for many years now. It is time to remove related functions.
+     * @todo       MDL-85298 Remove this function and all references to it.
      */
+    #[\core\attribute\deprecated(
+        null,
+        since: '6.0',
+        reason: 'MNet has been deprecated for many years now. It is time to remove related functions.',
+        mdl: 'MDL-84564'
+    )]
     protected function frontpage_remote_course(stdClass $course) {
-        $url = new moodle_url('/auth/mnet/jump.php', array(
-            'hostid' => $course->hostid,
-            'wantsurl' => '/course/view.php?id='. $course->remoteid
-        ));
-
-        $output = '';
-        $output .= html_writer::start_tag('div', array('class' => 'coursebox remotecoursebox clearfix'));
-        $output .= html_writer::start_tag('div', array('class' => 'info'));
-        $output .= html_writer::start_tag('h3', array('class' => 'coursename'));
-        $output .= html_writer::link($url, format_string($course->fullname), array('title' => get_string('entercourse')));
-        $output .= html_writer::end_tag('h3'); // .name
-        $output .= html_writer::tag('div', '', array('class' => 'moreinfo'));
-        $output .= html_writer::end_tag('div'); // .info
-        $output .= html_writer::start_tag('div', array('class' => 'content'));
-        $output .= html_writer::start_tag('div', array('class' => 'summary'));
-        $options = new stdClass();
-        $options->noclean = true;
-        $options->para = false;
-        $options->overflowdiv = true;
-        $output .= format_text($course->summary, $course->summaryformat, $options);
-        $output .= html_writer::end_tag('div'); // .summary
-        $addinfo = format_string($course->hostname) . ' : '
-            . format_string($course->cat_name) . ' : '
-            . format_string($course->shortname);
-        $output .= html_writer::tag('div', $addinfo, array('class' => 'remotecourseinfo'));
-        $output .= html_writer::end_tag('div'); // .content
-        $output .= html_writer::end_tag('div'); // .coursebox
-        return $output;
+        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
+        return '';
     }
 
     /**
@@ -1245,33 +1227,27 @@ class core_course_renderer extends plugin_renderer_base {
      *
      * @param array $host host information, contains properties: name, url, count
      * @return string
+     * @deprecated since Moodle 6.0 MDL-84564 - MNet has been deprecated for many years now. It is time to remove related functions.
+     * @todo       MDL-85298 Remove this function and all references to it.
      */
+    #[\core\attribute\deprecated(
+        null,
+        since: '6.0',
+        reason: 'MNet has been deprecated for many years now. It is time to remove related functions.',
+        mdl: 'MDL-84564'
+    )]
     protected function frontpage_remote_host($host) {
-        $output = '';
-        $output .= html_writer::start_tag('div', array('class' => 'coursebox remotehost clearfix'));
-        $output .= html_writer::start_tag('div', array('class' => 'info'));
-        $output .= html_writer::start_tag('h3', array('class' => 'name'));
-        $output .= html_writer::link($host['url'], s($host['name']), array('title' => s($host['name'])));
-        $output .= html_writer::end_tag('h3'); // .name
-        $output .= html_writer::tag('div', '', array('class' => 'moreinfo'));
-        $output .= html_writer::end_tag('div'); // .info
-        $output .= html_writer::start_tag('div', array('class' => 'content'));
-        $output .= html_writer::start_tag('div', array('class' => 'summary'));
-        $output .= $host['count'] . ' ' . get_string('courses');
-        $output .= html_writer::end_tag('div'); // .content
-        $output .= html_writer::end_tag('div'); // .coursebox
-        return $output;
+        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
+        return '';
     }
 
     /**
      * Returns HTML to print list of courses user is enrolled to for the frontpage
      *
-     * Also lists remote courses or remote hosts if MNET authorisation is used
-     *
      * @return string
      */
     public function frontpage_my_courses() {
-        global $USER, $CFG, $DB;
+        global $CFG, $DB;
 
         if (!isloggedin() or isguestuser()) {
             return '';
@@ -1279,15 +1255,8 @@ class core_course_renderer extends plugin_renderer_base {
 
         $output = '';
         $courses  = enrol_get_my_courses('summary, summaryformat');
-        $rhosts   = array();
-        $rcourses = array();
-        if (!empty($CFG->mnet_dispatcher_mode) && $CFG->mnet_dispatcher_mode==='strict') {
-            $rcourses = get_my_remotecourses($USER->id);
-            $rhosts   = get_my_remotehosts();
-        }
 
-        if (!empty($courses) || !empty($rcourses) || !empty($rhosts)) {
-
+        if (!empty($courses)) {
             $chelper = new coursecat_helper();
             $totalcount = count($courses);
             if (count($courses) > $CFG->frontpagecourselimit) {
@@ -1308,23 +1277,6 @@ class core_course_renderer extends plugin_renderer_base {
             $chelper->set_show_courses(self::COURSECAT_SHOW_COURSES_EXPANDED)->
                     set_attributes(array('class' => 'frontpage-course-list-enrolled'));
             $output .= $this->coursecat_courses($chelper, $courses, $totalcount);
-
-            // MNET
-            if (!empty($rcourses)) {
-                // at the IDP, we know of all the remote courses
-                $output .= html_writer::start_tag('div', array('class' => 'courses'));
-                foreach ($rcourses as $course) {
-                    $output .= $this->frontpage_remote_course($course);
-                }
-                $output .= html_writer::end_tag('div'); // .courses
-            } elseif (!empty($rhosts)) {
-                // non-IDP, we know of all the remote servers, but not courses
-                $output .= html_writer::start_tag('div', array('class' => 'courses'));
-                foreach ($rhosts as $host) {
-                    $output .= $this->frontpage_remote_host($host);
-                }
-                $output .= html_writer::end_tag('div'); // .courses
-            }
         }
         return $output;
     }
