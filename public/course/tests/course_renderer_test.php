@@ -89,4 +89,44 @@ final class course_renderer_test extends \advanced_testcase {
             $this->assertStringNotContainsString($notexpectedstring, $output);
         }
     }
+
+    /**
+     * Test that the deprecated frontpage_remote_course() method emits a deprecation notice.
+     */
+    public function test_frontpage_remote_course_is_deprecated(): void {
+        global $PAGE;
+
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $course = $this->getDataGenerator()->create_course();
+        $PAGE->set_context(context_course::instance($course->id));
+
+        /** @var \core_course_renderer $renderer */
+        $renderer = $PAGE->get_renderer('core', 'course');
+        $method = new \ReflectionMethod($renderer, 'frontpage_remote_course');
+
+        $this->assertSame('', $method->invoke($renderer, new \stdClass()));
+        $this->assertDebuggingCalled(null, DEBUG_DEVELOPER);
+    }
+
+    /**
+     * Test that the deprecated frontpage_remote_host() method emits a deprecation notice.
+     */
+    public function test_frontpage_remote_host_is_deprecated(): void {
+        global $PAGE;
+
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $course = $this->getDataGenerator()->create_course();
+        $PAGE->set_context(context_course::instance($course->id));
+
+        /** @var \core_course_renderer $renderer */
+        $renderer = $PAGE->get_renderer('core', 'course');
+        $method = new \ReflectionMethod($renderer, 'frontpage_remote_host');
+
+        $this->assertSame('', $method->invoke($renderer, ['name' => 'host']));
+        $this->assertDebuggingCalled(null, DEBUG_DEVELOPER);
+    }
 }

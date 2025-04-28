@@ -29,6 +29,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use core\attribute\deprecated;
+
 /**
  * List all core subsystems and their location
  *
@@ -1112,4 +1114,57 @@ function user_edit_map_field_purpose($userid, $fieldname) {
 function user_update_device_public_key(string $uuid, string $appid, string $publickey): bool {
     \core\deprecation::emit_deprecation_if_present(__FUNCTION__);
     return \core_user\devicekey::update_device_public_key($uuid, $appid, $publickey);
+}
+
+/**
+ * List of remote courses that a user has access to via MNET.
+ * Works only on the IDP.
+ *
+ * @param int $userid The user id to get remote courses for
+ * @return array Array of course objects
+ *
+ * @deprecated since Moodle 6.0 MDL-84564 - MNet has been deprecated for many years now. It is time to remove related functions.
+ * @todo       MDL-85298 Remove this function and all references to it.
+ */
+#[deprecated(
+    null,
+    since: '6.0',
+    reason: 'MNet has been deprecated for many years now. It is time to remove related functions.',
+    mdl: 'MDL-84564'
+)]
+function get_my_remotecourses($userid = 0) {
+    \core\deprecation::emit_deprecation_if_present(__FUNCTION__);
+
+    // The mnetservice_enrol plugin and its mnetservice_enrol_courses and
+    // mnetservice_enrol_enrolments tables were removed from core in Moodle 4.5
+    // (MDL-84311), so a user can never have any remote courses to return here.
+    return [];
+}
+
+/**
+ * List of remote hosts that a user has access to via MNET.
+ * Works on the SP.
+ *
+ * @return array|bool Array of host objects or false
+ *
+ * @deprecated since Moodle 6.0 MDL-84564 - MNet has been deprecated for many years now. It is time to remove related functions.
+ * @todo       MDL-85298 Remove this function and all references to it.
+ */
+#[deprecated(
+    null,
+    since: '6.0',
+    reason: 'MNet has been deprecated for many years now. It is time to remove related functions.',
+    mdl: 'MDL-84564'
+)]
+function get_my_remotehosts() {
+    \core\deprecation::emit_deprecation_if_present(__FUNCTION__);
+    global $CFG, $USER;
+
+    if ($USER->mnethostid == $CFG->mnet_localhost_id) {
+        return false; // Return nothing on the IDP.
+    }
+    if (!empty($USER->mnet_foreign_host_array) && is_array($USER->mnet_foreign_host_array)) {
+        return $USER->mnet_foreign_host_array;
+    }
+    return false;
 }
