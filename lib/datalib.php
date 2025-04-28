@@ -1085,57 +1085,6 @@ function _fix_course_cats($children, &$sortorder, $parent, $depth, $path, &$fixc
 }
 
 /**
- * List of remote courses that a user has access to via MNET.
- * Works only on the IDP
- *
- * @global object
- * @global object
- * @param int @userid The user id to get remote courses for
- * @return array Array of {@link $COURSE} of course objects
- */
-function get_my_remotecourses($userid=0) {
-    global $DB, $USER;
-
-    if (empty($userid)) {
-        $userid = $USER->id;
-    }
-
-    // We can not use SELECT DISTINCT + text field (summary) because of MS SQL, subselect used therefore.
-    $sql = "SELECT c.id, c.remoteid, c.shortname, c.fullname,
-                   c.hostid, c.summary, c.summaryformat, c.categoryname AS cat_name,
-                   h.name AS hostname
-              FROM {mnetservice_enrol_courses} c
-              JOIN (SELECT DISTINCT hostid, remotecourseid
-                      FROM {mnetservice_enrol_enrolments}
-                     WHERE userid = ?
-                   ) e ON (e.hostid = c.hostid AND e.remotecourseid = c.remoteid)
-              JOIN {mnet_host} h ON h.id = c.hostid";
-
-    return $DB->get_records_sql($sql, array($userid));
-}
-
-/**
- * List of remote hosts that a user has access to via MNET.
- * Works on the SP
- *
- * @global object
- * @global object
- * @return array|bool Array of host objects or false
- */
-function get_my_remotehosts() {
-    global $CFG, $USER;
-
-    if ($USER->mnethostid == $CFG->mnet_localhost_id) {
-        return false; // Return nothing on the IDP
-    }
-    if (!empty($USER->mnet_foreign_host_array) && is_array($USER->mnet_foreign_host_array)) {
-        return $USER->mnet_foreign_host_array;
-    }
-    return false;
-}
-
-
-/**
  * Returns a menu of all available scales from the site as well as the given course
  *
  * @global object

@@ -29,6 +29,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use core\attribute\deprecated;
+
 /**
  * List all core subsystems and their location
  *
@@ -851,4 +853,74 @@ function calendar_add_month($month, $year) {
 function imagecopybicubic($dst_img, $src_img, $dst_x, $dst_y, $src_x, $src_y, $dst_w, $dst_h, $src_w, $src_h) {
     \core\deprecation::emit_deprecation_if_present(__FUNCTION__);
     return imagecopyresampled($dst_img, $src_img, $dst_x, $dst_y, $src_x, $src_y, $dst_w, $dst_h, $src_w, $src_h);
+}
+
+/**
+ * List of remote courses that a user has access to via MNET.
+ * Works only on the IDP
+ *
+ * @global object
+ * @global object
+ * @param int @userid The user id to get remote courses for
+ * @return array Array of {@see $COURSE} of course objects
+ *
+ * @deprecated since Moodle 6.0 MDL-84564 - MNet has been deprecated for many years now. It is time to remove related functions.
+ * @todo       MDL-85298 Remove this function and all references to it.
+ */
+#[deprecated(
+    null,
+    since: '6.0',
+    reason: 'MNet has been deprecated for many years now. It is time to remove related functions.',
+    mdl: 'MDL-84564'
+)]
+function get_my_remotecourses($userid=0) {
+    \core\deprecation::emit_deprecation_if_present(__FUNCTION__);
+    global $DB, $USER;
+
+    if (empty($userid)) {
+        $userid = $USER->id;
+    }
+
+    // We can not use SELECT DISTINCT + text field (summary) because of MS SQL, subselect used therefore.
+    $sql = "SELECT c.id, c.remoteid, c.shortname, c.fullname,
+                   c.hostid, c.summary, c.summaryformat, c.categoryname AS cat_name,
+                   h.name AS hostname
+              FROM {mnetservice_enrol_courses} c
+              JOIN (SELECT DISTINCT hostid, remotecourseid
+                      FROM {mnetservice_enrol_enrolments}
+                     WHERE userid = ?
+                   ) e ON (e.hostid = c.hostid AND e.remotecourseid = c.remoteid)
+              JOIN {mnet_host} h ON h.id = c.hostid";
+
+    return $DB->get_records_sql($sql, array($userid));
+}
+
+/**
+ * List of remote hosts that a user has access to via MNET.
+ * Works on the SP
+ *
+ * @global object
+ * @global object
+ * @return array|bool Array of host objects or false
+ *
+ * @deprecated since Moodle 6.0 MDL-84564 - MNet has been deprecated for many years now. It is time to remove related functions.
+ * @todo       MDL-85298 Remove this function and all references to it.
+ */
+#[deprecated(
+    null,
+    since: '6.0',
+    reason: 'MNet has been deprecated for many years now. It is time to remove related functions.',
+    mdl: 'MDL-84564'
+)]
+function get_my_remotehosts() {
+    \core\deprecation::emit_deprecation_if_present(__FUNCTION__);
+    global $CFG, $USER;
+
+    if ($USER->mnethostid == $CFG->mnet_localhost_id) {
+        return false; // Return nothing on the IDP.
+    }
+    if (!empty($USER->mnet_foreign_host_array) && is_array($USER->mnet_foreign_host_array)) {
+        return $USER->mnet_foreign_host_array;
+    }
+    return false;
 }
