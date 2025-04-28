@@ -1,0 +1,11 @@
+issueNumber: MDL-84564
+notes:
+  core:
+    - message: >-
+        MNet has been deprecated for many years now. It is time to remove
+        related functions, so this deprecates the get_my_remotecourses() and
+        get_my_remotehosts() functions, along with the
+        core_course_renderer::frontpage_remote_course() and
+        core_course_renderer::frontpage_remote_host() methods and the
+        block_course_list::get_remote_courses() method.
+      type: deprecated
