@@ -571,6 +571,7 @@ $string['noidnumber'] = 'No ID number';
 $string['nolettergrade'] = 'No letter grade for';
 $string['nomode'] = 'NA';
 $string['nonnumericweight'] = 'Received non-numeric value for';
+$string['nonunlockableverbose'] = 'To unlock this grade, you need to unlock {$a->itemname}.';
 $string['nonunhideableverbose'] = 'To unhide this grade, you need to unhide {$a->itemname}.';
 $string['nonweightedpct'] = 'non-weighted %';
 $string['nooutcome'] = 'No outcome';
@@ -897,13 +898,12 @@ $string['filterbyname'] = 'Filter by name';
 $string['filterfirstactive'] = 'First ({$a->first})';
 $string['filterlastactive'] = 'Last ({$a->last})';
 
-// Deprecated since Moodle 5.0.
+// Deprecated since Moodle 5.1.
 $string['editcalculationverbose'] = 'Edit calculation for {$a->category} {$a->itemmodule} {$a->itemname}';
 $string['editverbose'] = 'Edit {$a->category} {$a->itemmodule} {$a->itemname}';
 $string['hiddenuntildate'] = 'Hidden until: {$a}';
 $string['hideverbose'] = 'Hide {$a->category} {$a->itemmodule} {$a->itemname}';
 $string['locktimedate'] = 'Locked after: {$a}';
 $string['lockverbose'] = 'Lock {$a->category} {$a->itemmodule} {$a->itemname}';
-$string['nonunlockableverbose'] = 'To unlock this grade, you need to unlock {$a->itemname}.';
 $string['showverbose'] = 'Show {$a->category} {$a->itemmodule} {$a->itemname}';
 $string['unlockverbose'] = 'Unlock {$a->category} {$a->itemmodule} {$a->itemname}';
