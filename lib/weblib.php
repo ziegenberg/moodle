@@ -1160,6 +1160,13 @@ function purify_html($text, $options = array()) {
                 'label' => 'Text',
                 'default' => 'Bool',
             ]);
+            // See https://html.spec.whatwg.org/#the-details-element.
+            $def->addElement('details', 'Block', 'Flow', 'Common', [
+                'open' => 'Bool',
+                'name' => 'Text',
+            ]);
+            // See https://html.spec.whatwg.org/#the-summary-element.
+            $def->addElement('summary', 'Inline', 'Inline', 'Common');
 
             // Use the built-in Ruby module to add annotation support.
             $def->manager->addModule(new HTMLPurifier_HTMLModule_Ruby());

@@ -506,4 +506,24 @@ final class htmlpurifier_test extends \basic_testcase {
                 '</div>'
             ]];
     }
+
+    /**
+     * Verify that details and summary aren't cleaned.
+     */
+    public function test_details_summary(): void {
+        $text = '<details><summary>Some summary</summary>And now the expandable details</details>';
+        $result = purify_html($text);
+        $this->assertSame($text, $result);
+
+        // HTMLPurifier is configured to produce XHTML, so valueless attributes don't stay that way.
+        $text = '<details open><summary>Some summary</summary>And now the already expanded details</details>';
+        $filteredtext = '<details open=""><summary>Some summary</summary>And now the already expanded details</details>';
+        $result = purify_html($text);
+        $this->assertSame($filteredtext, $result);
+
+        $text = '<details name="same"><summary>first</summary>Details of first</details>';
+        $text .= '<details name="same"><summary>second</summary>Details of second</details>';
+        $result = purify_html($text);
+        $this->assertSame($text, $result);
+    }
 }
