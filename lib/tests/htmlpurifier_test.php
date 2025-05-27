@@ -508,22 +508,78 @@ final class htmlpurifier_test extends \basic_testcase {
     }
 
     /**
-     * Verify that details and summary aren't cleaned.
+     * Test details and summary tags.
+     *
+     * @covers ::purify_html
+     * @dataProvider details_summary_tags_provider
+     * @param string $detailssummarytag HTML details and summary tag
+     * @param string $expected expected result
      */
-    public function test_details_summary(): void {
-        $text = '<details><summary>Some summary</summary>And now the expandable details</details>';
-        $result = purify_html($text);
-        $this->assertSame($text, $result);
+    public function test_details_summary_tags(string $detailssummarytag, string $expected): void {
+        $actual = purify_html($detailssummarytag);
+        $this->assertSame($expected, $actual);
+    }
 
-        // HTMLPurifier is configured to produce XHTML, so valueless attributes don't stay that way.
-        $text = '<details open><summary>Some summary</summary>And now the already expanded details</details>';
-        $filteredtext = '<details open=""><summary>Some summary</summary>And now the already expanded details</details>';
-        $result = purify_html($text);
-        $this->assertSame($filteredtext, $result);
-
-        $text = '<details name="same"><summary>first</summary>Details of first</details>';
-        $text .= '<details name="same"><summary>second</summary>Details of second</details>';
-        $result = purify_html($text);
-        $this->assertSame($text, $result);
+    /**
+     * Test cases for the test_details_summary_tags test.
+     */
+    public static function details_summary_tags_provider(): array {
+        return [
+            'details with summary' => [
+                '<details><summary>Some summary</summary>And now the expandable details</details>',
+                '<details><summary>Some summary</summary>And now the expandable details</details>',
+            ],
+            // HTMLPurifier is configured to produce XHTML, so valueless attributes don't stay that way.
+            'details with open attribute' => [
+                '<details open><summary>Some summary</summary>And now the already expanded details</details>',
+                '<details open=""><summary>Some summary</summary>And now the already expanded details</details>',
+            ],
+            'details with common attributes' => [
+                '<details class="someclass" style="background:#ffe7e8;">' .
+                '<summary>Some summary</summary>' .
+                'And now the expandable details</details>',
+                '<details class="someclass" style="background:#ffe7e8;">' .
+                '<summary>Some summary</summary>' .
+                'And now the expandable details</details>',
+            ],
+            'multiple details with same name' => [
+                '<details name="same"><summary>first</summary>Details of first</details>' .
+                '<details name="same"><summary>second</summary>Details of second</details>',
+                '<details name="same"><summary>first</summary>Details of first</details>' .
+                '<details name="same"><summary>second</summary>Details of second</details>',
+            ],
+            'multiple details with same name and one open' => [
+                '<details name="same"><summary>first</summary>Details of first</details>' .
+                '<details name="same" open><summary>second</summary>Details of open second</details>',
+                '<details name="same"><summary>first</summary>Details of first</details>' .
+                '<details name="same" open=""><summary>second</summary>Details of open second</details>',
+            ],
+            'details with summary and nested elements' => [
+                '<details><summary>Some summary</summary>' .
+                '<p>The expandable details with <a href="http://example.com">a link</a> and <strong>strong text</strong>.</p>' .
+                '</details>',
+                '<details><summary>Some summary</summary>' .
+                '<p>The expandable details with <a href="http://example.com">a link</a> and <strong>strong text</strong>.</p>' .
+                '</details>',
+            ],
+            'details with some flow content and heading content inside summary' => [
+                '<details><summary><h3>Heading</h3></summary>' .
+                '<dl>' .
+                '<dt>Transfer rate:</dt> <dd>452KB/s</dd>' .
+                '<dt>Local filename:</dt> <dd>/home/rpausch/raycd.m4v</dd>' .
+                '<dt>Remote filename:</dt> <dd>/var/www/lectures/raycd.m4v</dd>' .
+                '<dt>Duration:</dt> <dd>01:16:27</dd>' .
+                '</dl>' .
+                '</details>',
+                '<details><summary><h3>Heading</h3></summary>' .
+                '<dl>' .
+                '<dt>Transfer rate:</dt> <dd>452KB/s</dd>' .
+                '<dt>Local filename:</dt> <dd>/home/rpausch/raycd.m4v</dd>' .
+                '<dt>Remote filename:</dt> <dd>/var/www/lectures/raycd.m4v</dd>' .
+                '<dt>Duration:</dt> <dd>01:16:27</dd>' .
+                '</dl>' .
+                '</details>',
+            ],
+        ];
     }
 }
