@@ -142,7 +142,7 @@ final class filelib_test extends \advanced_testcase {
 
         $contents = download_file_content($testhtml);
         $this->assertFalse($contents);
-        $this->assertDebuggingCalled();
+        $this->assertDebuggingCalledCount(136);
 
         $response = download_file_content($testhtml, null, null, true);
         $this->assertInstanceOf('stdClass', $response);
@@ -220,6 +220,7 @@ final class filelib_test extends \advanced_testcase {
         $contents = $curl->get($testhtml);
         $this->assertSame('47250a973d1b88d9445f94db4ef2c97a', md5($contents));
         $this->assertSame(0, $curl->get_errno());
+        $this->assertDebuggingCalledCount(14);
 
         $curl = new \curl();
         $tofile = "$CFG->tempdir/test.html";
@@ -231,6 +232,7 @@ final class filelib_test extends \advanced_testcase {
         $this->assertFileExists($tofile);
         $this->assertSame($contents, file_get_contents($tofile));
         @unlink($tofile);
+        $this->assertDebuggingCalledCount(13);
 
         $curl = new \curl();
         $tofile = "$CFG->tempdir/test.html";
@@ -240,6 +242,7 @@ final class filelib_test extends \advanced_testcase {
         $this->assertFileExists($tofile);
         $this->assertSame($contents, file_get_contents($tofile));
         @unlink($tofile);
+        $this->assertDebuggingCalledCount(13);
 
         // Test 404 request.
         $curl = new \curl();
@@ -247,6 +250,7 @@ final class filelib_test extends \advanced_testcase {
         $response = $curl->getResponse();
         $this->assertSame('404 Not Found', reset($response));
         $this->assertSame(0, $curl->get_errno());
+        $this->assertDebuggingCalledCount(15);
     }
 
     /**
@@ -271,8 +275,29 @@ final class filelib_test extends \advanced_testcase {
         $expected = $curl->get_security()->get_blocked_url_string();
         $this->assertSame($expected, $contents);
         $this->assertSame(0, $curl->get_errno());
-        $this->assertDebuggingCalled(
-            "Blocked $testhtml: The URL is blocked. [user {$USER->id}]", DEBUG_NONE);
+        $this->assertDebuggingCalledCount(
+            expectedcount: 8,
+            debugmessages: [
+                self::curl_deprecation_message('__construct'),
+                self::curl_deprecation_message('resetopt'),
+                self::curl_deprecation_message('get_cacert'),
+                self::curl_deprecation_message('set_security'),
+                self::curl_deprecation_message('get'),
+                "Blocked $testhtml: The URL is blocked. [user {$USER->id}]",
+                self::curl_deprecation_message('get_security'),
+                self::curl_deprecation_message('get_errno'),
+            ],
+            debuglevels: [
+                DEBUG_DEVELOPER, // Deprecation warning.
+                DEBUG_DEVELOPER, // Deprecation warning.
+                DEBUG_DEVELOPER, // Deprecation warning.
+                DEBUG_DEVELOPER, // Deprecation warning.
+                DEBUG_DEVELOPER, // Deprecation warning.
+                DEBUG_NONE, // Blocked URL message.
+                DEBUG_DEVELOPER, // Deprecation warning.
+                DEBUG_DEVELOPER, // Deprecation warning.
+            ]
+        );
 
         $events = $sink->get_events();
         $this->assertCount(1, $events);
@@ -303,14 +328,29 @@ final class filelib_test extends \advanced_testcase {
         // And make the mock security helper block all URLs. This helper instance doesn't care about config.
         $mockhelper->expects($this->any())->method('url_is_blocked')->will($this->returnValue(true));
 
+        // Assert deprecation warnings.
+        $this->assertDebuggingCalledCount(14);
+
         $curl = new \curl(['securityhelper' => $mockhelper]);
         $contents = $curl->get($testhtml);
         $this->assertSame('You shall not pass', $curl->get_security()->get_blocked_url_string());
         $this->assertSame($curl->get_security()->get_blocked_url_string(), $contents);
-        $this->assertDebuggingCalled();
+        $this->assertDebuggingCalledCount(8);
 
         $events = $sink->get_events();
         $this->assertCount(2, $events);
+    }
+
+    /**
+     * Get the deprecation message emitted when calling a deprecated curl method.
+     *
+     * @param string $method The name of the deprecated curl method.
+     * @return string The expected deprecation message.
+     */
+    private static function curl_deprecation_message(string $method): string {
+        $attribute = \core\deprecation::from([\curl::class, $method]);
+        self::assertNotNull($attribute);
+        return \core\deprecation::get_deprecation_string($attribute);
     }
 
     public function test_curl_redirects(): void {
@@ -325,6 +365,7 @@ final class filelib_test extends \advanced_testcase {
         $this->assertSame(0, $curl->get_errno());
         $this->assertSame(2, $curl->info['redirect_count']);
         $this->assertSame('done', $contents);
+        $this->assertDebuggingCalledCount(17);
 
         // All redirects are emulated now. Enabling "emulateredirects" explicitly does not have effect.
         $curl = new \curl();
@@ -335,17 +376,26 @@ final class filelib_test extends \advanced_testcase {
         $this->assertSame(0, $curl->get_errno());
         $this->assertSame(2, $curl->info['redirect_count']);
         $this->assertSame('done', $contents);
+        $this->assertDebuggingCalledCount(17);
 
         // All redirects are emulated now. Attempting to disable "emulateredirects" explicitly causes warning.
         $curl = new \curl();
         $curl->emulateredirects = false;
+        $this->assertDebuggingCalledCount(16);
         $contents = $curl->get("$testurl?redir=2", array(), array('CURLOPT_MAXREDIRS' => 2));
+        $this->assertDebuggingCalledCount(
+            expectedcount: 17,
+            debugmessages: [
+                self::curl_deprecation_message('getResponse'),
+                'Attempting to disable emulated redirects has no effect any more!',
+            ]
+        );
         $response = $curl->getResponse();
-        $this->assertDebuggingCalled('Attempting to disable emulated redirects has no effect any more!');
         $this->assertSame('200 OK', reset($response));
         $this->assertSame(0, $curl->get_errno());
         $this->assertSame(2, $curl->info['redirect_count']);
         $this->assertSame('done', $contents);
+        $this->assertDebuggingCalledCount(2);
 
         // This test was failing for people behind Squid proxies. Squid does not
         // fully support HTTP 1.1, so converts things to HTTP 1.0, where the name
@@ -364,11 +414,13 @@ final class filelib_test extends \advanced_testcase {
         $this->assertSame(0, $curl->get_errno());
         $this->assertSame(302, $curl->info['http_code']);
         $this->assertSame('', $contents);
+        $this->assertDebuggingCalledCount(17);
 
         $curl = new \curl();
         $contents = $curl->get("$testurl?redir=2", array(), array('CURLOPT_MAXREDIRS'=>1));
         $this->assertSame(CURLE_TOO_MANY_REDIRECTS, $curl->get_errno());
         $this->assertNotEmpty($contents);
+        $this->assertDebuggingCalledCount(17);
 
         $curl = new \curl();
         $tofile = "$CFG->tempdir/test.html";
@@ -379,6 +431,7 @@ final class filelib_test extends \advanced_testcase {
         fclose($fp);
         $this->assertFileExists($tofile);
         $this->assertSame('done', file_get_contents($tofile));
+        $this->assertDebuggingCalledCount(17);
         @unlink($tofile);
 
         $curl = new \curl();
@@ -390,6 +443,7 @@ final class filelib_test extends \advanced_testcase {
         fclose($fp);
         $this->assertFileExists($tofile);
         $this->assertSame('done', file_get_contents($tofile));
+        $this->assertDebuggingCalledCount(17);
         @unlink($tofile);
 
         $curl = new \curl();
@@ -399,6 +453,7 @@ final class filelib_test extends \advanced_testcase {
         $this->assertTrue($result);
         $this->assertFileExists($tofile);
         $this->assertSame('done', file_get_contents($tofile));
+        $this->assertDebuggingCalledCount(17);
         @unlink($tofile);
 
         $curl = new \curl();
@@ -408,6 +463,7 @@ final class filelib_test extends \advanced_testcase {
         $this->assertTrue($result);
         $this->assertFileExists($tofile);
         $this->assertSame('done', file_get_contents($tofile));
+        $this->assertDebuggingCalledCount(17);
         @unlink($tofile);
     }
 
@@ -429,6 +485,7 @@ final class filelib_test extends \advanced_testcase {
         $response = $curl->getResponse();
         $this->assertSame('200 OK', reset($response));
         $this->assertSame(0, $curl->get_errno());
+        $this->assertDebuggingCalledCount(17);
 
         // Redirecting to the blocked host should fail.
         $curl = new \curl();
@@ -436,14 +493,14 @@ final class filelib_test extends \advanced_testcase {
         $contents = $curl->get("{$testurl}?redir=1&extdest=1");
         $this->assertSame($blockedstring, $contents);
         $this->assertSame(0, $curl->get_errno());
-        $this->assertDebuggingCalled();
+        $this->assertDebuggingCalledCount(16);
 
         // Redirecting to the blocked host after multiple successful redirects should also fail.
         $curl = new \curl();
         $contents = $curl->get("{$testurl}?redir=3&extdest=1");
         $this->assertSame($blockedstring, $contents);
         $this->assertSame(0, $curl->get_errno());
-        $this->assertDebuggingCalled();
+        $this->assertDebuggingCalledCount(17);
     }
 
     public function test_curl_relative_redirects(): void {
@@ -457,6 +514,7 @@ final class filelib_test extends \advanced_testcase {
         $this->assertSame(0, $curl->get_errno());
         $this->assertSame(1, $curl->info['redirect_count']);
         $this->assertSame('done', $contents);
+        $this->assertDebuggingCalledCount(16);
 
         // Test different redirect types.
         $testurl = $this->getExternalTestFileUrl('/test_relative_redir.php');
@@ -468,6 +526,7 @@ final class filelib_test extends \advanced_testcase {
         $this->assertSame(0, $curl->get_errno());
         $this->assertSame(1, $curl->info['redirect_count']);
         $this->assertSame('done', $contents);
+        $this->assertDebuggingCalledCount(16);
 
         $curl = new \curl();
         $contents = $curl->get("$testurl?type=302");
@@ -476,6 +535,7 @@ final class filelib_test extends \advanced_testcase {
         $this->assertSame(0, $curl->get_errno());
         $this->assertSame(1, $curl->info['redirect_count']);
         $this->assertSame('done', $contents);
+        $this->assertDebuggingCalledCount(17);
 
         $curl = new \curl();
         $contents = $curl->get("$testurl?type=303");
@@ -484,6 +544,7 @@ final class filelib_test extends \advanced_testcase {
         $this->assertSame(0, $curl->get_errno());
         $this->assertSame(1, $curl->info['redirect_count']);
         $this->assertSame('done', $contents);
+        $this->assertDebuggingCalledCount(17);
 
         $curl = new \curl();
         $contents = $curl->get("$testurl?type=307");
@@ -492,6 +553,7 @@ final class filelib_test extends \advanced_testcase {
         $this->assertSame(0, $curl->get_errno());
         $this->assertSame(1, $curl->info['redirect_count']);
         $this->assertSame('done', $contents);
+        $this->assertDebuggingCalledCount(17);
 
         $curl = new \curl();
         $contents = $curl->get("$testurl?type=308");
@@ -500,6 +562,7 @@ final class filelib_test extends \advanced_testcase {
         $this->assertSame(0, $curl->get_errno());
         $this->assertSame(1, $curl->info['redirect_count']);
         $this->assertSame('done', $contents);
+        $this->assertDebuggingCalledCount(17);
     }
 
     public function test_curl_proxybypass(): void {
@@ -516,6 +579,7 @@ final class filelib_test extends \advanced_testcase {
         $contents = $curl->get($testurl);
         $this->assertNotEquals(0, $curl->get_errno());
         $this->assertNotEquals('47250a973d1b88d9445f94db4ef2c97a', md5($contents));
+        $this->assertDebuggingCalledCount(17);
 
         // Test multiple queries with proxy.
         $curl = new \curl(['debug' => 1]);
@@ -545,6 +609,7 @@ final class filelib_test extends \advanced_testcase {
         $contents = $curl->get($testurl);
         $this->assertSame(0, $curl->get_errno());
         $this->assertSame('47250a973d1b88d9445f94db4ef2c97a', md5($contents));
+        $this->assertDebuggingCalledCount(17);
 
         // Test multiple queries with proxy bypass.
         $curl = new \curl(['debug' => 1]);
@@ -583,6 +648,7 @@ final class filelib_test extends \advanced_testcase {
         $curl->setHeader($header);
         $this->assertCount(1, $curl->header);
         $this->assertEquals($headerdata, $curl->header[0]);
+        $this->assertDebuggingCalledCount(7);
     }
 
     public function test_curl_post(): void {
@@ -595,6 +661,7 @@ final class filelib_test extends \advanced_testcase {
         $this->assertSame('200 OK', reset($response));
         $this->assertSame(0, $curl->get_errno());
         $this->assertSame('OK', $contents);
+        $this->assertDebuggingCalledCount(15);
 
         // Test 100 requests.
         $curl = new \curl();
@@ -604,6 +671,7 @@ final class filelib_test extends \advanced_testcase {
         $this->assertSame('200 OK', reset($response));
         $this->assertSame(0, $curl->get_errno());
         $this->assertSame('OK', $contents);
+        $this->assertDebuggingCalledCount(14);
     }
 
     public function test_curl_file(): void {
@@ -627,6 +695,7 @@ final class filelib_test extends \advanced_testcase {
         $curl = new \curl();
         $contents = $curl->post($testurl, $data);
         $this->assertSame('OK', $contents);
+        $this->assertDebuggingCalledCount(13);
     }
 
     public function test_curl_file_name(): void {
@@ -650,6 +719,7 @@ final class filelib_test extends \advanced_testcase {
         $curl = new \curl();
         $contents = $curl->post($testurl, $data);
         $this->assertSame('OK', $contents);
+        $this->assertDebuggingCalledCount(13);
     }
 
     public function test_curl_protocols(): void {
@@ -689,6 +759,7 @@ final class filelib_test extends \advanced_testcase {
         $curl->get($testurl, array('proto' => 'telnet'));
         $this->assertNotEmpty($curl->error);
         $this->assertEquals(CURLE_UNSUPPORTED_PROTOCOL, $curl->errno);
+        $this->assertDebuggingCalledCount(38);
     }
 
     /**
@@ -1384,6 +1455,7 @@ EOF;
         $contents = $extcurl->get($testurl, array(), array('CURLOPT_USERAGENT' => 'NonMatchingUserAgent/1.2'));
         $this->assertSame(0, $extcurl->get_errno());
         $this->assertSame('', $contents);
+        $this->assertDebuggingCalledCount(48);
     }
 
     /**
