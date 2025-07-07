@@ -2331,7 +2331,7 @@ MwIDAQAB
 
         // Request using the default 'coursevisible' param will include all tools except the one configured as "Do not show".
         $coursetooltypes = lti_get_lti_types_by_course($course->id);
-        $this->assertDebuggingCalled();
+        $this->assertDebuggingCalledCount(14);
         $this->assertCount(3, $coursetooltypes);
         $this->assertEmpty(array_diff(
             ['http://example.com/tool/2', 'http://example.com/tool/3', 'http://example.com/tool/4'],

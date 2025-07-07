@@ -3125,6 +3125,8 @@ function get_moodle_proxy_url() {
  * @category files
  * @copyright Dongsheng Cai <dongsheng@moodle.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU Public License
+ * @deprecated since Moodle 5.1 MDL-85958 Use \core\http_client instead
+ * @todo MDL-85959 Remove this class in Moodle 6.0
  */
 class curl {
     /** @var curl_cache|false Caches http request contents */
@@ -3187,8 +3189,12 @@ class curl {
      *  ignoresecurity: (bool) set true to override and ignore the security helper when making requests.
      *
      * @param array $settings
+     * @deprecated since Moodle 5.1 MDL-85958 Use \core\http_client instead
+     * @todo MDL-85959 Remove this class in Moodle 6.0
      */
+    #[\core\attribute\deprecated('\core\http_client', since: '5.1', mdl: 'MDL-85958')]
     public function __construct($settings = array()) {
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
         global $CFG;
         if (!function_exists('curl_init')) {
             $this->error = 'cURL module must be enabled!';
@@ -3272,8 +3278,12 @@ class curl {
 
     /**
      * Resets the CURL options that have already been set
+     * @deprecated since Moodle 5.1 MDL-85958 Use \core\http_client instead
+     * @todo MDL-85959 Remove this class in Moodle 6.0
      */
+    #[\core\attribute\deprecated('\core\http_client', since: '5.1', mdl: 'MDL-85958')]
     public function resetopt() {
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
         $this->options = array();
         $this->options['CURLOPT_USERAGENT']         = \core_useragent::get_moodlebot_useragent();
         // True to include the header in the output
@@ -3299,8 +3309,12 @@ class curl {
     /**
      * Get the location of ca certificates.
      * @return string absolute file path or empty if default used
+     * @deprecated since Moodle 5.1 MDL-85958 Use \core\http_client instead
+     * @todo MDL-85959 Remove this class in Moodle 6.0
      */
+    #[\core\attribute\deprecated('\core\http_client', since: '5.1', mdl: 'MDL-85958')]
     public static function get_cacert() {
+        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
         global $CFG;
 
         // Bundle in dataroot always wins.
@@ -3327,8 +3341,12 @@ class curl {
 
     /**
      * Reset Cookie
+     * @deprecated since Moodle 5.1 MDL-85958 Use \core\http_client instead
+     * @todo MDL-85959 Remove this class in Moodle 6.0
      */
+    #[\core\attribute\deprecated('\core\http_client', since: '5.1', mdl: 'MDL-85958')]
     public function resetcookie() {
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
         if (!empty($this->cookie)) {
             if (is_file($this->cookie)) {
                 $fp = fopen($this->cookie, 'w');
@@ -3350,8 +3368,12 @@ class curl {
      * @param array $options If array is null, this function will reset the options to default value.
      * @return void
      * @throws coding_exception If an option uses constant value instead of option name.
+     * @deprecated since Moodle 5.1 MDL-85958 Use \core\http_client instead
+     * @todo MDL-85959 Remove this class in Moodle 6.0
      */
+    #[\core\attribute\deprecated('\core\http_client', since: '5.1', mdl: 'MDL-85958')]
     public function setopt($options = array()) {
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
         if (is_array($options)) {
             foreach ($options as $name => $val) {
                 if (!is_string($name)) {
@@ -3373,8 +3395,12 @@ class curl {
 
     /**
      * Reset http method
+     * @deprecated since Moodle 5.1 MDL-85958 Use \core\http_client instead
+     * @todo MDL-85959 Remove this class in Moodle 6.0
      */
+    #[\core\attribute\deprecated('\core\http_client', since: '5.1', mdl: 'MDL-85958')]
     public function cleanopt() {
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
         unset($this->options['CURLOPT_HTTPGET']);
         unset($this->options['CURLOPT_POST']);
         unset($this->options['CURLOPT_POSTFIELDS']);
@@ -3387,8 +3413,12 @@ class curl {
 
     /**
      * Resets the HTTP Request headers (to prepare for the new request)
+     * @deprecated since Moodle 5.1 MDL-85958 Use \core\http_client instead
+     * @todo MDL-85959 Remove this class in Moodle 6.0
      */
+    #[\core\attribute\deprecated('\core\http_client', since: '5.1', mdl: 'MDL-85958')]
     public function resetHeader() {
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
         $this->header = array();
     }
 
@@ -3396,8 +3426,12 @@ class curl {
      * Set HTTP Request Header
      *
      * @param array|string $header
+     * @deprecated since Moodle 5.1 MDL-85958 Use \core\http_client instead
+     * @todo MDL-85959 Remove this class in Moodle 6.0
      */
+    #[\core\attribute\deprecated('\core\http_client', since: '5.1', mdl: 'MDL-85958')]
     public function setHeader($header) {
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
         if (is_array($header)) {
             foreach ($header as $v) {
                 $this->setHeader($v);
@@ -3414,16 +3448,24 @@ class curl {
     /**
      * Get HTTP Response Headers
      * @return array of arrays
+     * @deprecated since Moodle 5.1 MDL-85958 Use \core\http_client instead
+     * @todo MDL-85959 Remove this class in Moodle 6.0
      */
+    #[\core\attribute\deprecated('\core\http_client', since: '5.1', mdl: 'MDL-85958')]
     public function getResponse() {
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
         return $this->response;
     }
 
     /**
      * Get raw HTTP Response Headers
      * @return array of strings
+     * @deprecated since Moodle 5.1 MDL-85958 Use \core\http_client instead
+     * @todo MDL-85959 Remove this class in Moodle 6.0
      */
+    #[\core\attribute\deprecated('\core\http_client', since: '5.1', mdl: 'MDL-85958')]
     public function get_raw_response() {
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
         return $this->rawresponse;
     }
 
@@ -3529,6 +3571,7 @@ class curl {
         if (empty($this->header)) {
             $this->setHeader(array(
                 'User-Agent: ' . $useragent,
+                'Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7',
                 'Connection: keep-alive'
                 ));
         } else if (!in_array('User-Agent: ' . $useragent, $this->header)) {
@@ -3621,8 +3664,12 @@ class curl {
      *
      * @param array $options An array of options to set
      * @return array An array of results
+     * @deprecated since Moodle 5.1 MDL-85958 Use \core\http_client instead
+     * @todo MDL-85959 Remove this class in Moodle 6.0
      */
+    #[\core\attribute\deprecated('\core\http_client', since: '5.1', mdl: 'MDL-85958')]
     public function download($requests, $options = array()) {
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
         $options['RETURNTRANSFER'] = false;
         return $this->multi($requests, $options);
     }
@@ -3631,8 +3678,12 @@ class curl {
      * Returns the current curl security helper.
      *
      * @return \core\files\curl_security_helper instance.
+     * @deprecated since Moodle 5.1 MDL-85958 Use \core\http_client instead
+     * @todo MDL-85959 Remove this class in Moodle 6.0
      */
+    #[\core\attribute\deprecated('\core\http_client', since: '5.1', mdl: 'MDL-85958')]
     public function get_security() {
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
         return $this->securityhelper;
     }
 
@@ -3641,8 +3692,12 @@ class curl {
      *
      * @param \core\files\curl_security_helper $securityobject instance/subclass of the base curl_security_helper class.
      * @return bool true if the security helper could be set, false otherwise.
+     * @deprecated since Moodle 5.1 MDL-85958 Use \core\http_client instead
+     * @todo MDL-85959 Remove this class in Moodle 6.0
      */
+    #[\core\attribute\deprecated('\core\http_client', since: '5.1', mdl: 'MDL-85958')]
     public function set_security($securityobject) {
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
         if ($securityobject instanceof \core\files\curl_security_helper) {
             $this->securityhelper = $securityobject;
             return true;
@@ -3717,8 +3772,12 @@ class curl {
      * For use only in unit tests - we can pre-set the next curl response.
      * This is useful for unit testing APIs that call external systems.
      * @param string $response
+     * @deprecated since Moodle 5.1 MDL-85958 Use \core\http_client instead
+     * @todo MDL-85959 Remove this class in Moodle 6.0
      */
+    #[\core\attribute\deprecated('\core\http_client', since: '5.1', mdl: 'MDL-85958')]
     public static function mock_response($response) {
+        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
         if ((defined('PHPUNIT_TEST') && PHPUNIT_TEST)) {
             array_push(self::$mockresponses, $response);
         } else {
@@ -4016,8 +4075,12 @@ class curl {
      * @param string $url
      * @param array $options
      * @return string
+     * @deprecated since Moodle 5.1 MDL-85958 Use \core\http_client instead
+     * @todo MDL-85959 Remove this class in Moodle 6.0
      */
+    #[\core\attribute\deprecated('\core\http_client', since: '5.1', mdl: 'MDL-85958')]
     public function head($url, $options = array()) {
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
         $options['CURLOPT_HTTPGET'] = 0;
         $options['CURLOPT_HEADER']  = 1;
         $options['CURLOPT_NOBODY']  = 1;
@@ -4031,8 +4094,12 @@ class curl {
      * @param array|string $params
      * @param array $options
      * @return string
+     * @deprecated since Moodle 5.1 MDL-85958 Use \core\http_client instead
+     * @todo MDL-85959 Remove this class in Moodle 6.0
      */
+    #[\core\attribute\deprecated('\core\http_client', since: '5.1', mdl: 'MDL-85958')]
     public function patch($url, $params = '', $options = array()) {
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
         $options['CURLOPT_CUSTOMREQUEST'] = 'PATCH';
         if (is_array($params)) {
             $this->_tmp_file_post_params = array();
@@ -4059,8 +4126,12 @@ class curl {
      * @param array|string $params
      * @param array $options
      * @return string
+     * @deprecated since Moodle 5.1 MDL-85958 Use \core\http_client instead
+     * @todo MDL-85959 Remove this class in Moodle 6.0
      */
+    #[\core\attribute\deprecated('\core\http_client', since: '5.1', mdl: 'MDL-85958')]
     public function post($url, $params = '', $options = array()) {
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
         $options['CURLOPT_POST']       = 1;
         if (is_array($params)) {
             $this->_tmp_file_post_params = array();
@@ -4087,8 +4158,12 @@ class curl {
      * @param ?array $params
      * @param array $options
      * @return string
+     * @deprecated since Moodle 5.1 MDL-85958 Use \core\http_client instead
+     * @todo MDL-85959 Remove this class in Moodle 6.0
      */
+    #[\core\attribute\deprecated('\core\http_client', since: '5.1', mdl: 'MDL-85958')]
     public function get($url, $params = array(), $options = array()) {
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
         $options['CURLOPT_HTTPGET'] = 1;
 
         if (!empty($params)) {
@@ -4127,8 +4202,12 @@ class curl {
      * @param array|null $params key-value pairs to be added to $url as query string
      * @param array $options request options. Must include either 'file' or 'filepath'
      * @return bool|string true on success or error string on failure
+     * @deprecated since Moodle 5.1 MDL-85958 Use \core\http_client instead
+     * @todo MDL-85959 Remove this class in Moodle 6.0
      */
+    #[\core\attribute\deprecated('\core\http_client', since: '5.1', mdl: 'MDL-85958')]
     public function download_one($url, $params, $options = array()) {
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
         $options['CURLOPT_HTTPGET'] = 1;
         if (!empty($params)) {
             $url .= (stripos($url, '?') !== false) ? '&' : '?';
@@ -4160,8 +4239,12 @@ class curl {
      * @param array $params
      * @param array $options
      * @return ?string
+     * @deprecated since Moodle 5.1 MDL-85958 Use \core\http_client instead
+     * @todo MDL-85959 Remove this class in Moodle 6.0
      */
+    #[\core\attribute\deprecated('\core\http_client', since: '5.1', mdl: 'MDL-85958')]
     public function put($url, $params = array(), $options = array()) {
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
         $file = '';
         $fp = false;
         if (isset($params['file'])) {
@@ -4197,8 +4280,12 @@ class curl {
      * @param array $param
      * @param array $options
      * @return string
+     * @deprecated since Moodle 5.1 MDL-85958 Use \core\http_client instead
+     * @todo MDL-85959 Remove this class in Moodle 6.0
      */
+    #[\core\attribute\deprecated('\core\http_client', since: '5.1', mdl: 'MDL-85958')]
     public function delete($url, $param = array(), $options = array()) {
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
         $options['CURLOPT_CUSTOMREQUEST'] = 'DELETE';
         if (!isset($options['CURLOPT_USERPWD'])) {
             $options['CURLOPT_USERPWD'] = 'anonymous: noreply@moodle.org';
@@ -4213,8 +4300,12 @@ class curl {
      * @param string $url
      * @param array $options
      * @return string
+     * @deprecated since Moodle 5.1 MDL-85958 Use \core\http_client instead
+     * @todo MDL-85959 Remove this class in Moodle 6.0
      */
+    #[\core\attribute\deprecated('\core\http_client', since: '5.1', mdl: 'MDL-85958')]
     public function trace($url, $options = array()) {
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
         $options['CURLOPT_CUSTOMREQUEST'] = 'TRACE';
         $ret = $this->request($url, $options);
         return $ret;
@@ -4226,8 +4317,12 @@ class curl {
      * @param string $url
      * @param array $options
      * @return string
+     * @deprecated since Moodle 5.1 MDL-85958 Use \core\http_client instead
+     * @todo MDL-85959 Remove this class in Moodle 6.0
      */
+    #[\core\attribute\deprecated('\core\http_client', since: '5.1', mdl: 'MDL-85958')]
     public function options($url, $options = array()) {
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
         $options['CURLOPT_CUSTOMREQUEST'] = 'OPTIONS';
         $ret = $this->request($url, $options);
         return $ret;
@@ -4237,8 +4332,12 @@ class curl {
      * Get curl information
      *
      * @return array
+     * @deprecated since Moodle 5.1 MDL-85958 Use \core\http_client instead
+     * @todo MDL-85959 Remove this class in Moodle 6.0
      */
+    #[\core\attribute\deprecated('\core\http_client', since: '5.1', mdl: 'MDL-85958')]
     public function get_info() {
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
         return $this->info;
     }
 
@@ -4246,8 +4345,12 @@ class curl {
      * Get curl error code
      *
      * @return int
+     * @deprecated since Moodle 5.1 MDL-85958 Use \core\http_client instead
+     * @todo MDL-85959 Remove this class in Moodle 6.0
      */
+    #[\core\attribute\deprecated('\core\http_client', since: '5.1', mdl: 'MDL-85958')]
     public function get_errno() {
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
         return $this->errno;
     }
 
@@ -4268,8 +4371,12 @@ class curl {
      *
      * @param string $input Input HTTP response
      * @return string HTTP response with additional headers stripped if any
+     * @deprecated since Moodle 5.1 MDL-85958 Use \core\http_client instead
+     * @todo MDL-85959 Remove this class in Moodle 6.0
      */
+    #[\core\attribute\deprecated('\core\http_client', since: '5.1', mdl: 'MDL-85958')]
     public static function strip_double_headers($input) {
+        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
         // I have tried to make this regular expression as specific as possible
         // to avoid any case where it does weird stuff if you happen to put
         // HTTP/1.1 200 at the start of any line in your RSS file. This should
@@ -4305,6 +4412,8 @@ class curl {
  * @package   core_files
  * @copyright Dongsheng Cai <dongsheng@moodle.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @deprecated since Moodle 5.1 MDL-85958 Use \core\http_client instead
+ * @todo MDL-85959 Remove this class in Moodle 6.0
  */
 class curl_cache {
     /** @var string Path to cache directory */
@@ -4318,8 +4427,12 @@ class curl_cache {
      *
      * @global stdClass $CFG
      * @param string $module which module is using curl_cache
+     * @deprecated since Moodle 5.1 MDL-85958 Use \core\http_client instead
+     * @todo MDL-85959 Remove this class in Moodle 6.0
      */
+    #[\core\attribute\deprecated('\core\http_client', since: '5.1', mdl: 'MDL-85958')]
     public function __construct($module = 'repository') {
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
         global $CFG;
         if (!empty($module)) {
             $this->dir = $CFG->cachedir.'/'.$module.'/';
@@ -4349,8 +4462,12 @@ class curl_cache {
      * @global stdClass $USER
      * @param mixed $param
      * @return bool|string
+     * @deprecated since Moodle 5.1 MDL-85958 Use \core\http_client instead
+     * @todo MDL-85959 Remove this class in Moodle 6.0
      */
+    #[\core\attribute\deprecated('\core\http_client', since: '5.1', mdl: 'MDL-85958')]
     public function get($param) {
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
         global $CFG, $USER;
         $this->cleanup($this->ttl);
         $filename = 'u'.$USER->id.'_'.md5(serialize($param));
@@ -4375,8 +4492,12 @@ class curl_cache {
      * @global object $USER
      * @param mixed $param
      * @param mixed $val
+     * @deprecated since Moodle 5.1 MDL-85958 Use \core\http_client instead
+     * @todo MDL-85959 Remove this class in Moodle 6.0
      */
+    #[\core\attribute\deprecated('\core\http_client', since: '5.1', mdl: 'MDL-85958')]
     public function set($param, $val) {
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
         global $CFG, $USER;
         $filename = 'u'.$USER->id.'_'.md5(serialize($param));
         $fp = fopen($this->dir.$filename, 'w');
@@ -4389,8 +4510,12 @@ class curl_cache {
      * Remove cache files
      *
      * @param int $expire The number of seconds before expiry
+     * @deprecated since Moodle 5.1 MDL-85958 Use \core\http_client instead
+     * @todo MDL-85959 Remove this class in Moodle 6.0
      */
+    #[\core\attribute\deprecated('\core\http_client', since: '5.1', mdl: 'MDL-85958')]
     public function cleanup($expire) {
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
         if ($dir = opendir($this->dir)) {
             while (false !== ($file = readdir($dir))) {
                 if(!is_dir($file) && $file != '.' && $file != '..') {
@@ -4408,8 +4533,12 @@ class curl_cache {
      *
      * @global object $CFG
      * @global object $USER
+     * @deprecated since Moodle 5.1 MDL-85958 Use \core\http_client instead
+     * @todo MDL-85959 Remove this class in Moodle 6.0
      */
+    #[\core\attribute\deprecated('\core\http_client', since: '5.1', mdl: 'MDL-85958')]
     public function refresh() {
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
         global $CFG, $USER;
         if ($dir = opendir($this->dir)) {
             while (false !== ($file = readdir($dir))) {

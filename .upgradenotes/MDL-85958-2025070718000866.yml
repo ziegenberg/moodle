@@ -1,0 +1,39 @@
+issueNumber: MDL-85958
+notes:
+  core:
+    - message: |
+        The classes `\curl` and `\curl_cache` have been deprecated
+        in favor of `\core\http_client` which uses Guzzle library.
+        This includes the following public functions:
+          - `\curl::__construct()`
+          - `\curl::resetopt()`
+          - `\curl::get_cacert()`
+          - `\curl::resetcookie()`
+          - `\curl::setopt()`
+          - `\curl::cleanopt()`
+          - `\curl::resetHeader()`
+          - `\curl::setHeader()`
+          - `\curl::getResponse()`
+          - `\curl::get_raw_response()`
+          - `\curl::download()`
+          - `\curl::get_security()`
+          - `\curl::set_security()`
+          - `\curl::mock_response()`
+          - `\curl::head()`
+          - `\curl::patch()`
+          - `\curl::post()`
+          - `\curl::get()`
+          - `\curl::download_one()`
+          - `\curl::put()`
+          - `\curl::delete()`
+          - `\curl::trace()`
+          - `\curl::options()`
+          - `\curl::get_info()`
+          - `\curl::get_errno()`
+          - `\curl::strip_double_headers()`
+          - `\curl_cache::__construct()`
+          - `\curl_cache::get()`
+          - `\curl_cache::set()`
+          - `\curl_cache::cleanup()`
+          - `\curl_cache::refresh()`
+      type: deprecated
