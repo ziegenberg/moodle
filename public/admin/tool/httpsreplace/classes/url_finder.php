@@ -24,7 +24,12 @@
 
 namespace tool_httpsreplace;
 
+use core\di;
+use core\http_client;
 use database_column_info;
+use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\RequestOptions;
 use progress_bar;
 
 defined('MOODLE_INTERNAL') || die();
@@ -251,15 +256,17 @@ class url_finder {
     }
 
     /**
-     * Check if url is available (GET request returns 200)
+     * Check if url is available (HEAD request returns 200)
      *
      * @param string $url
      * @return bool
      */
-    protected function check_domain_availability($url) {
-        $curl = new \curl();
-        $curl->head($url);
-        $info = $curl->get_info();
-        return !empty($info['http_code']) && $info['http_code'] == 200;
+    protected function check_domain_availability(string $url): bool {
+        try {
+            $response = di::get(http_client::class)->send(new Request('HEAD', $url), [RequestOptions::HTTP_ERRORS => false]);
+        } catch (GuzzleException) {
+            return false;
+        }
+        return $response->getStatusCode() === 200;
     }
 }

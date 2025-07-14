@@ -24,12 +24,17 @@
 
 namespace tool_httpsreplace;
 
+use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Psr7\Response;
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
  * Tests the httpsreplace tool.
  *
  * @package   tool_httpsreplace
+ * @covers    \tool_httpsreplace\url_finder
  * @copyright Copyright (c) 2016 Blackboard Inc. (http://www.blackboard.com)
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -144,7 +149,12 @@ final class httpsreplace_test extends \advanced_testcase {
         $this->resetAfterTest();
         $this->expectOutputRegex($outputregex);
 
-        $finder = new tool_httpreplace_url_finder_mock();
+        // Mock the http client to return an (un)successful response.
+        $history = [];
+        ['mock' => $mock] = $this->get_mocked_http_client($history);
+        $mock->append(new Response(str_contains($content, '.unavailable') ? 404 : 200));
+
+        $finder = new url_finder();
 
         $generator = $this->getDataGenerator();
         $course = $generator->create_course((object) [
@@ -155,6 +165,7 @@ final class httpsreplace_test extends \advanced_testcase {
 
         $summary = $DB->get_field('course', 'summary', ['id' => $course->id]);
         $this->assertStringContainsString($expectedcontent, $summary);
+        $this->assertCount(expectedCount: 0, haystack: $history);
     }
 
     /**
@@ -170,37 +181,66 @@ final class httpsreplace_test extends \advanced_testcase {
             "Test image from an available site so shouldn't be reported" => [
                 "content" => '<img src="' . self::getExternalTestFileUrl('/test.jpg', false) . '">',
                 "domain" => $testdomain,
+                "response" => new Response(200),
                 "expectedcount" => 0,
+                "expectedcurlcount" => 1,
             ],
             "Link that is from this site shouldn't be reported" => [
                 "content" => '<img src="' . $wwwroothttp . '/logo.png">',
                 "domain" => $wwwrootdomain,
+                "response" => new Response(200),
                 "expectedcount" => 0,
+                "expectedcurlcount" => 1,
             ],
             "Unavailable, but https shouldn't be reported" => [
                 "content" => '<img src="https://intentionally.unavailable/logo.png">',
                 "domain" => 'intentionally.unavailable',
+                "response" => new ConnectException(
+                    "cURL error 6: Could not resolve host: intentionally.unavailable",
+                    new Request('HEAD', 'https://intentionally.unavailable/')
+                ),
                 "expectedcount" => 0,
+                "expectedcurlcount" => 0,
             ],
             "Unavailable image should be reported" => [
                 "content" => '<img src="http://intentionally.unavailable/link1.jpg">',
                 "domain" => 'intentionally.unavailable',
+                "response" => new ConnectException(
+                    "cURL error 6: Could not resolve host: intentionally.unavailable",
+                    new Request('HEAD', 'https://intentionally.unavailable/')
+                ),
                 "expectedcount" => 1,
+                "expectedcurlcount" => 1,
             ],
             "Unavailable object should be reported" => [
                 "content" => '<object data="http://intentionally.unavailable/file.swf">',
                 "domain" => 'intentionally.unavailable',
+                "response" => new ConnectException(
+                    "cURL error 6: Could not resolve host: intentionally.unavailable",
+                    new Request('HEAD', 'https://intentionally.unavailable/')
+                ),
                 "expectedcount" => 1,
+                "expectedcurlcount" => 1,
             ],
             "Link should not be reported" => [
                 "content" => '<a href="http://intentionally.unavailable/page.php">Link</a>',
                 "domain" => 'intentionally.unavailable',
+                "response" => new ConnectException(
+                    "cURL error 6: Could not resolve host: intentionally.unavailable",
+                    new Request('HEAD', 'https://intentionally.unavailable/')
+                ),
                 "expectedcount" => 0,
+                "expectedcurlcount" => 0,
             ],
             "Text should not be reported" => [
                 "content" => 'http://intentionally.unavailable/page.php',
                 "domain" => 'intentionally.unavailable',
+                "response" => new ConnectException(
+                    "cURL error 6: Could not resolve host: intentionally.unavailable",
+                    new Request('HEAD', 'https://intentionally.unavailable/')
+                ),
                 "expectedcount" => 0,
+                "expectedcurlcount" => 0,
             ],
         ];
     }
@@ -209,22 +249,31 @@ final class httpsreplace_test extends \advanced_testcase {
      * Test http_link_stats
      * @param string $content Example content that we'll attempt to replace.
      * @param string $domain The domain we will check was replaced.
+     * @param Response|ConnectException $response The response or exception for the mocked http_client.
      * @param string $expectedcount Number of urls from that domain that we expect to be replaced.
+     * @param string $expectedcurlcount Number of curl calls to check availability.
      * @dataProvider http_link_stats_provider
      */
-    public function test_http_link_stats($content, $domain, $expectedcount): void {
+    public function test_http_link_stats($content, $domain, $response, $expectedcount, $expectedcurlcount): void {
         $this->resetAfterTest();
 
-        $finder = new tool_httpreplace_url_finder_mock();
+        // Mock the http client to return a (un)successful response.
+        $history = [];
+        ['mock' => $mock] = $this->get_mocked_http_client($history);
+        $mock->append(new Response(str_contains($content, '.unavailable') ? 404 : 200));
+
+        $finder = new url_finder();
 
         $generator = $this->getDataGenerator();
-        $course = $generator->create_course((object) [
+        $generator->create_course((object) [
             'summary' => $content,
         ]);
 
         $results = $finder->http_link_stats();
 
         $this->assertEquals($expectedcount, $results[$domain] ?? 0);
+        $this->assertCount(expectedCount: $expectedcurlcount, haystack: $history);
+
     }
 
     /**
@@ -236,7 +285,12 @@ final class httpsreplace_test extends \advanced_testcase {
         $this->resetAfterTest();
         $this->expectOutputRegex('/^$/');
 
-        $finder = new tool_httpreplace_url_finder_mock();
+        // Mock the http client to return an unsuccessful response.
+        $history = [];
+        ['mock' => $mock] = $this->get_mocked_http_client($history);
+        $mock->append(new Response(404));
+
+        $finder = new url_finder();
 
         $generator = $this->getDataGenerator();
         $course = $generator->create_course((object) [
@@ -250,6 +304,7 @@ final class httpsreplace_test extends \advanced_testcase {
 
         $results = $finder->http_link_stats();
         $this->assertCount(0, $results);
+        $this->assertCount(expectedCount: 0, haystack: $history);
 
         $summary = $DB->get_field('course', 'summary', ['id' => $course->id]);
         $this->assertStringContainsString('http://intentionally.unavailable/page.php', $summary);
@@ -268,7 +323,12 @@ final class httpsreplace_test extends \advanced_testcase {
         $CFG->wwwroot = preg_replace('/^https:/', 'http:', $CFG->wwwroot);
         $this->expectOutputRegex('/^$/');
 
-        $finder = new tool_httpreplace_url_finder_mock();
+        // Mock the http client to return a successful response.
+        $history = [];
+        ['mock' => $mock] = $this->get_mocked_http_client($history);
+        $mock->append(new Response(200));
+
+        $finder = new url_finder();
 
         $generator = $this->getDataGenerator();
         $course = $generator->create_course((object) [
@@ -277,6 +337,7 @@ final class httpsreplace_test extends \advanced_testcase {
 
         $results = $finder->http_link_stats();
         $this->assertCount(0, $results);
+        $this->assertCount(expectedCount: 0, haystack: $history);
 
         $finder->upgrade_http_links();
         $summary = $DB->get_field('course', 'summary', ['id' => $course->id]);
@@ -291,7 +352,13 @@ final class httpsreplace_test extends \advanced_testcase {
 
         set_config('test_upgrade_http_links', '<img src="http://somesite/someimage.png" />');
 
-        $finder = new tool_httpreplace_url_finder_mock();
+        // Mock the http client to return a successful response.
+        $history = [];
+        ['mock' => $mock] = $this->get_mocked_http_client($history);
+        $mock->append(new Response(200));
+
+        $finder = new url_finder();
+
         ob_start();
         $results = $finder->upgrade_http_links();
         $output = ob_get_contents();
@@ -301,6 +368,7 @@ final class httpsreplace_test extends \advanced_testcase {
         $testconf = get_config('core', 'test_upgrade_http_links');
         $this->assertStringContainsString('http://somesite', $testconf);
         $this->assertStringNotContainsString('https://somesite', $testconf);
+        $this->assertCount(expectedCount: 0, haystack: $history);
     }
 
     /**
@@ -317,7 +385,12 @@ final class httpsreplace_test extends \advanced_testcase {
 
         set_config('renames', json_encode($renames), 'tool_httpsreplace');
 
-        $finder = new tool_httpreplace_url_finder_mock();
+        // Mock the http client to return a successful response.
+        $history = [];
+        ['mock' => $mock] = $this->get_mocked_http_client($history);
+        $mock->append(new Response(200));
+
+        $finder = new url_finder();
 
         $generator = $this->getDataGenerator();
         $course = $generator->create_course((object) [
@@ -326,6 +399,7 @@ final class httpsreplace_test extends \advanced_testcase {
 
         $results = $finder->http_link_stats();
         $this->assertCount(0, $results);
+        $this->assertCount(expectedCount: 1, haystack: $history);
 
         $finder->upgrade_http_links();
 
@@ -352,7 +426,13 @@ final class httpsreplace_test extends \advanced_testcase {
             $original2 .= '<img src="http://example.com/image' . ($i + 15 ) . '.png">';
             $expected2 .= '<img src="https://example.com/image' . ($i + 15) . '.png">';
         }
-        $finder = new tool_httpreplace_url_finder_mock();
+
+        // Mock the http client to return a successful response.
+        $history = [];
+        ['mock' => $mock] = $this->get_mocked_http_client($history);
+        $mock->append(new Response(200));
+
+        $finder = new url_finder();
 
         $generator = $this->getDataGenerator();
         $course1 = $generator->create_course((object) ['summary' => $original1]);
@@ -362,6 +442,8 @@ final class httpsreplace_test extends \advanced_testcase {
         $finder->upgrade_http_links();
         $output = ob_get_contents();
         ob_end_clean();
+
+        $this->assertCount(expectedCount: 0, haystack: $history);
 
         // Make sure everything is replaced.
         $summary1 = $DB->get_field('course', 'summary', ['id' => $course1->id]);
@@ -396,31 +478,18 @@ final class httpsreplace_test extends \advanced_testcase {
         $columnamequoted = $dbman->generator->getEncQuoted('where');
         $DB->execute("INSERT INTO {reserved_words_temp} ($columnamequoted) VALUES (?)", [$content]);
 
-        $finder = new tool_httpreplace_url_finder_mock();
+        // Mock the http client to return a successful response.
+        $history = [];
+        ['mock' => $mock] = $this->get_mocked_http_client($history);
+        $mock->append(new Response(200));
+
+        $finder = new url_finder();
         $finder->upgrade_http_links();
 
         $record = $DB->get_record('reserved_words_temp', []);
         $this->assertStringContainsString($expectedcontent, $record->where);
+        $this->assertCount(expectedCount: 0, haystack: $history);
 
         $dbman->drop_table($table);
-    }
-}
-
-/**
- * Class tool_httpreplace_url_finder_mock for testing replace tool without calling curl
- *
- * @package   tool_httpsreplace
- * @copyright 2017 Marina Glancy
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-class tool_httpreplace_url_finder_mock extends \tool_httpsreplace\url_finder {
-    /**
-     * Check if url is available (check hardcoded for unittests)
-     *
-     * @param string $url
-     * @return bool
-     */
-    protected function check_domain_availability($url) {
-        return !preg_match('|\.unavailable/$|', $url);
     }
 }
