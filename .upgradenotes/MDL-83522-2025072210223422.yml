@@ -1,0 +1,5 @@
+issueNumber: MDL-83522
+notes:
+  mod_feedback:
+    - message: Final removal
+      type: removed
