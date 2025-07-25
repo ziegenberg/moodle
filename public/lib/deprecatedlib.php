@@ -869,7 +869,7 @@ function imagecopybicubic($dst_img, $src_img, $dst_x, $dst_y, $src_x, $src_y, $d
  */
 #[\core\attribute\deprecated(
     replacement: 'core\url factory methods',
-    since: '5.0',
+    since: '5.1',
     mdl: 'MDL-31071'
 )]
 function file_encode_url($urlbase, $path, $forcedownload = false, $https = false) {
