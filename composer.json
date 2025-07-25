@@ -101,7 +101,8 @@
         "league/oauth2-server": "^9.4",
         "league/uri": "7.10.0",
         "league/uri-interfaces": "7.10.0",
-        "symfony/console": "^7.3"
+        "symfony/console": "^7.3",
+        "symfony/filesystem": "7.4.23"
     },
     "suggest": {
         "ext-mysqli": "Needed when Moodle uses MySQL or MariaDB database.",
