@@ -13,8 +13,8 @@ Feature: Blog entries can be added, modified and deleted
     And I follow "Add a new entry"
     And I should see "Blogs: Add a new entry"
     And I set the following fields to these values:
-      | Entry title     | Entry 1         |
-      | Blog entry body | Entry 1 content |
+      | Entry title     | Entry 1                      |
+      | Blog entry body | Entry 1 content              |
       | Attachment      | lib/tests/fixtures/empty.txt |
     And I press "Save changes"
 

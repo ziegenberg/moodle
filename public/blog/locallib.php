@@ -27,6 +27,8 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/filelib.php');
 
+use core\url;
+
 /**
  * Blog_entry class. Represents an entry in a user's blog. Contains all methods for managing this entry.
  * This class does not contain any HTML-generating code. See blog_listing sub-classes for such code.
@@ -1175,7 +1177,7 @@ class blog_entry_attachment implements renderable {
 
         $this->file = $file;
         $this->filename = $file->get_filename();
-        $this->url = \core\url::make_pluginfile_url(
+        $this->url = url::make_pluginfile_url(
             contextid: SYSCONTEXTID,
             component: 'blog',
             area: 'attachment',
