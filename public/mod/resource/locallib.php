@@ -25,6 +25,8 @@
 
 defined('MOODLE_INTERNAL') || die;
 
+use core\url;
+
 require_once("$CFG->libdir/filelib.php");
 require_once("$CFG->libdir/resourcelib.php");
 require_once("$CFG->dirroot/mod/resource/lib.php");
@@ -133,7 +135,7 @@ function resource_display_frame($resource, $cm, $course, $file) {
     } else {
         $config = get_config('resource');
         $context = context_module::instance($cm->id);
-        $fileurl = \core\url::make_pluginfile_url(
+        $fileurl = url::make_pluginfile_url(
             contextid: $context->id,
             component: 'mod_resource',
             area: 'content',
@@ -175,7 +177,7 @@ function resource_get_clicktoopen($file, $revision, $extra='') {
     global $CFG;
 
     $filename = $file->get_filename();
-    $fullurl = \core\url::make_pluginfile_url(
+    $fullurl = url::make_pluginfile_url(
         contextid: $file->get_contextid(),
         component: 'mod_resource',
         area: 'content',
@@ -196,7 +198,7 @@ function resource_get_clicktodownload($file, $revision) {
     global $CFG;
 
     $filename = $file->get_filename();
-    $fullurl = \core\url::make_pluginfile_url(
+    $fullurl = url::make_pluginfile_url(
         $file->get_contextid(),
         'mod_resource',
         'content',
@@ -231,7 +233,7 @@ function resource_print_workaround($resource, $cm, $course, $file) {
     echo '<div class="resourceworkaround">';
     switch (resource_get_final_display_type($resource)) {
         case RESOURCELIB_DISPLAY_POPUP:
-            $fullurl = \core\url::make_pluginfile_url(
+            $fullurl = url::make_pluginfile_url(
                 contextid: $file->get_contextid(),
                 component: 'mod_resource',
                 area: 'content',

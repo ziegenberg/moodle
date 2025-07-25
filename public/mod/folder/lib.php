@@ -25,6 +25,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use core\url;
+
 /** Display folder contents on a separate page */
 define('FOLDER_DISPLAY_PAGE', 0);
 /** Display folder contents inline in a course */
@@ -324,7 +326,7 @@ function folder_export_contents($cm, $baseurl) {
         $file['filename']     = $fileinfo->get_filename();
         $file['filepath']     = $fileinfo->get_filepath();
         $file['filesize']     = $fileinfo->get_filesize();
-        $file['fileurl']      = \core\url::make_webservice_pluginfile_url(
+        $file['fileurl']      = url::make_webservice_pluginfile_url(
             contextid: $context->id,
             component: 'mod_folder',
             area: 'content',

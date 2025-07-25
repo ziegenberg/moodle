@@ -34,6 +34,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use core\url;
+
 require_once($CFG->dirroot . '/mod/wiki/lib.php');
 require_once($CFG->dirroot . '/mod/wiki/parser/parser.php');
 require_once($CFG->libdir . '/filelib.php');
@@ -1487,7 +1489,7 @@ function wiki_print_upload_table($context, $filearea, $fileitemid, $deleteupload
 
             $checkbox .= " />";
 
-            $url = \core\url::make_pluginfile_url(
+            $url = url::make_pluginfile_url(
                 contextid: $context->id,
                 component: 'wiki_upload',
                 area: '',

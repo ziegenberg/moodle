@@ -23,6 +23,8 @@
 
 defined('MOODLE_INTERNAL') || die;
 
+use core\url;
+
 /**
  * List of features supported in Page module
  * @param string $feature FEATURE_xx constant for requested feature
@@ -414,7 +416,7 @@ function page_export_contents($cm, $baseurl) {
         $file['filename']     = $fileinfo->get_filename();
         $file['filepath']     = $fileinfo->get_filepath();
         $file['filesize']     = $fileinfo->get_filesize();
-        $file['fileurl']      = \core\url::make_webservice_pluginfile_url(
+        $file['fileurl']      = url::make_webservice_pluginfile_url(
             contextid: $context->id,
             component: 'mod_page',
             area: 'content',
@@ -444,7 +446,7 @@ function page_export_contents($cm, $baseurl) {
     $pagefile['filename']     = $filename;
     $pagefile['filepath']     = '/';
     $pagefile['filesize']     = 0;
-    $pagefile['fileurl']      = \core\url::make_webservice_pluginfile_url(
+    $pagefile['fileurl']      = url::make_webservice_pluginfile_url(
         contextid: $context->id,
         component: 'mod_page',
         area: 'content',

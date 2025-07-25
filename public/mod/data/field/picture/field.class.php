@@ -15,6 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 use core\output\html_writer;
+use core\url;
 
 /**
  * Class picture field for database activity
@@ -99,7 +100,7 @@ class data_field_picture extends data_field_base {
         }
         $str .= '<noscript>';
         if ($file) {
-            $src = \core\url::make_pluginfile_url(
+            $src = url::make_pluginfile_url(
                 contextid: $this->context->id,
                 component: 'mod_data',
                 area: 'content',
