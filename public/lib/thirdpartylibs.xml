@@ -755,6 +755,22 @@ All rights reserved.</copyright>
     <repository>https://github.com/symfony/deprecation-contracts</repository>
   </library>
   <library>
+    <location>thephpleague/uri</location>
+    <name>League URI</name>
+    <description>URI manipulation library</description>
+    <version>7.5.1</version>
+    <license>MIT</license>
+    <repository>https://github.com/thephpleague/uri</repository>
+  </library>
+  <library>
+    <location>thephpleague/uri-interfaces</location>
+    <name>League URI Interfaces</name>
+    <description>Common interfaces and classes for URI representation and interaction</description>
+    <version>7.5.0</version>
+    <license>MIT</license>
+    <repository>https://github.com/thephpleague/uri-interfaces</repository>
+  </library>
+  <library>
     <location>guzzlehttp/kevinrob/guzzlecache</location>
     <name>Guzzle cache middleware</name>
     <description>A HTTP Cache for Guzzle as a simple Middleware to be added in the HandlerStack.</description>
