@@ -1,21 +1,53 @@
-scssphp
--------
+# This is a description for including scssphp into Moodle core
 
-Downloaded from: https://github.com/scssphp/scssphp
 
-Import procedure:
+## Dependencies
 
-- Delete everything from this directory except readme_moodle.txt (this file).
-- Copy all the files from the folder 'src' to this directory.
-- Copy the license file from the project root.
-- Review the local changes defined below, if any. Reapply
-  them if needed. If already available upstream, please remove
-  them from the list.
+Please note that this library depends upon:
 
-Licensed under MIT, Copyright (c) 2015 Leaf Corcoran.
+- `psr/http-factory`
+- `psr/http-message`
+- `symfony/filesystem`
+- `league/uri-interfaces`
+- `league/uri`
 
-Local changes:
+They are included separately into Moodle core, so we need to replace them with our own versions.
 
-- Apply local changes to ensure that all nullable method parameters are correctly type-hinted.
-  These can be detected using:
-  phpcs --sniffs=PHPCompatibility.FunctionDeclarations.RemovedImplicitlyNullableParam lib/scssphp
+Please note that this library depends upon:
+
+- `symfony/polyfill-mbstring`
+- `symfony/polyfill-ctype`
+
+As the ctype and the mbstring extension are required by Moodle, we can safely assume that they are available in the environment.
+
+Please note that this library depends upon:
+
+- scssphp/source-span
+
+
+## Installation
+
+```sh
+mv public/lib/scssphp/readme_moodle.txt ./
+rm -rf public/lib/scssphp/*
+installdir=`mktemp -d`
+cd "${installdir}"
+composer init --require scssphp/scssphp:* -n
+
+cat composer.json | jq '.replace."psr/http-factory"="*"' --indent 4 > composer.json.tmp; mv composer.json.tmp composer.json
+cat composer.json | jq '.replace."psr/http-message"="*"' --indent 4 > composer.json.tmp; mv composer.json.tmp composer.json
+cat composer.json | jq '.replace."symfony/filesystem"="*"' --indent 4 > composer.json.tmp; mv composer.json.tmp composer.json
+cat composer.json | jq '.replace."league/uri-interfaces"="*"' --indent 4 > composer.json.tmp; mv composer.json.tmp composer.json
+cat composer.json | jq '.replace."league/uri"="*"' --indent 4 > composer.json.tmp; mv composer.json.tmp composer.json
+cat composer.json | jq '.replace."symfony/polyfill-mbstring"="*"' --indent 4 > composer.json.tmp; mv composer.json.tmp composer.json
+cat composer.json | jq '.replace."symfony/polyfill-ctype"="*"' --indent 4 > composer.json.tmp; mv composer.json.tmp composer.json
+
+composer install
+rm -rf vendor/composer
+rm vendor/autoload.php
+cd -
+cp -rf "${installdir}/vendor/scssphp/"* public/lib/scssphp/
+mv readme_moodle.txt public/lib/scssphp/
+rm -rf $installdir
+git add .
+```
