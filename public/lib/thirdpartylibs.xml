@@ -755,6 +755,14 @@ All rights reserved.</copyright>
     <repository>https://github.com/symfony/deprecation-contracts</repository>
   </library>
   <library>
+    <location>symfony/filesystem</location>
+    <name>Symfony Filesystem Component</name>
+    <description>Provides basic utilities for the filesystem</description>
+    <version>7.3.6</version>
+    <license>MIT</license>
+    <repository>https://github.com/symfony/filesystem</repository>
+  </library>
+  <library>
     <location>thephpleague/uri</location>
     <name>League URI</name>
     <description>URI manipulation library</description>
