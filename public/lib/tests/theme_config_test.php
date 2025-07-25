@@ -25,6 +25,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use core\scss\compiler;
+
 global $CFG;
 require_once($CFG->libdir . '/outputlib.php');
 
@@ -135,7 +137,7 @@ final class theme_config_test extends advanced_testcase {
         $editorscss = $CFG->dirroot.'/theme/boost/scss/editor.scss';
 
         $this->assertTrue(file_exists($editorscss));
-        $compiler = new core_scss();
+        $compiler = new compiler();
         $compiler->set_file($editorscss);
         $cssexpected = $compiler->to_css();
         $cssactual = $theme->editor_scss_to_css();
@@ -154,7 +156,7 @@ final class theme_config_test extends advanced_testcase {
         $editorscss = $CFG->dirroot.'/theme/boost/scss/editor.scss';
 
         $this->assertTrue(file_exists($editorscss));
-        $compiler = new core_scss();
+        $compiler = new compiler();
         $compiler->set_file($editorscss);
         $cssexpected = $compiler->to_css();
         $cssactual = $theme->editor_scss_to_css();

@@ -104,6 +104,7 @@
 
 use core_admin\local\settings\linkable_settings_page;
 use core_admin\admin_search;
+use core\scss\compiler;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -11269,7 +11270,7 @@ class admin_setting_scsscode extends admin_setting_configtextarea {
             return true;
         }
 
-        $scss = new core_scss();
+        $scss = new compiler();
         try {
             $scss->compile($data);
         } catch (ScssPhp\ScssPhp\Exception\ParserException $e) {
@@ -11567,7 +11568,7 @@ class admin_setting_configthemepreset extends admin_setting_configselect {
             // TODO: MDL-62757 When changing anything in this method please do not forget to check
             // if the get_css_content_from_scss() method in class theme_config needs updating too.
 
-            $compiler = new core_scss();
+            $compiler = new compiler();
             $compiler->prepend_raw_scss($theme->get_pre_scss_code());
             $compiler->append_raw_scss($presetfile->get_content());
             if ($scssproperties = $theme->get_scss_property()) {
