@@ -96,6 +96,7 @@
         "league/uri": "7.8.1",
         "league/uri-interfaces": "7.8.1",
         "symfony/filesystem": "7.4.18",
+        "scssphp/scssphp": "2.1.0",
         "symfony/console": "^7.3"
     },
     "suggest": {
