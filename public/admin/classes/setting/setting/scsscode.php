@@ -16,6 +16,8 @@
 
 namespace core_admin\setting\setting;
 
+use core\scss\compiler;
+
 /**
  * Used to validate the contents of SCSS code and ensuring they are parsable.
  *
@@ -39,7 +41,7 @@ class scsscode extends \core_admin\setting\setting\configtextarea {
             return true;
         }
 
-        $scss = new \core_scss();
+        $scss = new compiler();
         try {
             $scss->compile($data);
         } catch (\ScssPhp\ScssPhp\Exception\ParserException $e) {

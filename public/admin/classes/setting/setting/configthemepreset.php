@@ -16,6 +16,8 @@
 
 namespace core_admin\setting\setting;
 
+use core\scss\compiler;
+
 /**
  * Used to validate theme presets code and ensuring they compile well.
  *
@@ -85,7 +87,7 @@ class configthemepreset extends \core_admin\setting\setting\configselect {
             // TODO: MDL-62757 When changing anything in this method please do not forget to check
             // if the get_css_content_from_scss() method in class theme_config needs updating too.
 
-            $compiler = new \core_scss();
+            $compiler = new compiler();
             $compiler->prepend_raw_scss($theme->get_pre_scss_code());
             $compiler->append_raw_scss($presetfile->get_content());
             if ($scssproperties = $theme->get_scss_property()) {
