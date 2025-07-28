@@ -636,7 +636,7 @@ class plugin_manager {
      * @return string
      */
     public function plugintype_name($type) {
-        if ($parent = $this->get_parent_of_subplugin($type)) {
+        if ($parent = $this->get_parent_of_subplugin($type, true)) {
             // If this is a subplugin, try to ask the parent plugin for the name.
             return $this->plugin_name($parent) . ' / ' . get_string('subplugintype_' . $type, $parent);
         } else {
@@ -654,7 +654,7 @@ class plugin_manager {
      * @return string
      */
     public function plugintype_name_plural($type) {
-        if ($parent = $this->get_parent_of_subplugin($type)) {
+        if ($parent = $this->get_parent_of_subplugin($type, true)) {
             // If this is a subplugin, try to ask the parent plugin for the name.
             return $this->plugin_name($parent) . ' / ' . get_string('subplugintype_' . $type . '_plural', $parent);
         } else {
