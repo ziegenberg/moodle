@@ -69,14 +69,32 @@ class helper {
                   JOIN {question_versions} qv ON qv.questionid = q.id
                   JOIN {question_bank_entries} qbe ON qbe.id = qv.questionbankentryid
                  WHERE qbe.questioncategoryid = :categoryid
-                   AND (q.qtype = :qtype OR qv.status = :status)";
+                       AND (q.qtype = :qtype OR qv.status = :status)
+                       AND q.id > :lastid
+              ORDER BY q.id";
 
-        $params = ['categoryid' => $categoryid, 'qtype' => 'random', 'status' => question_version_status::QUESTION_STATUS_HIDDEN];
-        $questions = $DB->get_records_sql($sql, $params);
-        foreach ($questions as $question) {
-            // The function question_delete_question does not delete questions in use.
-            question_delete_question($question->id);
-        }
+        $lastid = 0;
+        $params = [
+            'categoryid' => $categoryid,
+            'qtype' => 'random',
+            'status' => question_version_status::QUESTION_STATUS_HIDDEN,
+            'lastid' => $lastid,
+        ];
+        $pagesize = 100;
+
+        // We need to process the questions in batches to avoid memory exhaustion.
+        do {
+            $questions = $DB->get_records_sql($sql, $params, limitnum: $pagesize);
+            $recordcount = 0;
+
+            foreach ($questions as $question) {
+                // The function question_delete_question does not delete questions in use.
+                question_delete_question($question->id);
+                $recordcount++;
+            }
+
+            $lastid = $question->id;
+        } while ($recordcount === $pagesize);
     }
 
     /**
