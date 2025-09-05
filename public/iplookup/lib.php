@@ -64,7 +64,7 @@ function iplookup_find_location($ip) {
 
         return $info;
 
-    } else {
+    } else if (!empty($CFG->geopluginapikey)) {
         require_once($CFG->libdir.'/filelib.php');
 
         if (strpos($ip, ':') !== false) {
@@ -73,7 +73,7 @@ function iplookup_find_location($ip) {
             return $info;
         }
 
-        $ipdata = download_file_content('http://www.geoplugin.net/json.gp?ip='.$ip);
+        $ipdata = download_file_content('http://www.geoplugin.net/json.gp?ip=' . $ip . '&auth=' . $CFG->geopluginapikey);
         if ($ipdata) {
             $ipdata = preg_replace('/^geoPlugin\((.*)\)\s*$/s', '$1', $ipdata);
             $ipdata = json_decode($ipdata, true);
@@ -103,5 +103,5 @@ function iplookup_find_location($ip) {
 
         return $info;
     }
-
+    return $info;
 }

@@ -36,12 +36,18 @@ final class geoplugin_test extends \advanced_testcase {
     }
 
     /**
-     * In order to execute this test PHPUNIT_LONGTEST should be defined as true in phpunit.xml or directly in config.php
+     * In order to execute this test:
+     * - PHPUNIT_LONGTEST should be defined as true in phpunit.xml or directly in config.php
+     * - GeoPlugin API key should be defined in config.php as $CFG->geopluginapikey
      */
     public function setUp(): void {
         parent::setUp();
         if (!PHPUNIT_LONGTEST) {
             $this->markTestSkipped('PHPUNIT_LONGTEST is not defined');
+        }
+        global $CFG;
+        if (empty($CFG->geopluginapikey)) {
+            $this->markTestSkipped('GeoPlugin API key is not defined.');
         }
     }
 
