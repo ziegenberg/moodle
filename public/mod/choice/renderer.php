@@ -47,7 +47,7 @@ class mod_choice_renderer extends plugin_renderer_base {
         $choicecount = 0;
         foreach ($options['options'] as $option) {
             $choicecount++;
-            $html .= html_writer::start_tag('li', array('class' => 'option me-3'));
+            $html .= html_writer::start_tag('li', ['class' => 'option me-3 mb-2']);
             if ($multiple) {
                 $option->attributes->name = 'answer[]';
                 $option->attributes->type = 'checkbox';

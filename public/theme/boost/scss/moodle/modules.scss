@@ -74,14 +74,10 @@ select {
 // Choice module
 
 .path-mod-choice {
-    .horizontal .choices .option {
-        display: inline-block;
-    }
-}
-
-.path-mod-choice {
-    .choices .option label {
-        vertical-align: top;
+    .choices .option {
+        display: grid;
+        grid-template-columns: 1.5rem auto;
+        align-items: baseline;
     }
 }
 
