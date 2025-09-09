@@ -33746,12 +33746,10 @@ select {
   margin-bottom: 0;
 }
 
-.path-mod-choice .horizontal .choices .option {
-  display: inline-block;
-}
-
-.path-mod-choice .choices .option label {
-  vertical-align: top;
+.path-mod-choice .choices .option {
+  display: grid;
+  grid-template-columns: 1.5rem auto;
+  align-items: baseline;
 }
 
 .path-mod-forum .forumsearch input,
