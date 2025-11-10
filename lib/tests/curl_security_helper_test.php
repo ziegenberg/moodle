@@ -44,12 +44,10 @@ final class curl_security_helper_test extends \advanced_testcase {
             ->getMock();
 
         // Override the get host list method to return hard coded values based on a mapping provided by $dns.
-        $helper->method('get_host_list_by_name')->will(
-            $this->returnCallback(
-                function($host) use ($dns) {
-                    return isset($dns[$host]) ? $dns[$host] : [];
-                }
-            )
+        $helper->method('get_host_list_by_name')->willReturnCallback(
+            function($host) use ($dns) {
+                return isset($dns[$host]) ? $dns[$host] : [];
+            }
         );
 
         set_config('curlsecurityblockedhosts', $blockedhosts);
