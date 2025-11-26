@@ -131,5 +131,27 @@ function xmldb_assign_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026022300, 'assign');
     }
 
+    if ($oldversion < 2026030600) {
+        // Define field reason to be added to assign_overrides.
+        $table = new xmldb_table('assign_overrides');
+        $field = new xmldb_field('reason', XMLDB_TYPE_TEXT, null, null, null, null, null, 'timelimit');
+
+        // Conditionally launch add field reason.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Define field reasonformat to be added to assign_overrides.
+        $formatfield = new xmldb_field('reasonformat', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '0', 'reason');
+
+        // Conditionally launch add field reasonformat.
+        if (!$dbman->field_exists($table, $formatfield)) {
+            $dbman->add_field($table, $formatfield);
+        }
+
+        // Assign savepoint reached.
+        upgrade_mod_savepoint(true, 2026030600, 'assign');
+    }
+
     return true;
 }

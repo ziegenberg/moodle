@@ -226,6 +226,8 @@ final class provider_test extends provider_testcase {
         $overridedata->duedate = time();
         $overridedata->allowsubmissionsfromdate = time();
         $overridedata->cutoffdate = time();
+        $overridedata->reason = 'This is a reason';
+        $overridedata->reasonformat = FORMAT_MOODLE;
         $DB->insert_record('assign_overrides', $overridedata);
 
         $grade1 = '67.00';
@@ -284,6 +286,10 @@ final class provider_test extends provider_testcase {
                 $overrideexport->cutoffdate);
         $this->assertEquals(\core_privacy\local\request\transform::datetime($overridedata->allowsubmissionsfromdate),
                 $overrideexport->allowsubmissionsfromdate);
+        $this->assertEquals(
+            format_text($overridedata->reason, $overridedata->reasonformat, ['context' => $context]),
+            $overrideexport->reason
+        );
     }
 
     /**
