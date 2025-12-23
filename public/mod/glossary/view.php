@@ -53,6 +53,8 @@ $context = context_module::instance($cm->id);
 require_capability('mod/glossary:view', $context);
 $hassecondary = $PAGE->has_secondary_navigation();
 
+$headinglevel = $PAGE->activityheader->get_heading_level();
+
 // Prepare format_string/text options
 $fmtoptions = array(
     'context' => $context);
@@ -443,7 +445,7 @@ if ($allentries) {
                     $coursecontext = context_course::instance($course->id);
                     $pivottoshow = fullname($user, has_capability('moodle/site:viewfullnames', $coursecontext));
                 }
-                $categoryheader .= $OUTPUT->heading($pivottoshow, 3);
+                $categoryheader .= $OUTPUT->heading($pivottoshow, $headinglevel);
                 echo html_writer::div($categoryheader, 'glossarycategoryheader text-center');
             }
         }
@@ -468,8 +470,24 @@ if ($allentries) {
             $entry->highlight = $strippedsearch;
         }
 
-        /// and finally print the entry.
-        glossary_print_entry($course, $cm, $glossary, $entry, $mode, $hook,1,$displayformat);
+        // Determine heading level for the concept.
+        $conceptheadinglevel = $headinglevel;
+        if (!empty($categoryheader)) {
+            // If we're displaying the glossary category header, increase the concept heading level.
+            $conceptheadinglevel++;
+        }
+        // And finally print the entry.
+        glossary_print_entry(
+            $course,
+            $cm,
+            $glossary,
+            $entry,
+            $mode,
+            $hook,
+            1,
+            $displayformat,
+            conceptheadinglevel: $conceptheadinglevel,
+        );
         $entriesshown++;
     }
     // The all entries value may be a recordset or an array.
