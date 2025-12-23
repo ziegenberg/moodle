@@ -1,6 +1,31 @@
 <?php
 
-function glossary_show_entry_TEMPLATE($course, $cm, $glossary, $entry, $mode='', $hook='', $printicons=1, $aliases=true) {
+/**
+ * Template function that can be used for displaying glossary entries on a different format.
+ *
+ * @param stdClass $course The course object.
+ * @param stdClass $cm The course module object.
+ * @param stdClass $glossary The glossary object.
+ * @param stdClass $entry The glossary entry object.
+ * @param string $mode The mode in which the entry is being displayed.
+ * @param string $hook
+ * @param int $printicons Whether to print editing icons.
+ * @param bool $aliases Whether to show aliases popup.
+ * @param int $conceptheadinglevel The heading level to use for rendering the concept within the heading element.
+ * @return void
+ * @package mod_glossary
+ */
+function glossary_show_entry_TEMPLATE(
+    $course,
+    $cm,
+    $glossary,
+    $entry,
+    $mode = '',
+    $hook = '',
+    $printicons = 1,
+    $aliases = true,
+    $conceptheadinglevel = 3,
+) {
     global $CFG, $USER, $DB, $OUTPUT;
 
 
@@ -61,7 +86,7 @@ function glossary_show_entry_TEMPLATE($course, $cm, $glossary, $entry, $mode='',
 
         //Use this function to print the concept in a heading <h3>
         //Comments: Configuration not supported
-        glossary_print_entry_concept($entry);
+        glossary_print_entry_concept($entry, headinglevel: $conceptheadinglevel);
 
         //Line separator not normally needed now.
         //echo "<br />\n";
@@ -94,17 +119,35 @@ function glossary_show_entry_TEMPLATE($course, $cm, $glossary, $entry, $mode='',
     }
 }
 
-function glossary_print_entry_TEMPLATE($course, $cm, $glossary, $entry, $mode='', $hook='', $printicons=1) {
+/**
+ * Template function that can be used for displaying glossary entries for printing.
+ *
+ * @param stdClass $course The course object.
+ * @param stdClass $cm The course module object.
+ * @param stdClass $glossary The glossary object.
+ * @param stdClass $entry The glossary entry object.
+ * @param string $mode The mode in which the entry is being displayed.
+ * @param string $hook
+ * @param int $printicons Whether to print editing icons.
+ * @param int $conceptheadinglevel The heading level to use for rendering the concept within the heading element.
+ * @package mod_glossary
+ */
+function glossary_print_entry_TEMPLATE(
+    $course,
+    $cm,
+    $glossary,
+    $entry,
+    $mode = '',
+    $hook = '',
+    $printicons = 1,
+    $conceptheadinglevel = 3
+) {
+    // The print view for this format is exactly the normal view, so we use it.
+    // Anyway, you can modify this to use your own print format!!
 
-    //The print view for this format is exactly the normal view, so we use it
-    //Anyway, you can modify this to use your own print format!!
+    // Take out auto-linking in definitions in print view.
+    $entry->definition = '<span class="nolink">' . $entry->definition . '</span>';
 
-    //Take out autolinking in definitions in print view
-    $entry->definition = '<span class="nolink">'.$entry->definition.'</span>';
-
-    //Call to view function (without icons, ratings and aliases) and return its result
-    return glossary_show_entry_TEMPLATE($course, $cm, $glossary, $entry, $mode, $hook, false, false, false);
-
+    // Call to view function (without icons, ratings and aliases) and return its result.
+    glossary_show_entry_TEMPLATE($course, $cm, $glossary, $entry, $mode, $hook, false, false, $conceptheadinglevel);
 }
-
-
