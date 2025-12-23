@@ -431,24 +431,20 @@ if ($allentries) {
             if ($currentpivot != $upperpivot) {
                 $currentpivot = $upperpivot;
 
-                // print the group break if apply
-
-                echo '<div>';
-                echo '<table cellspacing="0" class="glossarycategoryheader table-reboot">';
-
-                echo '<tr>';
+                // Print the group break if applicable.
+                $categoryheader = '';
                 if ($userispivot) {
-                // printing the user icon if defined (only when browsing authors)
-                    echo '<th align="left">';
+                    // Printing the user icon if defined (only when browsing authors).
                     $user = mod_glossary_entry_query_builder::get_user_from_record($entry);
-                    echo $OUTPUT->user_picture($user, array('courseid'=>$course->id));
-                    $pivottoshow = fullname($user, has_capability('moodle/site:viewfullnames', context_course::instance($course->id)));
-                } else {
-                    echo '<th >';
+                    $userpictureoptions = [
+                        'courseid' => $course->id,
+                    ];
+                    $categoryheader .= $OUTPUT->user_picture($user, $userpictureoptions);
+                    $coursecontext = context_course::instance($course->id);
+                    $pivottoshow = fullname($user, has_capability('moodle/site:viewfullnames', $coursecontext));
                 }
-
-                echo $OUTPUT->heading($pivottoshow, 3);
-                echo "</th></tr></table></div>\n";
+                $categoryheader .= $OUTPUT->heading($pivottoshow, 3);
+                echo html_writer::div($categoryheader, 'glossarycategoryheader text-center');
             }
         }
 
