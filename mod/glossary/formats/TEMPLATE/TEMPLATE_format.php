@@ -54,7 +54,7 @@ function glossary_show_entry_TEMPLATE(
         $by = new stdClass();
         $by->name = '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$user->id.'&amp;course='.$course->id.'">'.$fullname.'</a>';
         $by->date = userdate($entry->timemodified);
-        echo '<span class="author">'.get_string('bynameondate', 'forum', $by).'</span>' . '<br />';
+        echo '<span class="author">' . get_string('bynameondate', 'glossary', $by) . '</span>' . '<br />';
 
         //Use this code to show modification date
         //Comments: Configuration not supported
