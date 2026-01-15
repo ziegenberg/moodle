@@ -1,8 +1,5 @@
 <?php
 
-function glossary_show_entry_encyclopedia($course, $cm, $glossary, $entry, $mode='',$hook='',$printicons=1, $aliases=true) {
-    global $CFG, $USER, $DB, $OUTPUT;
-
 /**
  * Displays a glossary entry in encyclopedia format.
  *
@@ -29,12 +26,11 @@ function glossary_show_entry_encyclopedia(
     $aliases = true,
     $conceptheadinglevel = 3,
 ) {
-    global $DB, $OUTPUT, $PAGE;
-
-    $user = $DB->get_record('user', array('id'=>$entry->userid));
-    $strby = get_string('writtenby', 'glossary');
+    global $CFG, $DB, $OUTPUT;
 
     if ($entry) {
+        $user = $DB->get_record('user', ['id' => $entry->userid]);
+
         echo '<table class="glossarypost encyclopedia table-reboot" cellspacing="0" role="presentation">';
         echo '<tr valign="top">';
         echo '<td class="left picture">';
