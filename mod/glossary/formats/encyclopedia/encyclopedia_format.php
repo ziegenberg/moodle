@@ -26,12 +26,11 @@ function glossary_show_entry_encyclopedia(
     $aliases = true,
     $conceptheadinglevel = 3,
 ) {
-    global $DB, $OUTPUT, $PAGE;
-
-    $user = $DB->get_record('user', array('id'=>$entry->userid));
-    $strby = get_string('writtenby', 'glossary');
+    global $CFG, $DB, $OUTPUT;
 
     if ($entry) {
+        $user = $DB->get_record('user', ['id' => $entry->userid]);
+
         echo '<table class="glossarypost encyclopedia" cellspacing="0" role="presentation">';
         echo '<tr valign="top">';
         echo '<td class="left picture">';
