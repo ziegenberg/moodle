@@ -8,11 +8,14 @@ function glossary_show_entry_fullwithauthor($course, $cm, $glossary, $entry, $mo
     $strby = get_string('writtenby', 'glossary');
 
     if ($entry) {
-        echo '<table class="glossarypost fullwithauthor table-reboot" cellspacing="0">';
+        echo '<table class="glossarypost fullwithauthor table-reboot" cellspacing="0" role="presentation">';
         echo '<tr valign="top">';
 
         echo '<td class="picture">';
-        echo $OUTPUT->user_picture($user, array('courseid'=>$course->id));
+        echo $OUTPUT->user_picture($user, [
+            'courseid' => $course->id,
+            'link' => false,
+        ]);
         echo '</td>';
 
         echo '<th class="entryheader">';
@@ -36,7 +39,7 @@ function glossary_show_entry_fullwithauthor($course, $cm, $glossary, $entry, $mo
         echo '</tr>';
 
         echo '<tr valign="top">';
-        echo '<td class="left">&nbsp;</td>';
+        echo '<td class="left" aria-hidden="true">&nbsp;</td>';
         echo '<td colspan="2" class="entry">';
 
         glossary_print_entry_definition($entry, $glossary, $cm);
@@ -49,7 +52,7 @@ function glossary_show_entry_fullwithauthor($course, $cm, $glossary, $entry, $mo
 
         echo '</td></tr>';
         echo '<tr valign="top">';
-        echo '<td class="left">&nbsp;</td>';
+        echo '<td class="left" aria-hidden="true">&nbsp;</td>';
         echo '<td colspan="2" class="entrylowersection">';
 
         glossary_print_entry_lower_section($course, $cm, $glossary, $entry, $mode, $hook, $printicons, $aliases);
@@ -57,9 +60,7 @@ function glossary_show_entry_fullwithauthor($course, $cm, $glossary, $entry, $mo
         echo '</td></tr>';
         echo "</table>\n";
     } else {
-        echo '<div style="text-align:center">';
-        print_string('noentry', 'glossary');
-        echo '</div>';
+        echo html_writer::div(get_string('noentry', 'glossary'), 'text-center');
     }
 }
 
