@@ -5,7 +5,7 @@ function glossary_show_entry_fullwithoutauthor($course, $cm, $glossary, $entry, 
 
 
     if ($entry) {
-        echo '<table class="glossarypost fullwithoutauthor" cellspacing="0">';
+        echo '<table class="glossarypost fullwithoutauthor" cellspacing="0" role="presentation">';
         echo '<tr valign="top">';
 
         echo '<th class="entryheader">';
@@ -43,9 +43,7 @@ function glossary_show_entry_fullwithoutauthor($course, $cm, $glossary, $entry, 
         echo '</td></tr>';
         echo "</table>\n";
     } else {
-        echo '<center>';
-        print_string('noentry', 'glossary');
-        echo '</center>';
+        echo html_writer::div(get_string('noentry', 'glossary'), 'text-center');
     }
 }
 

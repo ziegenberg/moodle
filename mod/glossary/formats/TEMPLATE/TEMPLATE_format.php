@@ -9,13 +9,16 @@ function glossary_show_entry_TEMPLATE($course, $cm, $glossary, $entry, $mode='',
 
     if ($entry) {
 
-        echo '<table class="glossarypost TEMPLATE">';
+        echo '<table class="glossarypost TEMPLATE" role="presentation">';
         echo '<tr>';
         echo '<td class="entryheader">';
 
         //Use this function to show author's image
         //Comments: Configuration not supported
-        echo $OUTPUT->user_picture($user, array('courseid'=>$course->id));
+        echo $OUTPUT->user_picture($user, [
+            'courseid' => $course->id,
+            'link' => false,
+        ]);
 
         //Line separator to show this template fine. :-)
         echo '<br />';
@@ -87,9 +90,7 @@ function glossary_show_entry_TEMPLATE($course, $cm, $glossary, $entry, $mode='',
         echo '</tr>';
         echo "</table>\n";
     } else {
-        echo '<div style="text-align:center">';
-        print_string('noentry', 'glossary');
-        echo '</div>';
+        echo html_writer::div(get_string('noentry', 'glossary'), 'text-center');
     }
 }
 

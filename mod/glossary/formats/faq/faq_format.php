@@ -4,7 +4,7 @@ function glossary_show_entry_faq($course, $cm, $glossary, $entry, $mode="", $hoo
     global $USER, $OUTPUT;
     if ( $entry ) {
 
-        echo '<table class="glossarypost faq" cellspacing="0">';
+        echo '<table class="glossarypost faq" cellspacing="0" role="presentation">';
 
         echo '<tr valign="top">';
         echo '<th class="entryheader">';
@@ -42,9 +42,7 @@ function glossary_show_entry_faq($course, $cm, $glossary, $entry, $mode="", $hoo
         echo '</td></tr></table>';
 
     } else {
-        echo '<div style="text-align:center">';
-        print_string('noentry', 'glossary');
-        echo '</div>';
+        echo html_writer::div(get_string('noentry', 'glossary'), 'text-center');
     }
 }
 

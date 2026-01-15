@@ -5,7 +5,7 @@ function glossary_show_entry_entrylist($course, $cm, $glossary, $entry, $mode=''
 
     $return = false;
 
-    echo '<table class="glossarypost entrylist" cellspacing="0">';
+    echo '<table class="glossarypost entrylist" cellspacing="0" role="presentation">';
 
     echo '<tr valign="top">';
     echo '<td class="entry">';
@@ -31,9 +31,7 @@ function glossary_show_entry_entrylist($course, $cm, $glossary, $entry, $mode=''
         }
         echo '<br />';
     } else {
-        echo '<div style="text-align:center">';
-        print_string('noentry', 'glossary');
-        echo '</div>';
+        echo html_writer::div(get_string('noentry', 'glossary'), 'text-center');
     }
     echo '</td></tr>';
 
