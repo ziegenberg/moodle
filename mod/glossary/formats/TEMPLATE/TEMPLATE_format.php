@@ -26,13 +26,10 @@ function glossary_show_entry_TEMPLATE(
     $aliases = true,
     $conceptheadinglevel = 3,
 ) {
-    global $CFG, $USER, $DB, $OUTPUT;
-
-
-    $user = $DB->get_record('user', array('id'=>$entry->userid));
-    $strby = get_string('writtenby', 'glossary');
+    global $CFG, $DB, $OUTPUT;
 
     if ($entry) {
+        $user = $DB->get_record('user', ['id' => $entry->userid]);
 
         echo '<table class="glossarypost TEMPLATE" role="presentation">';
         echo '<tr>';
