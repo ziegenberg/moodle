@@ -5,6 +5,20 @@
     margin: 0 auto;
     text-align: left;
 
+    &.encyclopedia,
+    &.fullwithauthor {
+        .entry,
+        .entrylowersection {
+            margin-left: 2.7rem;
+        }
+    }
+
+    .entryheader {
+        .author {
+            font-weight: bold;
+        }
+    }
+
     .time {
         font-weight: bold;
     }
@@ -68,7 +82,7 @@
 
 .path-mod-glossary .entrybox,
 .path-mod-glossary table.glossaryapproval,
-.path-mod-glossary .glossarypost .entrylowersection table {
+.path-mod-glossary .glossarypost .entrylowersection {
     width: 100%;
     margin-bottom: 0;
 }
