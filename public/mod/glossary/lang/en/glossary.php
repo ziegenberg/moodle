@@ -234,6 +234,7 @@ $string['indicator:socialbreadthdef_help'] = 'The participant has reached this p
 $string['indicator:socialbreadthdef_link'] = 'Learning_analytics_indicators#Social_breadth';
 $string['isglobal'] = 'Is this glossary global?';
 $string['isglobal_help'] = 'A global glossary has entries which are linked to from throughout the site, rather than only in the course that the glossary is in. Only administrators can set a glossary as global.';
+$string['lastedited'] = '(Last edited: {$a})';
 $string['letter'] = 'letter';
 $string['linkcategory'] = 'Automatically link this category';
 $string['linkcategory_help'] = 'If glossary auto-linking has been enabled and this setting is enabled, the category name will be automatically linked wherever it appears throughout the rest of the course. When a participant follows a category name link, they will be taken to the "Browse by category" page of the glossary.';

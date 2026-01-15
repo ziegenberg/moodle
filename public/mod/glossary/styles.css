@@ -4,6 +4,10 @@
     border-collapse: separate;
     margin: 0 auto;
     text-align: left;
+
+    .time {
+        font-weight: bold;
+    }
 }
 
 .path-mod-glossary .glossarypost.entrylist {
