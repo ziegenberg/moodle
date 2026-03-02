@@ -739,36 +739,70 @@ final class external_test extends \core_external\tests\externallib_testcase {
 
     /**
      * Test get_user_quiz_attempts respects review options
+     * @todo MDL-88101: RunInSeparateProcess is needed because quiz_has_feedback has a static cache that isn't cleared.
      *
      * @covers \mod_quiz_external::get_user_quiz_attempts
      */
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
     public function test_get_user_quiz_attempts_respects_review_options(): void {
         global $DB;
 
-        [$quiz, , , $attempt] = $this->create_quiz_with_questions(
+        $reviewoptions = [
+            'marksduring' => 0,
+            'marksimmediately' => 0,
+            'marksopen' => 0,
+            'marksclosed' => 0,
+            'specificfeedbackduring' => 0,
+            'specificfeedbackimmediately' => 0,
+            'specificfeedbackopen' => 0,
+            'specificfeedbackclosed' => 0,
+            'generalfeedbackduring' => 0,
+            'generalfeedbackimmediately' => 0,
+            'generalfeedbackopen' => 0,
+            'generalfeedbackclosed' => 0,
+            'rightanswerduring' => 0,
+            'rightanswerimmediately' => 0,
+            'rightansweropen' => 0,
+            'rightanswerclosed' => 0,
+        ];
+        $overallfeedbacks = [
+            [
+                'mingrade' => '0',
+                'maxgrade' => '30%',
+                'feedbacktext' => '<p>0-30 feedback</p>',
+                'feedbacktextformat' => FORMAT_HTML,
+            ],
+            [
+                'mingrade' => '30%',
+                'maxgrade' => '70%',
+                'feedbacktext' => '<p>30-70 feedback</p>',
+                'feedbacktextformat' => FORMAT_HTML,
+            ],
+            [
+                'mingrade' => '70%',
+                'maxgrade' => '100%',
+                'feedbacktext' => '<p>70-100 feedback</p>',
+                'feedbacktextformat' => FORMAT_HTML,
+            ],
+        ];
+
+        [$quiz, , $quizobj, $attempt1, $attemptobj1] = $this->create_quiz_with_questions(
             true,
-            true,
+            false,
             'deferredfeedback',
             false,
             [
-                'marksduring' => 0,
-                'marksimmediately' => 0,
-                'marksopen' => 0,
-                'marksclosed' => 0,
-                'specificfeedbackduring' => 0,
-                'specificfeedbackimmediately' => 0,
-                'specificfeedbackopen' => 0,
-                'specificfeedbackclosed' => 0,
-                'generalfeedbackduring' => 0,
-                'generalfeedbackimmediately' => 0,
-                'generalfeedbackopen' => 0,
-                'generalfeedbackclosed' => 0,
-                'rightanswerduring' => 0,
-                'rightanswerimmediately' => 0,
-                'rightansweropen' => 0,
-                'rightanswerclosed' => 0,
+                ...$reviewoptions,
+                'overallfeedbacks' => $overallfeedbacks,
             ]
         );
+
+        // Finish the attempt with no correct answers.
+        $this->answer_attempt(attemptobj: $attemptobj1, finish: true, answers: [1 => ['answer' => '1']]);
+
+        // Now add a new attempt with 1 correct answer.
+        [$attempt2, $attemptobj2] = $this->create_quiz_attempt_object(quizobj: $quizobj, started: true);
+        $this->answer_attempt(attemptobj: $attemptobj2, finish: true, answers: [1 => ['answer' => '3.14']]);
 
         $quiz->timeclose = time() - 1;
         $DB->update_record('quiz', $quiz);
@@ -778,19 +812,69 @@ final class external_test extends \core_external\tests\externallib_testcase {
         $result = mod_quiz_external::get_user_quiz_attempts($quiz->id);
         $result = external_api::clean_returnvalue(mod_quiz_external::get_user_quiz_attempts_returns(), $result);
 
-        $this->assertCount(1, $result['attempts']);
-        $this->assertEquals($attempt->id, $result['attempts'][0]['id']);
+        $this->assertCount(2, $result['attempts']);
+        $this->assertEquals($attempt1->id, $result['attempts'][0]['id']);
         $this->assertNull($result['attempts'][0]['sumgrades']);
+        $this->assertArrayHasKey('feedback', $result['attempts'][0]);
+        $this->assertEquals($result['attempts'][0]['feedback']['feedbacktext'], '<p>0-30 feedback</p>');
+        $this->assertEquals($attempt2->id, $result['attempts'][1]['id']);
+        $this->assertNull($result['attempts'][1]['sumgrades']);
+        $this->assertArrayHasKey('feedback', $result['attempts'][1]);
+        $this->assertEquals($result['attempts'][1]['feedback']['feedbacktext'], '<p>30-70 feedback</p>');
 
         // Test as teacher.
         $this->setUser($this->teacher);
         $result = mod_quiz_external::get_user_quiz_attempts($quiz->id, $this->student->id);
         $result = external_api::clean_returnvalue(mod_quiz_external::get_user_quiz_attempts_returns(), $result);
 
+        $this->assertCount(2, $result['attempts']);
+        $this->assertEquals($attempt1->id, $result['attempts'][0]['id']);
+        $this->assertNotNull($result['attempts'][0]['sumgrades']);
+        $this->assertEquals(0.0, $result['attempts'][0]['sumgrades']);
+        $this->assertArrayHasKey('feedback', $result['attempts'][0]);
+        $this->assertEquals($result['attempts'][0]['feedback']['feedbacktext'], '<p>0-30 feedback</p>');
+        $this->assertEquals($attempt2->id, $result['attempts'][1]['id']);
+        $this->assertNotNull($result['attempts'][1]['sumgrades']);
+        $this->assertEquals(1.0, $result['attempts'][1]['sumgrades']);
+        $this->assertArrayHasKey('feedback', $result['attempts'][1]);
+        $this->assertEquals($result['attempts'][1]['feedback']['feedbacktext'], '<p>30-70 feedback</p>');
+
+        // Now test that the feedback is not returned if the review options are configured to not show it.
+        [$quiz2, , , $attempt, ] = $this->create_quiz_with_questions(
+            true,
+            true,
+            'deferredfeedback',
+            false,
+            [
+                ...$reviewoptions,
+                'overallfeedbackimmediately' => 0,
+                'overallfeedbackopen' => 0,
+                'overallfeedbackclosed' => 0,
+                'overallfeedbacks' => $overallfeedbacks,
+            ]
+        );
+
+        // Test as student.
+        $this->setUser($this->student);
+        $result = mod_quiz_external::get_user_quiz_attempts($quiz2->id);
+        $result = external_api::clean_returnvalue(mod_quiz_external::get_user_quiz_attempts_returns(), $result);
+
+        $this->assertCount(1, $result['attempts']);
+        $this->assertEquals($attempt->id, $result['attempts'][0]['id']);
+        $this->assertNull($result['attempts'][0]['sumgrades']);
+        $this->assertArrayNotHasKey('feedback', $result['attempts'][0]);
+
+        // Test as teacher.
+        $this->setUser($this->teacher);
+        $result = mod_quiz_external::get_user_quiz_attempts($quiz2->id, $this->student->id);
+        $result = external_api::clean_returnvalue(mod_quiz_external::get_user_quiz_attempts_returns(), $result);
+
         $this->assertCount(1, $result['attempts']);
         $this->assertEquals($attempt->id, $result['attempts'][0]['id']);
         $this->assertNotNull($result['attempts'][0]['sumgrades']);
         $this->assertEquals(1.0, $result['attempts'][0]['sumgrades']);
+        $this->assertArrayHasKey('feedback', $result['attempts'][0]);
+        $this->assertEquals($result['attempts'][0]['feedback']['feedbacktext'], '<p>30-70 feedback</p>');
     }
 
     /**
