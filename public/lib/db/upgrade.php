@@ -1043,7 +1043,7 @@ function xmldb_main_upgrade($oldversion) {
                 // Handle custom params.
                 if (isset($action['settings']['modelextraparams'])) {
                     $modelsettings['custom']['modelextraparams'] = $action['settings']['modelextraparams'] ?? '';
-                // Handle known models and their keys.
+                    // Handle known models and their keys.
                 } else if (isset($affectedkeys[$model])) {
                     foreach ($affectedkeys[$model] as $key) {
                         $modelsettings[$model][$key] = $action['settings'][$key] ?? '';
@@ -1445,7 +1445,7 @@ function xmldb_main_upgrade($oldversion) {
             $dbman->add_field($table, $field);
         }
 
-         // Define field area to be added to customfield_data.
+        // Define field area to be added to customfield_data.
         $table = new xmldb_table('customfield_data');
         $field = new xmldb_field('area', XMLDB_TYPE_CHAR, '100', null, XMLDB_NOTNULL, null, null, 'component');
 
@@ -1621,7 +1621,7 @@ function xmldb_main_upgrade($oldversion) {
     }
 
     if ($oldversion < 2025121900.01) {
-            // Define field nextversion to be added to question_bank_entries.
+        // Define field nextversion to be added to question_bank_entries.
         $table = new xmldb_table('question_bank_entries');
         $field = new xmldb_field('nextversion', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'ownerid');
 
@@ -1769,6 +1769,69 @@ function xmldb_main_upgrade($oldversion) {
         }
 
         upgrade_main_savepoint(true, 2026030600.01);
+    }
+
+    if ($oldversion < 2026030600.02) {
+        // Remove MoodleNet outbound sharing functionality.
+
+        // Drop the moodlenet_share_progress table if it exists.
+        $table = new xmldb_table('moodlenet_share_progress');
+        if ($dbman->table_exists($table)) {
+            $dbman->drop_table($table);
+        }
+
+        // Remove the enablesharingtomoodlenet config setting.
+        unset_config('enablesharingtomoodlenet');
+
+        // Remove MoodleNet outbound OAuth2 configuration.
+        unset_config('oauthservice', 'moodlenet');
+        $issuerids = $DB->get_fieldset_select('oauth2_issuer', 'id', "servicetype = ?", ['moodlenet']);
+        if (!empty($issuerids)) {
+            $DB->delete_records_list('oauth2_endpoint', 'issuerid', $issuerids);
+            $DB->delete_records_list('oauth2_access_token', 'issuerid', $issuerids);
+            $DB->delete_records_list('oauth2_refresh_token', 'issuerid', $issuerids);
+            $DB->delete_records_list('oauth2_system_account', 'issuerid', $issuerids);
+            $DB->delete_records_list('oauth2_user_field_mapping', 'issuerid', $issuerids);
+            $DB->delete_records_list('oauth2_issuer', 'id', $issuerids);
+        }
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2026030600.02);
+    }
+
+    if ($oldversion < 2026030600.03) {
+        require_once($CFG->dirroot . '/lib/db/upgradelib.php');
+
+        // Check if the moodlenetprofile column exists in the user table.
+        $table = new xmldb_table('user');
+        $field = new xmldb_field('moodlenetprofile');
+
+        if ($dbman->field_exists($table, $field)) {
+            // Move the MoodleNet profile.
+            moodlenet_migrate_profile_field();
+
+            // Remove the moodlenetprofile column from the user table.
+            $dbman->drop_field($table, $field);
+        }
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2026030600.03);
+    }
+
+    if ($oldversion < 2026030600.04) {
+        // Remove tool_moodlenet if no longer present.
+        if (!file_exists($CFG->dirroot . '/admin/tool/moodlenet/version.php')) {
+            // Reset activity chooser footer if set to tool_moodlenet.
+            if (get_config('core', 'activitychooseractivefooter') === 'tool_moodlenet') {
+                set_config('activitychooseractivefooter', 'hidden');
+            }
+
+            // Uninstall the plugin.
+            uninstall_plugin('tool', 'moodlenet');
+        }
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2026030600.04);
     }
 
     return true;
