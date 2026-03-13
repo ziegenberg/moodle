@@ -14,22 +14,29 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Cache data source for the quiz overrides.
+ *
+ * @package   mod_quiz
+ * @copyright 2021 Shamim Rezaie <shamim@moodle.com>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 declare(strict_types=1);
 
-namespace mod_lesson\cache;
+namespace mod_quiz\cache;
 
 use core_cache\data_source_interface;
 use core_cache\definition;
 
 /**
- * Cache data source for the lesson overrides.
+ * Class quiz_overrides
  *
- * @package   mod_lesson
+ * @package   mod_quiz
  * @copyright 2021 Shamim Rezaie <shamim@moodle.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class overrides implements data_source_interface {
-
     /** @var overrides the singleton instance of this class. */
     protected static $instance = null;
 
@@ -38,7 +45,7 @@ class overrides implements data_source_interface {
      * specified by this interface.
      *
      * @param definition $definition
-     * @return object
+     * @return overrides
      */
     public static function get_instance_for_cache(definition $definition): overrides {
         if (is_null(self::$instance)) {
@@ -57,24 +64,29 @@ class overrides implements data_source_interface {
     public function load_for_cache($key) {
         global $DB;
 
-        [$lessonid, $ug, $ugid] = explode('_', $key);
-        $lessonid = (int) $lessonid;
+        // Ignore getting data if this is a cache invalidation - {@see \core_cache\helper::purge_by_event()}.
+        if ($key == 'lastinvalidation') {
+            return null;
+        }
+
+        [$quizid, $ug, $ugid] = explode('_', $key);
+        $quizid = (int) $quizid;
 
         switch ($ug) {
             case 'u':
                 $userid = (int) $ugid;
                 $override = $DB->get_record(
-                    'lesson_overrides',
-                    ['lessonid' => $lessonid, 'userid' => $userid],
-                    'available, deadline, timelimit, review, maxattempts, retake, password, reason, reasonformat'
+                    'quiz_overrides',
+                    ['quiz' => $quizid, 'userid' => $userid],
+                    'timeopen, timeclose, timelimit, attempts, password, reason, reasonformat'
                 );
                 break;
             case 'g':
                 $groupid = (int) $ugid;
                 $override = $DB->get_record(
-                    'lesson_overrides',
-                    ['lessonid' => $lessonid, 'groupid' => $groupid],
-                    'available, deadline, timelimit, review, maxattempts, retake, password, reason, reasonformat'
+                    'quiz_overrides',
+                    ['quiz' => $quizid, 'groupid' => $groupid],
+                    'timeopen, timeclose, timelimit, attempts, password, reason, reasonformat'
                 );
                 break;
             default:
