@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -16,14 +15,32 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Provides a mock testable_tool_installaddon_installer_without_site_info class.
+ *
  * @package     tool_installaddon
- * @copyright   2013 David Mudrak <david@moodle.com>
+ * @subpackage  fixtures
+ * @category    test
+ * @copyright   2026 Safat Shahin <safat.shahin@moodle.com>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component  = 'tool_installaddon';
-$plugin->version    = 2024100701;
-$plugin->requires   = 2024100100;
-$plugin->maturity   = MATURITY_STABLE;
+require_once(__DIR__ . '/testable_installer.php');
+
+/**
+ * Testable subclass with site-info sharing disabled.
+ *
+ * @copyright 2026 Safat Shahin <safat.shahin@moodle.com>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class testable_tool_installaddon_installer_without_site_info extends testable_tool_installaddon_installer {
+    /**
+     * Disable site info sharing.
+     *
+     * @return bool
+     */
+    protected function should_send_site_info() {
+        return false;
+    }
+}
