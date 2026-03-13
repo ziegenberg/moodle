@@ -795,7 +795,7 @@ $divider-hover-color: $primary !default;
         margin-top: 0;
         .section-item {
             border: none;
-            padding: $activity-item-padding;
+            padding: $activity-item-padding $activity-item-padding 0;
         }
         .icons-collapse-expand:has(+ h4) {
             height: map-get($iconsizes, 4);
@@ -830,12 +830,31 @@ $divider-hover-color: $primary !default;
             .course-content-item-content {
                 border-bottom: $border-width solid $border-color;
             }
+            .course-section-header {
+                padding-bottom: map-get($spacers, 3);
+            }
+            &:has([data-for="sectiontoggler"].collapsed):not(:has(.course-content-item-content.collapsing)) {
+                .course-section-header {
+                    border-bottom: $border-width solid $border-color;
+                }
+            }
             .section .activity:last-child {
                 border-bottom: none;
             }
-            .course-section-header {
-                border-bottom: $border-width solid $border-color;
-                padding-bottom: map-get($spacers, 3);
+
+        }
+        .course-content-item-content > [data-for="sectioninfo"] {
+            margin: map-get($spacers, 1) 0;
+        }
+        .course-content-item-content > [data-for="sectioninfo"]:not(.description) {
+            margin: 0;
+            min-height: 0;
+        }
+        // No bottom line for the last subsection.
+        &:last-child .section-item {
+            .course-content-item-content,
+            &:has([data-for="sectiontoggler"].collapsed):not(:has(.course-content-item-content.collapsing)) .course-section-header {
+                border-bottom: none;
             }
         }
     }
@@ -895,6 +914,10 @@ $divider-hover-color: $primary !default;
             }
         }
     }
+}
+
+[data-for="sectioninfo"] {
+    margin: map-get($spacers, 3) 0;
 }
 
 /* Drag and drop */
