@@ -280,7 +280,7 @@ if ($hassiteconfig || has_capability('moodle/site:configview', context_system::i
     }
 
     // Manage disabledfeatures with custommenuitems and customusermenuitems.
-    $custommenuitemsstr = new lang_string('disabledfeatures', 'tool_mobile');
+    $custommenuitemsstr = new lang_string('custommenuitems', 'tool_mobile');
     $customusermenuitemsstr = new lang_string('customusermenuitems', 'tool_mobile');
     $temp->add(new admin_setting_configtextarea(
         'tool_mobile/custommenuitems',
