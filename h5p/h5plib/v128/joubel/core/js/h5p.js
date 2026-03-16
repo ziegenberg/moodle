@@ -2398,6 +2398,12 @@ H5P.createTitle = function (rawTitle, maxLength) {
       return;
     }
 
+    // Moodle patch to let override this method.
+    if (H5P.contentUserDataAjax !== undefined) {
+      return H5P.contentUserDataAjax(contentId, dataType, subContentId, done, data, preload, invalidate, async);
+    }
+    // End of Moodle patch.
+
     var options = {
       url: H5PIntegration.ajax.contentUserData.replace(':contentId', contentId).replace(':dataType', dataType).replace(':subContentId', subContentId ? subContentId : 0),
       dataType: 'json',

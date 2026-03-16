@@ -61,3 +61,5 @@ instance, if a new method is added to h5p-file-storage.interface.php, it should 
     // End of Moodle patch.
 
     var options = {
+
+8. Update the version of this library in thirdpartylibs.xml.
