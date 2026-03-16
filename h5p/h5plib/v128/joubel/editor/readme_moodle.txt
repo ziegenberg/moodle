@@ -31,3 +31,4 @@ Changed:
  * Add "use stdClass;" in h5peditor.class.php and h5peditor-file.class.php (check that it's still used before replacing it when
    upgrading the library).
  * Edit language/en.js and remove the content for 'filters' (it's a JSON with several fields, such as level or language).
+ * Update the version of this library in thirdpartylibs.xml.
