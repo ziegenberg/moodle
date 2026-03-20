@@ -12,6 +12,12 @@ The format of this change log follows the advice given at [Keep a CHANGELOG](htt
 
 #### Added
 
+- "grunt watch" now accepts a force flag. Run "grunt watch -f" or "grunt watch --force" to prevent grunt from cancelling builds when errors occur. This is especially useful during development, because js build files will be built even if, for example, jslint errors are still present in the files.
+
+  For more information see [MDL-86839](https://tracker.moodle.org/browse/MDL-86839)
+- When creating upgrade notes, the issue number will be inferred from the current Git branch name by default
+
+  For more information see [MDL-87100](https://tracker.moodle.org/browse/MDL-87100)
 - There is a new Behat `toast_message` named selector to more easily assert the presence of Toast messages on the page
 
   For more information see [MDL-87443](https://tracker.moodle.org/browse/MDL-87443)
@@ -27,6 +33,14 @@ The format of this change log follows the advice given at [Keep a CHANGELOG](htt
 
   For more information see [MDL-86524](https://tracker.moodle.org/browse/MDL-86524)
 
+### core_user
+
+#### Added
+
+- Added new optional parameter `userid` to the `user_remove_user_device` function.
+
+  For more information see [MDL-87795](https://tracker.moodle.org/browse/MDL-87795)
+
 ### block_html
 
 #### Changed
@@ -34,6 +48,14 @@ The format of this change log follows the advice given at [Keep a CHANGELOG](htt
 - Treat Dashboard (pagetype 'my-index') as trusted in web services so get_content_for_external preserves embedded HTML (e.g. iframes) on user Dashboard.
 
   For more information see [MDL-85322](https://tracker.moodle.org/browse/MDL-85322)
+
+### tool_behat
+
+#### Added
+
+- The `behat_session_trait::ensure_element_[does_not_]exists(...)` methods now accept optional `$container` parameter to define the parent node to look within
+
+  For more information see [MDL-75067](https://tracker.moodle.org/browse/MDL-75067)
 
 ## 5.0.5
 
