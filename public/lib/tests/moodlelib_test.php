@@ -425,6 +425,17 @@ final class moodlelib_test extends \advanced_testcase {
      * @covers \core\param
      * @covers \clean_param
      */
+    public function test_clean_param_bool(): void {
+        $this->assertSame(0, clean_param(false, PARAM_BOOL));
+        $this->assertSame(0, clean_param(0, PARAM_BOOL));
+        $this->assertSame(1, clean_param(true, PARAM_BOOL));
+        $this->assertSame(1, clean_param(1, PARAM_BOOL));
+    }
+
+    /**
+     * @covers \core\param
+     * @covers \clean_param
+     */
     public function test_clean_param_sequence(): void {
         $this->assertSame(',9789,42897', clean_param('#()*#,9789\'".,<42897></?$(*DSFMO#$*)(SDJ)($*)', PARAM_SEQUENCE));
         $this->assertSame('', clean_param(null, PARAM_SEQUENCE));
@@ -947,6 +958,12 @@ final class moodlelib_test extends \advanced_testcase {
         validate_param('1e10', PARAM_FLOAT);
         validate_param('.1e+10', PARAM_FLOAT);
         validate_param('1E-1', PARAM_FLOAT);
+
+        // Make sure bools do not cause exceptions.
+        validate_param(false, PARAM_BOOL);
+        validate_param(0, PARAM_BOOL);
+        validate_param(true, PARAM_BOOL);
+        validate_param(1, PARAM_BOOL);
 
         try {
             $param = validate_param('1,2', PARAM_FLOAT);
