@@ -1,7 +1,7 @@
 issueNumber: MDL-83902
 notes:
   core_badges:
-    - message: >-
+    - message: |-
         The following classes and functions are now also available in the following new
         locations. They will continue to work in their old locations:
         

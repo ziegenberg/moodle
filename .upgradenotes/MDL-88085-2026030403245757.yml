@@ -3,7 +3,7 @@ notes:
   theme:
     - message: >-
         These icons are no longer in use and have been deprecated:
-          - core:t/blocks_drawer
-          - core:t/blocks_drawer_rtl
-          - core:t/index_drawer
+          - `core:t/blocks_drawer`
+          - `core:t/blocks_drawer_rtl`
+          - `core:t/index_drawer`
       type: deprecated
