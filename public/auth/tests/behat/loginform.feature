@@ -43,11 +43,18 @@ Feature: Test if the login form provides the correct feedback
     Then "//img[@id='logoimage' and contains(@src, '/1.jpg')]" "xpath_element" should exist
     And "//link[@rel='shortcut icon' and contains(@href, '/2.jpg')]" "xpath_element" should exist
 
+  Scenario: Default welcome section is shown when no custom instructions are set
+    Given I am on homepage
+    Then I should see "Welcome to Moodle"
+    And I should see "You're part of a global learning community"
+
   Scenario: Add a custom welcome message
     Given the following config values are set as admin:
       | auth_instructions | Lorem ipsum dolor sit amet |
     And I am on homepage
     Then I should see "Lorem ipsum dolor sit amet"
+    And I should not see "Welcome to Moodle"
+    And I should not see "You're part of a global learning community"
 
   @javascript @accessibility
   Scenario: Show the maintenance mode message
