@@ -34,15 +34,15 @@
 }}
 <div class="container-fluid tertiary-navigation">
     <div class="d-flex">
+        {{#marklink}}
+        <div class="navitem">
+            <a class="btn btn-primary text-nowrap" href="{{marklink}}">{{#str}}markallocatedsubmissions, mod_assign{{/str}}</a>
+        </div>
+        {{/marklink}}
         {{#gradelink}}
         <div class="navitem">
             <a class="btn btn-primary" href="{{gradelink}}">{{#str}}gradeverb, core{{/str}}</a>
         </div>
         {{/gradelink}}
-        {{#marklink}}
-        <div class="navitem">
-            <a class="btn btn-primary" href="{{marklink}}">{{#str}}markverb, mod_assign{{/str}}</a>
-        </div>
-        {{/marklink}}
     </div>
 </div>

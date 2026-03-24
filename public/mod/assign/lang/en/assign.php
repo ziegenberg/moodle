@@ -386,6 +386,7 @@ $string['locksubmissions'] = 'Lock submissions';
 $string['manageassignfeedbackplugins'] = 'Manage assignment feedback plugins';
 $string['manageassignsubmissionplugins'] = 'Manage assignment submission plugins';
 $string['markactions'] = 'Mark actions';
+$string['markallocatedsubmissions'] = 'Mark allocated submissions';
 $string['markerallocations'] = 'Marker allocations';
 $string['marker'] = 'Marker';
 $string['markercount'] = 'Markers';

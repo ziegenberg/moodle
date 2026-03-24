@@ -6317,7 +6317,8 @@ class assign {
         if ($this->can_view_grades()) {
             $markingworkflow =
                 property_exists($this->get_instance(), 'markingworkflow') &&
-                $this->get_instance()->markingworkflow == '1';
+                $this->get_instance()->markingworkflow == '1' &&
+                $this->is_user_allocated_marker($USER->id);
             $actionbuttons = new \mod_assign\output\actionmenu($this->get_course_module()->id, $markingworkflow);
             $o .= $this->get_renderer()->submission_actionmenu($actionbuttons);
 
@@ -10565,20 +10566,27 @@ class assign {
     }
 
     /**
-     * Check if a given user is allocated as a marker for a given student on this assignment.
+     * Check if a user is an allocated marker on this assignment.
+     *
+     * Providing a student ID will check the user is allocated to that student too.
      *
      * @param int $userid The ID of the user we are checking to see if they are a marker.
-     * @param int $studentid The ID of the student.
+     * @param int|null $studentid The ID of the student (optional).
      * @return bool
      */
-    public function is_user_allocated_marker(int $userid, int $studentid): bool {
+    public function is_user_allocated_marker(int $userid, ?int $studentid = null): bool {
         global $DB;
 
-        $record = $DB->count_records('assign_allocated_marker', [
+        $params = [
             'assignment' => $this->get_instance()->id,
-            'student' => $studentid,
             'marker' => $userid,
-        ]);
+        ];
+
+        if (!empty($studentid)) {
+            $params['student'] = $studentid;
+        }
+
+        $record = $DB->count_records('assign_allocated_marker', $params);
 
         return ($record > 0);
     }
