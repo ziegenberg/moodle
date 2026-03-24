@@ -422,6 +422,7 @@ $string['markingworkflowstatenotmarked'] = 'Not marked';
 $string['markingworkflowstatereadyforreview'] = 'Marking completed';
 $string['markingworkflowstatereadyforrelease'] = 'Ready for release';
 $string['markingworkflowstatereleased'] = 'Released';
+$string['marknoun'] = 'Mark';
 $string['markoutof'] = 'Mark out of {$a}';
 $string['markoutof_help'] = 'Enter the mark for the student\'s submission here. You may include decimals.';
 $string['marks'] = 'Marks';

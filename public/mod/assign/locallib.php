@@ -8346,7 +8346,11 @@ class assign {
         $gradingdisabled = $this->grading_disabled($userid);
         $gradinginstance = $this->get_grading_instance($userid, $grade, $gradingdisabled);
 
-        $mform->addElement('header', 'gradeheader', get_string('gradenoun'));
+        if ($marker) {
+            $mform->addElement('header', 'gradeheader', get_string('marknoun', 'assign'));
+        } else {
+            $mform->addElement('header', 'gradeheader', get_string('gradenoun'));
+        }
         if ($gradinginstance) {
             $gradingelement = $mform->addElement('grading',
                                                  'advancedgrading',
