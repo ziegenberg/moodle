@@ -49,7 +49,9 @@
     <div class="card">
         {{#header}}
         <div class="card-header">
-            <span class="mb-0 fs-6 fw-bold">{{{header}}}</span>
+            {{$headercontent}}
+                <h4 class="mb-0 fs-6 fw-bold">{{{header}}}</h4>
+            {{/headercontent}}
         </div>
         {{/header}}
         {{#body}}
