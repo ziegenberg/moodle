@@ -35599,8 +35599,9 @@ textarea[data-auto-rows] {
 }
 
 .login-layout-left-content {
-  max-width: 360px;
+  max-width: 450px;
   text-align: center;
+  text-shadow: 1px 1px 3px #000;
 }
 
 .login-layout-stats {

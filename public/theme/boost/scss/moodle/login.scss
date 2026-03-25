@@ -1,7 +1,7 @@
 $login-layout-left-bg: $primary !default;
 $login-layout-panel-padding: 3rem !default;
 $login-layout-content-width: 576px !default;
-$login-layout-copy-width: 360px !default;
+$login-layout-copy-width: 450px !default;
 $login-input-bg: $gray-100 !default;
 
 .pagelayout-login {
@@ -34,6 +34,7 @@ $login-input-bg: $gray-100 !default;
 .login-layout-left-content {
     max-width: $login-layout-copy-width;
     text-align: center;
+    text-shadow: 1px 1px 3px $black;
 }
 
 .login-layout-stats {
