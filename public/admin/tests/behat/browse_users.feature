@@ -71,9 +71,9 @@ Feature: An administrator can browse user accounts
   Scenario: Suspend and activate user account
     Given I navigate to "Users > Accounts > Browse list of users" in site administration
     And I press "Suspend user account" action in the "User One" report row
-    And I should see "Suspended" in the "User One" "table_row"
+    And I should see "Suspended account" in the "User One" "table_row"
     And I press "Activate user account" action in the "User One" report row
-    Then I should not see "Suspended" in the "User One" "table_row"
+    Then I should not see "Suspended account" in the "User One" "table_row"
 
   @javascript
   Scenario: Delete a user account
