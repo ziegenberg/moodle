@@ -7,7 +7,7 @@ notes:
         instances which most report sources will already have:
 
 
-        - `add_all_from_[entity|entities]()`
+        * `add_all_from_[entity|entities]()`
 
-        - `add_[columns|filters|conditions]_from_entity()`
+        * `add_[columns|filters|conditions]_from_entity()`
       type: changed

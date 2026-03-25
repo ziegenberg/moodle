@@ -190,9 +190,16 @@ notes:
       type: removed
   core_reportbuilder:
     - message: >-
-        - The `\core_reportbuilder\local\helpers\audience::get_all_audiences_menu_types()` has been removed from `public/reportbuilder/classes/local/helpers/audience.php`.
-        - The `\core_reportbuilder\local\entities\base::get_default_table_aliases()` has been removed from `public/reportbuilder/classes/local/entities/base.php`.
-        - The `\core_reportbuilder\local\helpers\report::get_available_columns()` has been removed from `public/reportbuilder/classes/local/helpers/report.php`.
+        The following deprecated report helper methods have been removed:
+
+
+        * `audience::get_all_audiences_menu_types()`
+
+        * `report::get_available_columns()`
+
+
+        The stub `get_default_table_aliases()` method of the base entity class
+        has also been removed as it hasn't been supported for some time
       type: removed
   core_repository:
     - message: The `\repository::get_file_size()` has been removed from `public/repository/lib.php`.
