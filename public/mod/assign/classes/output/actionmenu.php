@@ -60,10 +60,9 @@ class actionmenu implements templatable, renderable {
             if ($this->markingworkflow) {
                 $gradelink = new moodle_url('/mod/assign/view.php', ['id' => $this->cmid, 'action' => 'marker']);
                 $return['marklink'] = $gradelink->out(false);
-            } else {
-                $gradelink = new moodle_url('/mod/assign/view.php', ['id' => $this->cmid, 'action' => 'grader']);
-                $return['gradelink'] = $gradelink->out(false);
             }
+            $gradelink = new moodle_url('/mod/assign/view.php', ['id' => $this->cmid, 'action' => 'grader']);
+            $return['gradelink'] = $gradelink->out(false);
         }
 
         return $return;

@@ -93,3 +93,21 @@ Feature: Allocate markers to student submissions
       | Marker 2    |
       | Teacher One |
       | Teacher One |
+
+  Scenario: Only allocated markers see the mark button
+    Given I am on the "A1" "assign activity" page logged in as teacher1
+    And I should not see "Mark allocated submissions" in the ".tertiary-navigation" "css_element"
+    And I should see "Grade" in the ".tertiary-navigation" "css_element"
+    And I navigate to "Submissions" in current page administration
+    And I should not see "Mark allocated submissions" in the ".tertiary-navigation" "css_element"
+    And I should see "Grade" in the ".tertiary-navigation" "css_element"
+    And I set the field "selectall" to "1"
+    And I click on "Allocate marker" "button" in the "sticky-footer" "region"
+    And I click on "Allocate marker" "button" in the ".modal-footer" "css_element"
+    And I select "Teacher One" from the "Allocated marker 1" singleselect
+    When I press "Save changes"
+    Then I should see "Mark allocated submissions" in the ".tertiary-navigation" "css_element"
+    And I should see "Grade" in the ".tertiary-navigation" "css_element"
+    And I am on the "A1" "assign activity" page
+    And I should see "Mark allocated submissions" in the ".tertiary-navigation" "css_element"
+    And I should see "Grade" in the ".tertiary-navigation" "css_element"
