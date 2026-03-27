@@ -6,7 +6,7 @@ More detailed information on key changes can be found in the [Developer update n
 
 The format of this change log follows the advice given at [Keep a CHANGELOG](https://keepachangelog.com).
 
-## 5.2dev+
+## 5.2beta
 
 ### core
 
@@ -701,8 +701,8 @@ The format of this change log follows the advice given at [Keep a CHANGELOG](htt
   For more information see [MDL-87263](https://tracker.moodle.org/browse/MDL-87263)
 - The following methods now support both string or entity instance types for parameters referring to entities by name, which prevents lookups of instances which most report sources will already have:
 
-  - `add_all_from_[entity|entities]()`
-  - `add_[columns|filters|conditions]_from_entity()`
+  * `add_all_from_[entity|entities]()`
+  * `add_[columns|filters|conditions]_from_entity()`
 
   For more information see [MDL-87451](https://tracker.moodle.org/browse/MDL-87451)
 
@@ -724,7 +724,12 @@ The format of this change log follows the advice given at [Keep a CHANGELOG](htt
 
 #### Removed
 
-- - The `\core_reportbuilder\local\helpers\audience::get_all_audiences_menu_types()` has been removed from `public/reportbuilder/classes/local/helpers/audience.php`. - The `\core_reportbuilder\local\entities\base::get_default_table_aliases()` has been removed from `public/reportbuilder/classes/local/entities/base.php`. - The `\core_reportbuilder\local\helpers\report::get_available_columns()` has been removed from `public/reportbuilder/classes/local/helpers/report.php`.
+- The following deprecated report helper methods have been removed:
+
+  * `audience::get_all_audiences_menu_types()`
+  * `report::get_available_columns()`
+
+  The stub `get_default_table_aliases()` method of the base entity class has also been removed as it hasn't been supported for some time
 
   For more information see [MDL-87425](https://tracker.moodle.org/browse/MDL-87425)
 
@@ -810,6 +815,14 @@ The format of this change log follows the advice given at [Keep a CHANGELOG](htt
   * The `\customfield_number\task\recalculate` helpers for queueing task instances
 
   For more information see [MDL-87714](https://tracker.moodle.org/browse/MDL-87714)
+
+### enrol_manual
+
+#### Removed
+
+- The unused parameter 'roleid' has been removed from the external function `unenrol_users()`
+
+  For more information see [MDL-51152](https://tracker.moodle.org/browse/MDL-51152)
 
 ### enrol_self
 

@@ -1,6 +1,6 @@
 # core_enrol (subsystem / plugintype) Upgrade notes
 
-## 5.2dev+
+## 5.2beta
 
 ### Changed
 

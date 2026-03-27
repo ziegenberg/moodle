@@ -1,6 +1,6 @@
 # core_user (subsystem) Upgrade notes
 
-## 5.2dev+
+## 5.2beta
 
 ### Added
 
