@@ -3506,10 +3506,21 @@ function glossary_get_entries_by_letter($glossary, $context, $letter, $from, $li
         $filteredentries = $entries;
     }
 
-    // Now sort the array in regard to the current language.
-    usort($filteredentries, function($a, $b) {
-        return format_string($a->concept) <=> format_string($b->concept);
-    });
+    // Build an auxiliary array mapping keys to formatted concepts for locale-aware sorting.
+    $sortkeys = [];
+    foreach ($filteredentries as $key => $entry) {
+        $sortkeys[$key] = format_string($entry->concept);
+    }
+
+    // Sort the auxiliary array using the collator for locale-aware, case-insensitive sorting.
+    core_collator::asort($sortkeys, core_collator::SORT_STRING);
+
+    // Reorder the original array based on the sorted keys.
+    $sortedentries = [];
+    foreach (array_keys($sortkeys) as $key) {
+        $sortedentries[$key] = $filteredentries[$key];
+    }
+    $filteredentries = $sortedentries;
 
     // Size of the overall array.
     $count = count($entries);
@@ -3994,10 +4005,21 @@ function glossary_get_entries_by_term($glossary, $context, $term, $from, $limit,
     $entries = $filteredentries;
     // Check whether concept or alias match the term.
 
-    // Now sort the array in regard to the current language.
-    usort($filteredentries, function($a, $b) {
-        return format_string($a->concept) <=> format_string($b->concept);
-    });
+    // Build an auxiliary array mapping keys to formatted concepts for locale-aware sorting.
+    $sortkeys = [];
+    foreach ($filteredentries as $key => $entry) {
+        $sortkeys[$key] = format_string($entry->concept);
+    }
+
+    // Sort the auxiliary array using the collator for locale-aware, case-insensitive sorting.
+    core_collator::asort($sortkeys, core_collator::SORT_STRING);
+
+    // Reorder the original array based on the sorted keys.
+    $sortedentries = [];
+    foreach (array_keys($sortkeys) as $key) {
+        $sortedentries[$key] = $filteredentries[$key];
+    }
+    $filteredentries = $sortedentries;
 
     // Size of the overall array.
     $count = count($entries);
@@ -4068,7 +4090,6 @@ function glossary_get_entries_to_approve($glossary, $context, $letter, $order, $
         $filteredentries = $entries;
     }
 
-    // Now sort the array in regard to the current language.
     if ($order == 'CREATION') {
         if (strcasecmp($sort, 'DESC') === 0) {
             usort($filteredentries, function($a, $b) {
@@ -4090,15 +4111,24 @@ function glossary_get_entries_to_approve($glossary, $context, $letter, $order, $
             });
         }
     } else {
-        // This means CONCEPT.
+        // Build an auxiliary array mapping keys to formatted concepts for locale-aware sorting.
+        $sortkeys = [];
+        foreach ($filteredentries as $key => $entry) {
+            $sortkeys[$key] = format_string($entry->concept);
+        }
+
+        // Sort the auxiliary array using the collator for locale-aware, case-insensitive sorting.
+        core_collator::asort($sortkeys, core_collator::SORT_STRING);
+
+        // Reorder the original array based on the sorted keys.
+        $sortedentries = [];
+        foreach (array_keys($sortkeys) as $key) {
+            $sortedentries[$key] = $filteredentries[$key];
+        }
+        $filteredentries = $sortedentries;
+
         if (strcasecmp($sort, 'DESC') === 0) {
-            usort($filteredentries, function($a, $b) {
-                return format_string($b->concept) <=> format_string($a->concept);
-            });
-        } else {
-            usort($filteredentries, function($a, $b) {
-                return format_string($a->concept) <=> format_string($b->concept);
-            });
+            $filteredentries = array_reverse($filteredentries);
         }
     }
 
