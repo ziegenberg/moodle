@@ -2387,10 +2387,10 @@ class core_renderer extends renderer_base {
         $output = html_writer::tag('a', $output, $attributes);
 
         // Show suspended label if needed.
-        if ( $userpicture->showsuspended && property_exists($user, 'suspended') && $user->suspended) {
+        if ($userpicture->showsuspended && property_exists($user, 'suspended') && $user->suspended) {
             $output .= html_writer::tag(
                 'span',
-                get_string('suspended'),
+                get_string('suspended', 'auth'),
                 ['class' => 'badge text-bg-warning ms-1']
             );
         }
