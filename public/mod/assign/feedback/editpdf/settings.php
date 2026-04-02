@@ -47,3 +47,11 @@ $settings->add(new admin_setting_heading('pathtogs', get_string('pathtogs', 'adm
 $url = new moodle_url('/mod/assign/feedback/editpdf/testgs.php');
 $link = html_writer::link($url, get_string('testgs', 'assignfeedback_editpdf'));
 $settings->add(new admin_setting_heading('testgs', '', $link));
+
+// Ghostscript processing timeout. 0 = no timeout.
+$settings->add(new admin_setting_configduration(
+    'assignfeedback_editpdf/gs_timeout',
+    new lang_string('gstimeout', 'assignfeedback_editpdf'),
+    new lang_string('gstimeout_desc', 'assignfeedback_editpdf'),
+    0,
+));

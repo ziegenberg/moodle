@@ -76,6 +76,8 @@ class pdf extends Fpdi {
     const BLANK_PDF = '/mod/assign/feedback/editpdf/fixtures/blank.pdf';
     /** Page image file name prefix*/
     const IMAGE_PAGE = 'image_page';
+    /** Grace period in seconds between the SIGTERM and SIGKILL when terminating a timed-out process. */
+    const GS_TERMINATE_GRACE = 10;
     /**
      * Get the name of the font to use in generated PDF files.
      * If $CFG->pdfexportfont is set - use it, otherwise use "freesans" as this
@@ -548,7 +550,12 @@ class pdf extends Fpdi {
 
         $imagefile = $this->imagefolder . '/' . self::IMAGE_PAGE;
         $command = $this->get_command_for_image(-1, $imagefile);
-        exec($command);
+        try {
+            self::run_gs($command, $this->filename);
+        } catch (\moodle_exception $e) {
+            // GS failed or timed out; the loop below will produce error images for all pages.
+            debugging($e->getMessage(), DEBUG_NORMAL);
+        }
         $images = array();
         for ($i = 0; $i < $this->pagecount; $i++) {
             // Image file is created from 1, so need to change to 0.
@@ -592,11 +599,17 @@ class pdf extends Fpdi {
 
         if ($generate) {
             $command = $this->get_command_for_image($pageno, $imagefile);
-            $output = null;
-            $result = exec($command, $output);
+            $output = [];
+            try {
+                self::run_gs($command, $this->filename, $output);
+            } catch (\moodle_exception $e) {
+                // Fall through to the file check below which generates a detailed error.
+                debugging($e->getMessage(), DEBUG_DEVELOPER);
+            }
             if (!file_exists($imagefile)) {
+                $result = !empty($output) ? end($output) : '';
                 $fullerror = '<pre>'.get_string('command', 'assignfeedback_editpdf')."\n";
-                $fullerror .= $command . "\n\n";
+                $fullerror .= implode(' ', array_map('escapeshellarg', $command)) . "\n\n";
                 $fullerror .= get_string('result', 'assignfeedback_editpdf')."\n";
                 $fullerror .= htmlspecialchars($result, ENT_COMPAT) . "\n\n";
                 $fullerror .= get_string('output', 'assignfeedback_editpdf')."\n";
@@ -632,9 +645,9 @@ class pdf extends Fpdi {
      * from a PDF document into the $imagefile file.
      * @param int $pageno Page number to extract from document. -1 means for all pages.
      * @param string $imagefile Target filename for the PNG image as absolute path.
-     * @return string The command to use to extract a page as PNG image.
+     * @return array The command arguments to extract a page as PNG image.
      */
-    private function get_command_for_image(int $pageno, string $imagefile): string {
+    private function get_command_for_image(int $pageno, string $imagefile): array {
         global $CFG;
 
         // First, quickest convertion option.
@@ -651,28 +664,36 @@ class pdf extends Fpdi {
      * from a PDF document into the $imagefile file.
      * @param int $pageno Page number to extract from document. -1 means for all pages.
      * @param string $imagefile Target filename for the PNG image as absolute path.
-     * @return string The pdftoppm command to use to extract a page as PNG image.
+     * @return array The pdftoppm command arguments to extract a page as PNG image.
      */
-    private function get_pdftoppm_command_for_image(int $pageno, string $imagefile): string {
+    private function get_pdftoppm_command_for_image(int $pageno, string $imagefile): array {
         global $CFG;
-        $pdftoppmexec = \escapeshellarg($CFG->pathtopdftoppm);
-        $imageres = \escapeshellarg(100);
-        $filename = \escapeshellarg($this->filename);
-        $pagenoinc = \escapeshellarg($pageno + 1);
+        $command = [
+            $CFG->pathtopdftoppm,
+            '-q',
+            '-r', '100',
+        ];
         if ($pageno >= 0) {
             // Convert 1 page.
-            $imagefile = substr($imagefile, 0, -4); // Pdftoppm tool automatically adds extension file.
-            $frompageno = $pagenoinc;
-            $topageno = $pagenoinc;
-            $singlefile = '-singlefile';
+            $imagefile = substr($imagefile, 0, -4); // Pdftoppm tool automatically adds file extension.
+            $pagenoinc = $pageno + 1;
+            $command[] = '-f';
+            $command[] = (string)$pagenoinc;
+            $command[] = '-l';
+            $command[] = (string)$pagenoinc;
+            $command[] = '-png';
+            $command[] = '-singlefile';
         } else {
             // Convert all pages at once.
-            $frompageno = 1;
-            $topageno = $this->pagecount;
-            $singlefile = '';
+            $command[] = '-f';
+            $command[] = '1';
+            $command[] = '-l';
+            $command[] = (string)$this->pagecount;
+            $command[] = '-png';
         }
-        $imagefilearg = \escapeshellarg($imagefile);
-        return "$pdftoppmexec -q -r $imageres -f $frompageno -l $topageno -png $singlefile $filename $imagefilearg";
+        $command[] = $this->filename;
+        $command[] = $imagefile;
+        return $command;
     }
 
     /**
@@ -680,28 +701,36 @@ class pdf extends Fpdi {
      * from a PDF document into the $imagefile file.
      * @param int $pageno Page number to extract from document. -1 means for all pages.
      * @param string $imagefile Target filename for the PNG image as absolute path.
-     * @return string The ghostscript (gs) command to use to extract a page as PNG image.
+     * @return array The ghostscript (gs) command arguments to extract a page as PNG image.
      */
-    private function get_gs_command_for_image(int $pageno, string $imagefile): string {
+    private function get_gs_command_for_image(int $pageno, string $imagefile): array {
         global $CFG;
-        $gsexec = \escapeshellarg($CFG->pathtogs);
-        $imageres = \escapeshellarg(100);
-        $imagefilearg = \escapeshellarg($imagefile);
-        $filename = \escapeshellarg($this->filename);
-        $pagenoinc = \escapeshellarg($pageno + 1);
+        $command = [
+            $CFG->pathtogs,
+            '-q',
+            '-sDEVICE=png16m',
+            '-dSAFER',
+            '-dBATCH',
+            '-dNOPAUSE',
+            '-r100',
+        ];
         if ($pageno >= 0) {
             // Convert 1 page.
-            $firstpage = $pagenoinc;
-            $lastpage = $pagenoinc;
+            $command[] = '-dFirstPage=' . ($pageno + 1);
+            $command[] = '-dLastPage=' . ($pageno + 1);
         } else {
-            // Convert all pages at once. Ensure that %d is not replaced by escapeshellarg on Windows systems.
-            $imagefilearg = \escapeshellarg($imagefile);
-            $imagefilearg = substr($imagefilearg, 0, -1) . '%d.png' . substr($imagefilearg, -1);
-            $firstpage = 1;
-            $lastpage = $this->pagecount;
+            // Convert all pages at once. %d is expanded by ghostscript; with no
+            // shell there is no escapeshellarg on Windows to mangle it.
+            $imagefile .= '%d.png';
+            $command[] = '-dFirstPage=1';
+            $command[] = '-dLastPage=' . $this->pagecount;
         }
-        return "$gsexec -q -sDEVICE=png16m -dSAFER -dBATCH -dNOPAUSE -r$imageres -dFirstPage=$firstpage -dLastPage=$lastpage ".
-            "-dDOINTERPOLATE -dGraphicsAlphaBits=4 -dTextAlphaBits=4 -sOutputFile=$imagefilearg $filename";
+        $command[] = '-dDOINTERPOLATE';
+        $command[] = '-dGraphicsAlphaBits=4';
+        $command[] = '-dTextAlphaBits=4';
+        $command[] = '-sOutputFile=' . $imagefile;
+        $command[] = $this->filename;
+        return $command;
     }
 
     /**
@@ -733,13 +762,24 @@ class pdf extends Fpdi {
         $temparea = make_request_directory();
         $tempdst = $temparea . "/target.pdf";
 
-        $gsexec = \escapeshellarg($CFG->pathtogs);
-        $tempdstarg = \escapeshellarg($tempdst);
-        $tempsrcarg = \escapeshellarg($tempsrc);
-        $command = "$gsexec -q -sDEVICE=pdfwrite -dPreserveAnnots=false -dSAFER -dBATCH -dNOPAUSE -dCompatibilityLevel=1.4 "
-            . "-sOutputFile=$tempdstarg $tempsrcarg";
+        $command = [
+            $CFG->pathtogs,
+            '-q',
+            '-sDEVICE=pdfwrite',
+            '-dPreserveAnnots=false',
+            '-dSAFER',
+            '-dBATCH',
+            '-dNOPAUSE',
+            '-dCompatibilityLevel=1.4',
+            '-sOutputFile=' . $tempdst,
+            $tempsrc,
+        ];
 
-        exec($command);
+        try {
+            self::run_gs($command, $tempsrc);
+        } catch (\moodle_exception $e) {
+            return false;
+        }
         if (!file_exists($tempdst)) {
             // Something has gone wrong in the conversion.
             return false;
@@ -761,6 +801,131 @@ class pdf extends Fpdi {
         }
 
         return $tempdst;
+    }
+
+    /**
+     * Runs a ghostscript command via proc_open, enforcing a timeout if configured.
+     *
+     * The command is passed as an argument array so proc_open starts the
+     * executable directly without an intermediate shell (sh -c / cmd.exe).
+     * This matters for the timeout: proc_terminate() then kills the actual
+     * ghostscript process instead of only the shell wrapper, which would
+     * otherwise survive as an orphan on Windows.
+     *
+     * Both output pipes are made non-blocking and drained on every poll
+     * iteration, as a child whose output fills the OS pipe buffer (e.g. 64 KiB by
+     * default on Linux) blocks on write until the parent reads, and an undrained
+     * pipe would deadlock the wait loop forever — also with gs_timeout disabled (0).
+     *
+     * @param array $command The command as an argument array. The first element is the executable,
+     *         the rest its arguments.
+     * @param string $filename The PDF filename being processed, used in exception messages.
+     * @param array $output Populated with stdout lines on completion.
+     * @return void
+     * @throws \moodle_exception If proc_open fails, the process exceeds the configured gs_timeout,
+     *         or ghostscript exits with a non-zero status.
+     */
+    private static function run_gs(array $command, string $filename, array &$output = []): void {
+        $descriptorspec = [
+            0 => ['pipe', 'r'],
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ];
+
+        $process = proc_open($command, $descriptorspec, $pipes);
+        if (!is_resource($process)) {
+            throw new \moodle_exception(
+                'errorgsfailed',
+                'assignfeedback_editpdf',
+                '',
+                (object)['file' => $filename],
+            );
+        }
+
+        fclose($pipes[0]);
+
+        // Non-blocking reads: the parent never blocks on a full pipe, and the
+        // child's writes are consumed as soon as they arrive.
+        stream_set_blocking($pipes[1], false);
+        stream_set_blocking($pipes[2], false);
+
+        $timeoutseconds = (int)get_config('assignfeedback_editpdf', 'gs_timeout');
+        $start = time();
+        $stdout = '';
+
+        while (true) {
+            // Drain everything currently available. stderr is discarded; the
+            // caller only needs stdout (which is small: -q, output goes to files).
+            $chunk = fread($pipes[1], 65536);
+            while ($chunk !== false && $chunk !== '') {
+                $stdout .= $chunk;
+                $chunk = fread($pipes[1], 65536);
+            }
+            $chunk = fread($pipes[2], 65536);
+            while ($chunk !== false && $chunk !== '') {
+                $chunk = fread($pipes[2], 65536);
+            }
+
+            $status = proc_get_status($process);
+            if (!$status['running']) {
+                break;
+            }
+
+            if ($timeoutseconds > 0 && (time() - $start) >= $timeoutseconds) {
+                // Re-check in case the process exited after the poll above.
+                if (!proc_get_status($process)['running']) {
+                    break;
+                }
+
+                proc_terminate($process);
+                fclose($pipes[1]);
+                fclose($pipes[2]);
+                // Two-stage termination: give the process GS_TERMINATE_GRACE
+                // seconds to exit after SIGTERM, then escalate to SIGKILL.
+                // proc_close() blocks until the child exits, so a runaway
+                // must be dead before we call it.
+                $killed = false;
+                $terminatestart = time();
+                while (proc_get_status($process)['running']) {
+                    if (!$killed && (time() - $terminatestart) >= self::GS_TERMINATE_GRACE) {
+                        proc_terminate($process, 9); // SIGKILL: cannot be caught or ignored.
+                        $killed = true;
+                    }
+                    usleep(1000000); // Poll every 1s.
+                }
+                proc_close($process);
+                throw new \moodle_exception(
+                    'errorgstimeout',
+                    'assignfeedback_editpdf',
+                    '',
+                    (object)['file' => $filename, 'timeout' => $timeoutseconds],
+                );
+            }
+
+            usleep(100000); // Poll every 100ms.
+        }
+
+        // Final drain: the child may have written data after our last read but
+        // before it exited.
+        $chunk = fread($pipes[1], 65536);
+        while ($chunk !== false && $chunk !== '') {
+            $stdout .= $chunk;
+            $chunk = fread($pipes[1], 65536);
+        }
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+
+        $output = array_values(array_filter(explode("\n", trim($stdout)), fn($line) => $line !== ''));
+
+        $exitcode = proc_close($process);
+        if ($exitcode !== 0) {
+            throw new \moodle_exception(
+                'errorgsfailed',
+                'assignfeedback_editpdf',
+                '',
+                (object)['file' => $filename],
+            );
+        }
     }
 
     /**

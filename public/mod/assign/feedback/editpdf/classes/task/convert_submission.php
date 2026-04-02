@@ -103,8 +103,14 @@ class convert_submission extends adhoc_task {
                     throw new \moodle_exception('documentcombinationfailed');
             }
 
-            document_services::get_page_images_for_attempt($assign, $userid, $data->submissionattempt, false);
-            document_services::get_page_images_for_attempt($assign, $userid, $data->submissionattempt, true);
+            try {
+                document_services::get_page_images_for_attempt($assign, $userid, $data->submissionattempt, false);
+                document_services::get_page_images_for_attempt($assign, $userid, $data->submissionattempt, true);
+            } catch (\moodle_exception $e) {
+                mtrace('assignfeedback_editpdf: Page image generation failed for user id ' . $userid
+                    . ', attempt ' . $data->submissionattempt . ': ' . $e->getMessage());
+                throw $e; // Re-throw so the task API marks this task as failed with backoff.
+            }
         }
 
         if (!$this->is_adhoc_task_delayed()) {

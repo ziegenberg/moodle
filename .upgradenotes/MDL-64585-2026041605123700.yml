@@ -1,0 +1,8 @@
+issueNumber: MDL-64585
+notes:
+  assignfeedback_editpdf:
+    - message: >-
+        Added a configurable Ghostscript processing timeout (gs_timeout) to
+        prevent high-resolution or complex PDFs from blocking the conversion
+        queue indefinitely.
+      type: improved
