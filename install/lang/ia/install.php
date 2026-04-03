@@ -45,12 +45,34 @@ $string['datarootpermission'] = 'Permission de directorios de datos';
 $string['dbprefix'] = 'Prefixo de tabella';
 $string['dirroot'] = 'Directorio de Moodle';
 $string['environmenthead'] = 'Verificante tu ambiente...';
+$string['environmentsub2'] = 'Cata version de Moodle ha certe requisitos de version minime de PHP e un numero de extensiones de PHP obligatori. Un verification complete del ambiente es realisate ante cata installation e actualisation. Per favor, continge le administrator del servitor si tu non sape como installar un nove version o activar extensiones de PHP.';
 $string['errorsinenvironment'] = 'Verifica de ambiente falleva!';
 $string['installation'] = 'installation';
+$string['langdownloaderror'] = 'Infortunatemente le linguage "{$a}" non poteva esser discargate. Le processo de installation continuara in anglese.';
 $string['paths'] = 'Percursos';
+$string['pathserrcreatedataroot'] = 'Le directorio de datos ({$a->dataroot}) non pote esser create per le installator.';
 $string['pathshead'] = 'Confirma percursos';
 $string['pathsrodataroot'] = 'Directorio de Dataroot non es scribibile.';
+$string['pathsroparentdataroot'] = 'Directorio genitor ({$a->parent}) non es scribibile. Le directorio de datos ({$a->dataroot}) non pote esser create per le installator.';
+$string['pathssubadmindir'] = 'Multo pauc providitores de webhosts usa /admin como un URL special pro que tu accede a un pannello de controlo o simile. Infortunatemente, isto entra in conflicto con le loco standard pro le paginas de administration de Moodle. Tu pote corriger isto per renominar le directorio admin in tu installation, e poner ille nove nomine hic. Per exemplo: <em>moodleadmin</em>. Isto corrigera le ligamines de administration in Moodle.';
+$string['pathssubdataroot'] = '<p>Un directorio ubi Moodle immagazinara tote le contento de files cargate per le usatores.</p>
+<p>Iste directorio debe esser legibile e scribibile per le usator del servitor web (habitualmente \'www-data\', \'nobody\', o \'apache\').</p>
+<p>Illo non debe esser directemente accessibile via le web.</p>
+<p>Si le directorio non existe actualmente, le processo de installation tentara crear lo.</p>';
+$string['pathssubdirroot'] = '<p>Le percurso complete al directorio que contine le codice de Moodle.</p>';
+$string['pathssubwwwroot'] = '<p>Le adresse complete ubi Moodle essera accessite, i.e. le adresse que le usatores introducera in le barra de adresse de lor navigator pro acceder a Moodle.</p>
+<p>Il non es possibile acceder a Moodle usante plure adresses. Si tu sito es accessibile via plure adresses, alora elige le plus facile e configura un redirection permanente pro cata un del altere adresses.</p>
+<p>Si tu sito es accessibile tanto ab Internet como ab un rete interne (alcun vices appellate un Intranet), alora usa le adresse public hic.</p>
+<p>Si le adresse currente non es correcte, per favor cambia le URL in le barra de adresse de tu navigator e recomencia le installation.</p>';
 $string['pathsunsecuredataroot'] = 'Location de Dataroot non es secur';
 $string['pathswrongadmindir'] = 'Directorio de admin non existe';
+$string['phpextension'] = '$a} PHP extension';
 $string['phpversion'] = 'Version de PHP';
+$string['welcomep10'] = '{$a->installername} ({$a->installerversion})';
+$string['welcomep20'] = 'Tu vide iste pagina proque tu ha installate e lanceate con successo le pacchetto <strong>{$a->packname} {$a->packversion}</strong> in tu computator. Felicitatones!';
+$string['welcomep30'] = 'Iste version del <strong>{$a->installername}</strong> include le applicationes pro crear un ambiente in le qual <strong>Moodle</strong> operara, a saper:';
+$string['welcomep40'] = 'Le pacchetto anque include <strong>Moodle {$a->moodlerelease} ({$a->moodleversion})</strong>.';
+$string['welcomep50'] = 'Le uso de tote le applicationes in iste pacchetto es regite per lor respective licentias. Le pacchetto complete <strong>{$a->installername}</strong> es <a href="https://www.opensource.org/docs/definition_plain.html">de fonte aperite</a> e es distribuite sub le licentia <a href="https://www.gnu.org/copyleft/gpl.html">GPL</a>.';
+$string['welcomep60'] = 'Le paginas sequente te conducera per alcun passos facile a sequer pro configurar e installar <strong>Moodle</strong> sur tu computator. Tu pote acceptar le preferentias predefinite o, optionalmente, modificar los pro adaptar los a tu proprie necessitates.';
+$string['welcomep70'] = 'Clicca le button "Proxime" infra pro continuar con le configuration de <strong>Moodle</strong>.';
 $string['wwwroot'] = 'Adresse web';
