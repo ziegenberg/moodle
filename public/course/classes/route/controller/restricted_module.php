@@ -96,6 +96,7 @@ class restricted_module {
         $PAGE->set_title($strtitle . \moodle_page::TITLE_SEPARATOR . $course->shortname);
         $PAGE->set_heading($course->fullname);
         $PAGE->set_cm($cminfo);
+        $PAGE->set_pagelayout('incourse');
         $PAGE->set_secondary_navigation(false);
         $PAGE->set_ai_visibility_hint(false);
 
