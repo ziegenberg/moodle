@@ -4520,6 +4520,10 @@ EOD;
      * @return string
      */
     public function region_main_settings_menu() {
+        if ($this->page->hide_settings()) {
+            return '';
+        }
+
         $context = $this->page->context;
         $menu = new action_menu();
 
@@ -4532,7 +4536,7 @@ EOD;
                 $buildmenu = true;
             } else if (
                 !empty($node) && ($node->type == navigation_node::TYPE_ACTIVITY ||
-                            $node->type == navigation_node::TYPE_RESOURCE)
+                    $node->type == navigation_node::TYPE_RESOURCE)
             ) {
                 $items = $this->page->navbar->get_items();
                 $navbarnode = end($items);
