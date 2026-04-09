@@ -1648,10 +1648,26 @@ function xmldb_main_upgrade($oldversion) {
         // Delete any remaining instances of qtype_random questions.
         // At this point, such questions were created during a restore, but never used by anything (otherwise they would have
         // been converted to question set references and deleted already), so they are all safe to delete.
-        $questions = $DB->get_records('question', ['qtype' => 'random']);
-        foreach ($questions as $question) {
-            question_delete_question($question->id);
-        }
+
+        // Process the questions in batches, to avoid running out of memory.
+        $batchsize = 50000;
+        $lastid = 0;
+        do {
+            $questions = $DB->get_records_sql(
+                "SELECT id FROM {question} WHERE qtype = 'random' AND id > :lastid ORDER BY id",
+                ['lastid' => $lastid],
+                0,
+                $batchsize,
+            );
+            $recordcount = 0;
+            foreach ($questions as $question) {
+                $lastid = $question->id;
+                question_delete_question($question->id);
+                $recordcount++;
+            }
+            // Reset timeout after each batch to avoid timeouts on large sites.
+            upgrade_set_timeout();
+        } while ($recordcount === $batchsize);
         // Finally, uninstall qtype_random as it's been removed.
         uninstall_plugin('qtype', 'random');
         upgrade_main_savepoint(true, 2026010900.02);
