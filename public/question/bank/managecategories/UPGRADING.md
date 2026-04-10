@@ -1,6 +1,6 @@
 # qbank_managecategories Upgrade notes
 
-## 5.2beta
+## 5.2rc1
 
 ### Deprecated
 

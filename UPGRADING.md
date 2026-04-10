@@ -6,7 +6,7 @@ More detailed information on key changes can be found in the [Developer update n
 
 The format of this change log follows the advice given at [Keep a CHANGELOG](https://keepachangelog.com).
 
-## 5.2beta
+## 5.2rc1
 
 ### core
 
@@ -382,6 +382,9 @@ The format of this change log follows the advice given at [Keep a CHANGELOG](htt
 - The `cm_info` class now includes `get_navigation_url()`, `set_navigation_url(?url $url)`, and `reset_navigation_url()` methods, allowing activities to explicitly define, override, or suppress their navigation URL. This customisation can be managed within the `cm_info_dynamic callback`. By setting the navigation URL to null, a module can be effectively excluded from the linear navigation flow, such as the automatic "Previous" and "Next" routing URLs. In cases where no override is specified, `get_navigation_url()` will return the default `$cm->url` by fallback.
 
   For more information see [MDL-87984](https://tracker.moodle.org/browse/MDL-87984)
+- A new protected hidesettings property has been added to pagelib  to force the page to hide the settings menu. Use set_hide_settings()  and get_hide_setting() to fully hide the settings menu.
+
+  For more information see [MDL-88214](https://tracker.moodle.org/browse/MDL-88214)
 
 #### Changed
 
@@ -525,6 +528,15 @@ The format of this change log follows the advice given at [Keep a CHANGELOG](htt
   For more information see [MDL-87425](https://tracker.moodle.org/browse/MDL-87425)
 
 ### core_files
+
+#### Added
+
+- A new method called `removeopt()` has been created in the `curl` class to allow users to remove options previously set with `setopt()`.
+
+  For more information see [MDL-87822](https://tracker.moodle.org/browse/MDL-87822)
+- User can pass `'CURLOPT_USERPWD' => false` to the `$options` array for the `put()` method of `curl` to remove the `CURLOPT_USERPWD` option from the request.
+
+  For more information see [MDL-87822](https://tracker.moodle.org/browse/MDL-87822)
 
 #### Removed
 
