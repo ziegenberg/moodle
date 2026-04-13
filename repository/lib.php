@@ -1658,7 +1658,7 @@ abstract class repository implements cacheable_object {
         if (empty($filename)) {
             $filename = 'file';
         }
-        return sprintf('%s/%s', make_request_directory(), $filename);
+        return sprintf('%s/%s', make_request_directory(), clean_param($filename, PARAM_FILE));
     }
 
     /**
