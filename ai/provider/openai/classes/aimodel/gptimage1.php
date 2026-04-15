@@ -19,26 +19,21 @@ namespace aiprovider_openai\aimodel;
 use core_ai\aimodel\base;
 
 /**
- * DALL-e-3 AI model.
+ * GPT Image 1.5 AI model.
  *
  * @package    aiprovider_openai
- * @copyright  2025 Huong Nguyen <huongnv13@gmail.com>
+ * @copyright  2026 Huong Nguyen <huongnv13@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class dalle3 extends base implements openai_base, openai_image_base {
-    #[\Override]
-    public function get_model_name(): string {
-        return 'dall-e-3';
-    }
-
+class gptimage1 extends base implements openai_base, openai_image_base {
     #[\Override]
     public function get_model_display_name(): string {
-        return 'DALL-e-3';
+        return 'GPT Image 1.5';
     }
 
     #[\Override]
-    public function has_model_settings(): bool {
-        return false;
+    public function get_model_name(): string {
+        return 'gpt-image-1.5';
     }
 
     #[\Override]
@@ -48,13 +43,12 @@ class dalle3 extends base implements openai_base, openai_image_base {
 
     #[\Override]
     public function response_format(): ?string {
-        return 'b64_json';
+        return null;
     }
 
     #[\Override]
     public function get_output_format(): ?string {
-        // DALL-E 3 does not accept output_format as an API parameter.
-        return null;
+        return 'png';
     }
 
     #[\Override]
@@ -62,9 +56,9 @@ class dalle3 extends base implements openai_base, openai_image_base {
         if ($ratio === 'square') {
             $size = '1024x1024';
         } else if ($ratio === 'landscape') {
-            $size = '1792x1024';
+            $size = '1536x1024';
         } else if ($ratio === 'portrait') {
-            $size = '1024x1792';
+            $size = '1024x1536';
         } else {
             throw new \coding_exception('Invalid aspect ratio: ' . $ratio);
         }
@@ -73,6 +67,14 @@ class dalle3 extends base implements openai_base, openai_image_base {
 
     #[\Override]
     public function calculate_quality(string $quality): string {
-        return $quality;
+        if ($quality === 'standard') {
+            $processedquality = 'medium';
+        } else if ($quality === 'hd') {
+            $processedquality = 'high';
+        } else {
+            throw new \coding_exception('Invalid quality: ' . $quality);
+        }
+
+        return $processedquality;
     }
 }
