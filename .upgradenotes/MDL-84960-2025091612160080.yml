@@ -1,7 +1,7 @@
 issueNumber: MDL-84960
 notes:
   core:
-    - message: >-
+    - message: |-
         Several core web services now include a new initials field in user data
         structures. This change is backward-compatible and only adds an optional
         field; no existing fields or field semantics have been changed.

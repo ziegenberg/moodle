@@ -1,14 +1,14 @@
 issueNumber: MDL-87426
 notes:
   auth_ldap:
-    - message: >-
+    - message: |-
         - The following methods have been removed from `auth/ldap/lib.php`:
           - `\auth_plugin_ldap::auth_plugin_ldap()`
           - `\auth_plugin_ldap::iscreator()`
         - The `public/auth/ldap/cli/sync_users.php` file has been removed.
       type: removed
   core_calendar:
-    - message: >-
+    - message: |-
         - The `calendar_add_event_metadata()` has been removed from `public/calendar/deprecatedlib.php`.
         - The `\core_external\external_api\calendar_information::prepare_for_view()` has been removed from `public/calendar/lib.php`.
         - The `\core_calendar_renderer::event()` has been removed from `public/calendar/renderer.php`.
@@ -17,7 +17,7 @@ notes:
     - message: The `replaceSectionActionItem()` has been removed from `public/course/amd/src/actions.js`.
       type: removed
   core:
-    - message: >-
+    - message: |-
         - The `\core\output\action_menu::do_not_enhance()` has been removed from `public/lib/classes/output/action_menu.php`.
         - The following functions have been removed from `public/lib/javascript-static.js`:
           - `M.util.init_toggle_class_on_click()`
@@ -37,7 +37,7 @@ notes:
           - `M.form.init_smartselect()`
       type: removed
   core_form:
-    - message: >-
+    - message: |-
         - The following methods have been removed from `public/lib/antivirus/clamav/classes/scanner.php`:
           - `\antivirus_clamav\scanner::scan_data_execute_unixsocket()`
           - `\antivirus_clamav\scanner::scan_file_execute_unixsocket()`
@@ -46,7 +46,7 @@ notes:
           - `\core_form\filetypes_util::get_not_whitelisted()`
       type: removed
   core_message:
-    - message: >-
+    - message: |-
         - The following methods have been removed from `public/message/classes/api.php`:
           - `\core_message\api::search_users_in_course()`
           - `\core_message\api::search_users()`
@@ -69,13 +69,13 @@ notes:
           - `\core_message\helper::get_conversations_legacy_formatter()`
       type: removed
   mod_choice:
-    - message: >-
+    - message: |-
         - The following files have been removed:
           - `public/mod/choice/classes/event/answer_submitted.php`
           - `public/mod/choice/classes/event/answer_updated.php`
       type: removed
   mod_lesson:
-    - message: >-
+    - message: |-
         - The following files have been removed:
           - `public/mod/lesson/classes/event/highscore_added.php`
           - `public/mod/lesson/classes/event/highscores_viewed.php`
@@ -84,7 +84,7 @@ notes:
     - message: The `public/mod/scorm/report/graphs/graph.php` has been removed.
       type: removed
   core_user:
-    - message: >-
+    - message: |-
         - The `\profile_field_base::profile_field_base()` has been removed from `public/user/profile/lib.php`.
         - The `\core_user_renderer::unified_filter()` has been removed from `public/user/renderer.php`.
       type: removed

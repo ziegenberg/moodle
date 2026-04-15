@@ -1,7 +1,7 @@
 issueNumber: MDL-86660
 notes:
   core_courseformat:
-    - message: >-
+    - message: |-
         Two new public static methods have been added to the `overviewtable`
         class:
         - `is_cm_displayable`: Determines if a course module should be listed in the overview table.

@@ -1,7 +1,7 @@
 issueNumber: MDL-87423
 notes:
   core:
-    - message: >-
+    - message: |-
         The following functions have been removed from `public/lib/deprecatedlib.php` as part of the depreciation process:
         - `print_course_request_buttons()`
         - `cron_run()`
