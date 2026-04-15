@@ -93,7 +93,6 @@ $string['enablesmartappbanners_desc'] = 'If enabled, a banner promoting the mobi
 $string['enhanced'] = 'Premium';
 $string['feature'] = 'Feature';
 $string['featurecomparison'] = 'Feature comparison';
-$string['features'] = 'features';
 $string['filetypeexclusionlist'] = 'File type exclusion list';
 $string['filetypeexclusionlist_desc'] = 'Select all file types which are not for use on a mobile device. Such files will be listed in the course, then if a user attempts to open them, a warning will be displayed advising that the file type is not intended for use on a mobile device. The user can then cancel or ignore the warning and open the file anyway.';
 $string['filetypeexclusionlistplaceholder'] = 'Mobile file type exclusion list';
@@ -115,8 +114,8 @@ $string['iosappid'] = 'iOS app\'s unique identifier';
 $string['iosappid_desc'] = 'This setting may be left as default unless you have a custom iOS app.';
 $string['launchviasiteinbrowser'] = 'Launch via site in system browser';
 $string['learnmore'] = 'Learn more';
-$string['limiteddisabledfeature'] = 'You are limited to {$a->limit} {$a->feature} on your {$a->plan} plan. {$a->related} <a href="{$a->url}">View plan details</a>.';
-$string['limiteddisabledfeature_related'] = 'This limit is shared with {$a}. ';
+$string['limiteddisabledfeature'] = 'Your <strong>{$a->plan}</strong> plan allows {$a->limit} {$a->feature}. <a href="{$a->url}">View plan details</a>.';
+$string['limiteddisabledfeature_related'] = 'Your <strong>{$a->plan}</strong> plan allows {$a->limit} item total across <strong>{$a->feature1}</strong> and <strong>{$a->feature2}</strong>. <a href="{$a->url}">View plan details</a>.';
 $string['limitedfeatures'] = 'Limited features';
 $string['loginintheapp'] = 'Via the app';
 $string['logininthebrowser'] = 'Via a browser window (for SSO plugins)';
@@ -143,7 +142,7 @@ $string['moodleappsportalfeatureswarning'] = 'Please note that some features may
 $string['movedcsstopremiumfeatures'] = 'CSS for mobile app customisation has been moved to the <a href="{$a->url}">{$a->urlname}</a> section.';
 $string['moveddisabledtopremiumfeatures'] = 'Features like disabled features, custom menu items, and language customisation have been moved to the <a href="{$a->url}">{$a->urlname}</a> section.';
 $string['movedqrtopremiumfeatures'] = 'QR code access has been moved to the <a href="{$a->url}">{$a->urlname}</a> section. This includes both basic QR code (free) and automatic QR code login ({$a->upgradename}).';
-$string['new'] = 'New';
+$string['new'] = '(New! ⭐️)';
 $string['nosubsblocked'] = 'Your Moodle server may be blocking outbound connections to the Moodle Apps Portal.';
 $string['nosubscouldntretrieve'] = "We couldn't retrieve your plan details";
 $string['nosubsoerror'] = "Unable to connect to Moodle Apps Portal. Your plan, feature limits, and usage data are temporarily unavailable. This doesn’t affect your active subscription.";
@@ -164,7 +163,8 @@ $string['offlineuse'] = 'Offline use';
 $string['planbenefits'] = 'Your {$a} plan benefits';
 $string['plancontinues'] = 'Your {$a} plan continues without changes';
 $string['plandetails'] = 'Your Moodle app subscription';
-$string['planexpireson'] = 'Expires on ';
+$string['planexpireson'] = 'Expires on {$a}.';
+$string['planfeatures'] = '{$a} features';
 $string['planlastchecked'] = 'Plan status last checked on {$a}.';
 $string['planneverchecked'] = 'Plan status has never been checked.';
 $string['pluginname'] = 'Moodle app tools';
@@ -220,7 +220,7 @@ $string['upgradeforunlimit'] = 'Upgrade to {$a} for unlimited access.';
 $string['upgradeplanlimits'] = 'Some features are available with limits on the {$a} plan.';
 $string['upgraderemovelimits'] = 'Upgrade to {$a} and remove all limits';
 $string['upgradetosubscription'] = 'Upgrade to {$a}';
-$string['upgradeyourplan'] = 'Upgrade your plan';
+$string['upgradeyourplan'] = '(Upgrade your plan! 🚀)';
 $string['viewqrcode'] = 'View QR code';
 
 // Deprecated since Moodle 5.2.
