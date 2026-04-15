@@ -1,6 +1,6 @@
 # core_backup (subsystem) Upgrade notes
 
-## 5.2rc1
+## 5.2rc2
 
 ### Removed
 
