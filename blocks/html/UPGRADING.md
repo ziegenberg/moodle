@@ -1,6 +1,6 @@
 # block_html Upgrade notes
 
-## 5.0.6+
+## 5.0.7
 
 ### Changed
 

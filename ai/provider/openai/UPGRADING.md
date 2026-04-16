@@ -1,6 +1,6 @@
 # aiprovider_openai Upgrade notes
 
-## 5.0.6+
+## 5.0.7
 
 ### Added
 
@@ -18,4 +18,3 @@
   The image is now decoded directly from the API response instead of being downloaded via a second HTTP request. Size and quality logic has been moved into the model class.
 
   For more information see [MDL-85352](https://tracker.moodle.org/browse/MDL-85352)
-

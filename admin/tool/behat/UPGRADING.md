@@ -1,6 +1,6 @@
 # tool_behat Upgrade notes
 
-## 5.0.6+
+## 5.0.7
 
 ### Added
 
