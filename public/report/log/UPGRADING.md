@@ -1,6 +1,6 @@
 # report_log Upgrade notes
 
-## 5.2rc2
+## 5.2
 
 ### Removed
 

@@ -1,6 +1,6 @@
 # qbank_columnsortorder Upgrade notes
 
-## 5.2rc2
+## 5.2
 
 ### Removed
 

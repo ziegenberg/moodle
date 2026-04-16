@@ -1,6 +1,6 @@
 # core_course (subsystem) Upgrade notes
 
-## 5.2rc2
+## 5.2
 
 ### Added
 

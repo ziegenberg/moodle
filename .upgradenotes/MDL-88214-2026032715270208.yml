@@ -1,8 +1,0 @@
-issueNumber: MDL-88214
-notes:
-  core_course:
-    - message: >-
-        A new protected hidesettings property has been added to pagelib 
-        to force the page to hide the settings menu. Use set_hide_settings() 
-        and get_hide_setting() to fully hide the settings menu.
-      type: improved
