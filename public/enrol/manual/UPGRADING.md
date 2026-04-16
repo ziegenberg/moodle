@@ -1,6 +1,6 @@
 # enrol_manual Upgrade notes
 
-## 5.1.3+
+## 5.1.4
 
 ### Removed
 
