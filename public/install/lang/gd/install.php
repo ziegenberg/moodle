@@ -50,3 +50,23 @@ $string['pathserrcreatedataroot'] = 'Chan urrainn an iùl-lann dàta ({$a->datar
 $string['pathshead'] = 'Dearbh slighean';
 $string['pathsrodataroot'] = 'Chan eil an iùl-lann freumh-dàta so-sgrìobhte.';
 $string['pathsroparentdataroot'] = 'Chan eil an iùl-lann tuisteach ({$a->parent}) so-sgrìobhte.  Chan urrainn an iùl-lann dàta ({$a->dataroot}) a chruthachadh leis an stàlaichear.';
+$string['pathssubadmindir'] = 'Tha àireamh glè bheag de dh’òstairean-lìn a’ cleachdadh /rianachd mar URL sònraichte às am faod thu pannal riaghlaidh no a leithid a ruigheachd.  Gu mì-fhortanach, tha seo a’ dol an aghaidh àite àbhaisteach duilleagan rianachd Moodle.  ’S urrainn dhut seo a chur ceart le ainm ùr a thoirt air an iùl-lann rianachd anns a’ chur an sàs agad, agus an t-ainm ùr sin a chur an seo.  Mar eisimpleir: <em>moodlerianachd</em>. Cuiridh seo ceangalan rianachd ceart ann am Moodle.';
+$string['pathssubdataroot'] = '<p>Iùl-lann anns an tèid an t-susbaint fhaidhlichean uile a chaidh a luchdachadh a-nìos le luchd-cleachdaidh a stòradh le Moodle.</p>
+<p>Bu chòir don iùl-lann seo a bhith so-leughte agus so-sgrìobhte le neach-cleachdaidh an fhrithealaiche-lìn (mar as trice ‘www-data’. ‘nobody’, no ‘apache’).</p>
+<p>Chan fhaod gun teid a ruighinn gu dìreach bhon lìon.</p>
+<p>Mura h-eil an iùl-lann ann am bith an-dràsta, feuchaidh am pròiseas ri cur an sàs a chruthachadh.</p>';
+$string['pathssubdirroot'] = '<p>An t-slighe slàn chun iùl-lann anns a bheil còd Moodle.</p>';
+$string['pathssubwwwroot'] = '<p>An seòladh slàn far an tèid Moodle a ruigheachd, i.e. an seòladh a chuireas luchd-cleachdaidh a-steach ann am bàr-seòlaidh a’ bhrobhsair aca gus Moodle a ruigheachd.</p>
+<p>Chan urrainn Moodle a ruighinn a’ cleachdadh iomadach seòladh.  Mas urrainn an làrach agad a ruighinn tro iomadach seòladh, tagh am fear as fhasa agus stèidhich ath-stiùireadh maireannach airson gach aon de na seòlaidhean eile.</p>
+<p>Mas urrainn an làrach agad a ruighinn an dà chuid bhon eadar-lìon, agus bho lìonra bhon taobh a-staigh (air ainmeachadh uaireannan mar Eadra-lìon), cleachd an seòladh poblach an seo.</p>
+<p>Mura h-eil an seòladh a th’ ann an-dràsta ceart, atharraich an URL ann am bàr-seòlaidh a’ bhrobhsair agad agus ath-thòisich an cur an sàs.</p>';
+$string['pathswrongadmindir'] = 'Chan eil an iùl-lann rianachd ann am bith';
+$string['phpextension'] = 'Leudachan PHP {$a}';
+$string['phpversion'] = 'Tionndadh PHP';
+$string['welcomep10'] = '{$a->installername} ({$a->installerversion})';
+$string['welcomep20'] = 'Tha thu a’ faicinn na duilleig seo leis gun do shoirbhich le cur an sàs agus cur air bhog na pacaid <strong>{$a->packname} {$a->packversion}</strong>anns a’ choimpiutair agad. Meal do naidheachd!';
+$string['welcomep30'] = 'Tha an sgaoileadh seo den <strong>{$a->installername}</strong> a’ gabhail a-steach na h-aplacaidean gus àrainneachd anns an obraich <strong>Moodle</strong> a chruthachadh, sin:';
+$string['welcomep40'] = 'Tha a’ phacaid cuideachd a’ gabhail a-steach <strong>Moodle {$a->moodlerelease} ({$a->moodleversion})</strong>.';
+$string['welcomep50'] = 'Tha cleachdadh nan aplacaid uile sa phacaid seo air a riaghladh leis na ceadachan fa leth aca.  ’S e  a\' phacaid <strong>{$a->installername}</strong> slàn <a href="https://www.opensource.org/docs/definition\\_plain.html">open source</a> agus tha i air a sgaoileadh fon cheadachas <a href="https://www.gnu.org/copyleft/gpl.html">GPL</a>';
+$string['welcomep60'] = 'Bheir na duilleagan a leanas thu tro cheumannan a tha furasta ri leantainn gus <strong>Moodle</strong> a rèiteachadh agus a stèidheachadh air a’ choimpiutair agad.  Faodaidh tu gabhail ris na suidheachaidhean gnàthach no, gu roghainneil, an leasachadh a-rèir na feumalachdan agad fhein.';
+$string['wwwroot'] = 'Seòladh lìn';
