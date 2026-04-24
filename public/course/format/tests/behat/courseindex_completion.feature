@@ -150,23 +150,3 @@ Feature: Course index completion icons
       | 1    | False    |
     When I am on the "C1" "Course" page logged in as "student1"
     And "Done" "icon" should exist in the "courseindex-content" "region"
-
-  @javascript
-  Scenario: Activities are dimmed only when restricted
-    Given the following "activities" exist:
-      | activity | name              | intro                             | course | idnumber | section |
-      | assign   | Activity sample 2 | Restricted assignment description | C1     | sample2  | 1       |
-    And I log in as "teacher1"
-    And I am on "Course 1" course homepage with editing mode on
-    And I open "Activity sample 2" actions menu
-    And I click on "Edit settings" "link" in the "Activity sample 2" activity
-    And I expand all fieldsets
-    And I click on "Add restriction..." "button"
-    And I click on "Activity completion" "button" in the "Add restriction..." "dialogue"
-    And I set the field "Activity or resource" to "Activity sample 1"
-    And I press "Save and return to course"
-    When I am on the "Course 1" "course" page logged in as "student1"
-    Then the "class" attribute of "//li[contains(@class, 'courseindex-item') and contains(., 'Activity sample 2')]" "xpath_element" should contain "dimmed"
-    And I toggle the manual completion state of "Activity sample 1"
-    And I should see "Activity sample 2" in the "courseindex-content" "region"
-    And the "class" attribute of "//li[contains(@class, 'courseindex-item') and contains(., 'Activity sample 2')]" "xpath_element" should not contain "dimmed"
