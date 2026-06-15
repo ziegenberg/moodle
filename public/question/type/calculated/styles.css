@@ -3,10 +3,6 @@
     display: inline;
 }
 
-.que.calculated .answer input[type="text"] {
-    width: 30%;
-}
-
 /*rtl:ignore*/
 #page-question-type-calculated input[name^="answer"],
 #page-question-type-calculated input[name^="unit"],
