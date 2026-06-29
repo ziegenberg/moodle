@@ -623,8 +623,15 @@ class navigation_node implements renderable {
 
     /**
      * Resets the page specific information on this node if it is being unserialised.
+     *
+     * @param array $data Array of object properties.
      */
-    public function __wakeup() {
+    public function __unserialize(array $data): void {
+        foreach ($data as $name => $value) {
+            if (property_exists($this, $name)) {
+                $this->$name = $value;
+            }
+        }
         $this->forceopen = false;
         $this->isactive = false;
         $this->remove_class('active_tree_node');

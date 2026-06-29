@@ -56,22 +56,44 @@ class file_logger extends base_logger {
         }
     }
 
-    public function __sleep() {
+    /**
+     * Serialize the object to an array.
+     *
+     * @return array
+     */
+    public function __serialize(): array {
         if (is_resource($this->fhandle)) {
             // Blindy close the file handler before serialization.
             @fclose($this->fhandle);
             $this->fhandle = null;
         }
-        return array('level', 'showdate', 'showlevel', 'next', 'fullpath');
+        return [
+            'level' => $this->level,
+            'showdate' => $this->showdate,
+            'showlevel' => $this->showlevel,
+            'next' => $this->next,
+            'fullpath' => $this->fullpath,
+        ];
     }
 
-    public function __wakeup() {
+    /**
+     * Unserialize object from array.
+     *
+     * @param array $data Array of object properties.
+     */
+    public function __unserialize(array $data): void {
+        $this->fullpath = $data['fullpath'] ?? null;
         // If the stored path no longer exists, reconstruct it using the current backup temp dir.
         if (!empty($this->fullpath) && !file_exists(dirname($this->fullpath))) {
             $filename = basename($this->fullpath);
             $backuptempdir = make_backup_temp_directory('');
             $this->fullpath = $backuptempdir . '/' . $filename;
         }
+
+        $this->level = $data['level'];
+        $this->showdate = $data['showdate'];
+        $this->showlevel = $data['showlevel'];
+        $this->next = $data['next'];
 
         if ($this->level > backup::LOG_NONE) { // Only create the file if we are going to log something
             if (! $this->fhandle = fopen($this->fullpath, 'a')) {

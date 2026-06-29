@@ -100,16 +100,19 @@ class stored_file {
      *
      * @return array
      */
-    public function __sleep() {
+    public function __serialize(): array {
         // We only ever want the file_record saved, not the file_storage object.
-        return ['file_record'];
+        return ['file_record' => $this->file_record];
     }
 
     /**
      * Magic method, called during unserialization.
+     *
+     * @param array $data Array of object properties.
      */
-    public function __wakeup() {
+    public function __unserialize(array $data): void {
         // Recreate our stored_file based on the file_record, and using file storage retrieved the correct way.
+        $this->file_record = $data['file_record'];
         $this->__construct(get_file_storage(), $this->file_record);
     }
 

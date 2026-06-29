@@ -254,16 +254,23 @@ class data_portfolio_caller extends portfolio_module_caller_base {
     }
 
     /**
-     * @global object
-     * @return bool|void
+     * Unserialize object from array.
+     *
+     * @param array $data Array of object properties.
      */
-    public function __wakeup() {
+    public function __unserialize(array $data): void {
+        foreach ($data as $name => $value) {
+            if (property_exists($this, $name)) {
+                $this->$name = $value;
+            }
+        }
+
         global $CFG;
         if (empty($CFG)) {
-            return true; // too early yet
+            return; // Too early yet.
         }
         foreach ($this->fieldtypes as $key => $field) {
-            $filepath = $CFG->dirroot . '/mod/data/field/' . $field .'/field.class.php';
+            $filepath = $CFG->dirroot . '/mod/data/field/' . $field . '/field.class.php';
             if (!file_exists($filepath)) {
                 continue;
             }
