@@ -90,7 +90,7 @@
         "geoip2/geoip2": "3.2.0",
         "maxmind-db/reader": "1.12.1",
         "redeyeventures/geopattern": "1.1.2",
-        "phpxmlrpc/phpxmlrpc": "4.11.1",
+        "phpxmlrpc/phpxmlrpc": "4.11.5",
         "ralouphie/getallheaders": "3.0.3"
     },
     "suggest": {

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a68990e6c2753993d05a20ba3be3fbf4",
+    "content-hash": "7c1498f8088b7d3e18dfc394cca3a4d3",
     "packages": [
         {
             "name": "adodb/adodb-php",
@@ -2063,19 +2063,20 @@
         },
         {
             "name": "phpxmlrpc/phpxmlrpc",
-            "version": "4.11.1",
+            "version": "4.11.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/gggeek/phpxmlrpc.git",
-                "reference": "06b9d7275d637f6859527091a54a5edfe8a16749"
+                "reference": "ad6df5f9e296a9ea76e58a7cb634b88a8e324dc4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/gggeek/phpxmlrpc/zipball/06b9d7275d637f6859527091a54a5edfe8a16749",
-                "reference": "06b9d7275d637f6859527091a54a5edfe8a16749",
+                "url": "https://api.github.com/repos/gggeek/phpxmlrpc/zipball/ad6df5f9e296a9ea76e58a7cb634b88a8e324dc4",
+                "reference": "ad6df5f9e296a9ea76e58a7cb634b88a8e324dc4",
                 "shasum": ""
             },
             "require": {
+                "ext-ctype": "*",
                 "ext-xml": "*",
                 "php": "^5.4.0 || ^7.0 || ^8.0"
             },
@@ -2087,14 +2088,14 @@
                 "ext-curl": "*",
                 "ext-dom": "*",
                 "ext-mbstring": "*",
-                "phpunit/phpunit": "^4.8 || ^5.0 || ^8.5.14",
+                "phpunit/phpunit": "^4.8.28 || ^5.6.3 || ^8.5.42",
                 "phpunit/phpunit-selenium": "*",
                 "yoast/phpunit-polyfills": "*"
             },
             "suggest": {
                 "ext-curl": "Needed for HTTPS, HTTP2 and HTTP 1.1 support, NTLM Auth etc...",
                 "ext-mbstring": "Needed to allow reception of requests/responses in character sets other than ASCII,LATIN-1,UTF-8",
-                "ext-zlib": "Needed for sending compressed requests and receiving compressed responses, if cURL is not available",
+                "ext-zlib": "Needed for sending compressed requests and receiving compressed responses, if CURL is not available",
                 "phpxmlrpc/extras": "Adds more featured Server classes, including self-documenting and ajax-enabled servers",
                 "phpxmlrpc/jsonrpc": "Adds support for the JSON-RPC protocol"
             },
@@ -2117,9 +2118,9 @@
             ],
             "support": {
                 "issues": "https://github.com/gggeek/phpxmlrpc/issues",
-                "source": "https://github.com/gggeek/phpxmlrpc/tree/4.11.1"
+                "source": "https://github.com/gggeek/phpxmlrpc/tree/4.11.5"
             },
-            "time": "2025-01-17T17:04:37+00:00"
+            "time": "2025-11-11T13:17:35+00:00"
         },
         {
             "name": "psr/cache",

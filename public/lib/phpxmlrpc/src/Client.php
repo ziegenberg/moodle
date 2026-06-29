@@ -143,9 +143,12 @@ class Client
      */
     protected $verifyhost = 2;
     /**
-     * @var int
+     * @var int Corresponds to CURL_SSLVERSION_DEFAULT. Other CURL_SSLVERSION_ values are supported when in curl mode,
+     *          and in socket mode different values from 0 to 7, matching the corresponding curl value. Old php versions
+     *          do not support all values, php 5.4 and 5.5 do not support any in fact.
+     *          NB: please do not use any version lower than TLS 1.3 (value: 7) as they are considered insecure.
      */
-    protected $sslversion = 0; // corresponds to CURL_SSLVERSION_DEFAULT. Other  CURL_SSLVERSION_ values are supported
+    protected $sslversion = 0;
     /**
      * @var string
      */
@@ -201,7 +204,7 @@ class Client
      * List of http compression methods accepted by the client for responses.
      * NB: PHP supports deflate, gzip compressions out of the box if compiled w. zlib.
      *
-     * NNB: you can set it to any non-empty array for HTTP11 and HTTPS, since in those cases it will be up to CURL to
+     * NNB: you can set it to any non-empty array for HTTP11+ and HTTPS, since in those cases it will be up to CURL to
      * decide the compression methods it supports. You might check for the presence of 'zlib' in the output of
      * curl_version() to determine whether compression is supported or not
      */
@@ -582,9 +585,12 @@ class Client
     }
 
     /**
-     * Set attributes for SSL communication: SSL version to use. Best left at 0 (default value): let cURL decide
+     * Set attributes for SSL communication: SSL version to use. Best left at 0 (default value): let PHP decide.
      *
-     * @param int $i see  CURL_SSLVERSION_ constants
+     * @param int $i use CURL_SSLVERSION_ constants. When in socket mode, use the same values: 2 (SSLv2) to 7 (TLSv1.3),
+     *               0 for auto (note that old php versions do not support all TLS versions).
+     *               Note that, in curl mode, the actual ssl version in use might be higher than requested.
+     *               NB: please do not use any version lower than TLS 1.3 as they are considered insecure.
      * @return $this
      * @deprecated use setOption
      */
@@ -713,6 +719,7 @@ class Client
 
     /**
      * @param int $useCurlMode self::USE_CURL_ALWAYS, self::USE_CURL_AUTO or self::USE_CURL_NEVER
+     *                         In 'auto' mode, curl is picked up based on features used, such as fe. NTLM auth, or https
      * @return $this
      * @deprecated use setOption
      */
@@ -723,7 +730,6 @@ class Client
         $this->use_curl = $useCurlMode;
         return $this;
     }
-
 
     /**
      * Set user-agent string that will be used by this client instance in http headers sent to the server.
@@ -745,12 +751,13 @@ class Client
     /**
      * @param null|int $component allowed values: PHP_URL_SCHEME, PHP_URL_HOST, PHP_URL_PORT, PHP_URL_PATH
      * @return string|int Notes: the path component will include query string and fragment; NULL is a valid value for port
-     *                    (in which case the default port for http/https will be used);
+     *                    (in which case the default port for http/https will be used); the url scheme component will
+     *                    reflect the `$method` used in the constructor, so it might not be http or https
      * @throws ValueErrorException on unsupported component
      */
     public function getUrl($component = null)
     {
-        if (is_int($component) || ctype_digit($component)) {
+        if (is_int($component) || ($component !== null && ctype_digit($component))) {
             switch ($component) {
                 case PHP_URL_SCHEME:
                     return $this->method;
@@ -768,7 +775,7 @@ class Client
         }
 
         $url = $this->method . '://' . $this->server;
-        if ($this->port == 0 || ($this->port == 80 && in_array($this->method, array('http', 'http10', 'http11', 'h2c'))) ||
+        if ($this->port == 0 || ($this->port == 80 && in_array($this->method, array('http', 'http10', 'http11',  'http11_only', 'h2c'))) ||
             ($this->port == 443 && in_array($this->method, array('https', 'h2')))) {
             return $url . $this->path;
         } else {
@@ -796,7 +803,10 @@ class Client
      *                         will be used. If that is 0, a platform specific timeout will apply.
      *                         This timeout value is passed to fsockopen(). It is also used for detecting server
      *                         timeouts during communication (i.e. if the server does not send anything to the client
-     *                         for $timeout seconds, the connection will be closed).
+     *                         for $timeout seconds, the connection will be closed). When in CURL mode, this is the
+     *                         CURL timeout.
+     *                         NB: in both CURL and Socket modes, some conditions might lead to the client not
+     *                        respecting the given timeout. Eg. if the network is not connected
      * @param string $method deprecated. Use the same value in the constructor instead.
      *                       Valid values are 'http', 'http11', 'https', 'h2' and 'h2c'. If left empty,
      *                       the http protocol chosen during creation of the object will be used.
@@ -804,6 +814,7 @@ class Client
      *                       for http/2 without tls. Note that 'h2c' will not use the h2c 'upgrade' method, and be
      *                       thus incompatible with any server/proxy not supporting http/2. This is because POST
      *                       request are not compatible with h2c upgrade.
+     *                       You can also use 'http11_only' to force usage of curl with http 1.1 (no http2)
      * @return Response|Response[] Note that the client will always return a Response object, even if the call fails
      *
      * @todo allow throwing exceptions instead of returning responses in case of failed calls and/or Fault responses
@@ -839,12 +850,18 @@ class Client
         // where req is a Request
         $req->setDebug($this->debug);
 
-        /// @todo we could be smarter about this and not force usage of curl for https if not present as well as use the
-        ///       presence of curl_extra_opts or socket_extra_opts as a hint
+        /// @todo move to its own function, to make it easier to change in subclasses
+        /// @todo we could be smarter about this:
+        ///       - not force usage of curl if it is not present
+        ///       - not force usage of curl for https (minor BC)
+        ///       - use the presence of curl_extra_opts or socket_extra_opts as a hint
         $useCurl = ($this->use_curl == self::USE_CURL_ALWAYS) || ($this->use_curl == self::USE_CURL_AUTO && (
-            in_array($method, array('https', 'http11', 'h2c', 'h2')) ||
+            in_array($method, array('https', 'http11', 'http11_only', 'h2c', 'h2')) ||
             ($this->username != '' && $this->authtype != 1) ||
             ($this->proxy != '' && $this->proxy_user != '' && $this->proxy_authtype != 1)
+            // uncomment the following if not forcing curl always for 'https'
+            //|| ($this->sslversion == 7 && PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION == '7.3')
+            //|| ($this->sslversion != 0 && PHP_MAJOR_VERSION < 6)
         ));
 
         // BC - we go through sendPayloadCURL/sendPayloadSocket in case some subclass reimplemented those
@@ -866,8 +883,8 @@ class Client
                 $this->proxy_user,
                 $this->proxy_pass,
                 $this->proxy_authtype,
-                // BC
-                $method == 'http11' ? 'http' : $method,
+                // BC - http11 was used to force enabling curl
+                $method == 'http11' ? 'http' : ($method == 'http11_only' ? 'http11' : $method),
                 $this->keepalive,
                 $this->key,
                 $this->keypass,
@@ -891,7 +908,7 @@ class Client
                 $this->proxy_user,
                 $this->proxy_pass,
                 $this->proxy_authtype,
-                $method,
+                $method == 'http11_only' ? 'http11' : $method,
                 $this->key,
                 $this->keypass,
                 $this->sslversion
@@ -978,13 +995,24 @@ class Client
             $connectServer = $opts['proxy'];
             $connectPort = $opts['proxyport'];
             $transport = 'tcp';
-            /// @todo check: should we not use https in some cases?
-            $uri = 'http://' . $server . ':' . $port . $path;
+            $protocol = $method;
+            if ($method === 'http10' || $method === 'http11') {
+                $protocol = 'http';
+            } elseif ($method === 'h2') {
+                $protocol = 'https';
+            } else if (strpos($protocol, ':') !== false) {
+                $this->getLogger()->error('XML-RPC: ' . __METHOD__ . ": warning - attempted hacking attempt?. The protocol requested for the call is: '$protocol'");
+                return new static::$responseClass(0, PhpXmlRpc::$xmlrpcerr['unsupported_option'], PhpXmlRpc::$xmlrpcerr['unsupported_option'] .
+                    " attempted hacking attempt?. The protocol requested for the call is: '$protocol'");
+            }
+            /// @todo this does not work atm (tested at least with an http proxy forwarding to an https server) - we
+            ///       should implement the CONNECT protocol
+            $uri = $protocol . '://' . $server . ':' . $port . $path;
             if ($opts['proxy_user'] != '') {
                 if ($opts['proxy_authtype'] != 1) {
                     $this->getLogger()->error('XML-RPC: ' . __METHOD__ . ': warning. Only Basic auth to proxy is supported with HTTP 1.0');
                     return new static::$responseClass(0, PhpXmlRpc::$xmlrpcerr['unsupported_option'],
-                        PhpXmlRpc::$xmlrpcerr['unsupported_option'] . ': only Basic auth to proxy is supported with HTTP 1.0');
+                        PhpXmlRpc::$xmlrpcerr['unsupported_option'] . ': only Basic auth to proxy is supported with socket transport');
                 }
                 $proxyCredentials = 'Proxy-Authorization: Basic ' . base64_encode($opts['proxy_user'] . ':' .
                     $opts['proxy_pass']) . "\r\n";
@@ -992,6 +1020,7 @@ class Client
         } else {
             $connectServer = $server;
             $connectPort = $port;
+            /// @todo should we add support for 'h2' method? If so, is it 'tls' or 'tcp' ?
             $transport = ($method === 'https') ? 'tls' : 'tcp';
             $uri = $path;
         }
@@ -1014,7 +1043,8 @@ class Client
         }
 
         // omit port if default
-        if (($port == 80 && in_array($method, array('http', 'http10'))) || ($port == 443 && $method == 'https')) {
+        /// @todo add handling of http2, h2c in case they start being supported by fosckopen
+        if (($port == 80 && in_array($method, array('http', 'http10', 'http11'))) || ($port == 443 && $method == 'https')) {
             $port = '';
         } else {
             $port = ':' . $port;
@@ -1059,27 +1089,35 @@ class Client
             $contextOptions['ssl']['verify_peer_name'] = $opts['verifypeer'];
 
             if ($opts['sslversion'] != 0) {
-                /// @see https://www.php.net/manual/en/function.curl-setopt.php, https://www.php.net/manual/en/migration56.openssl.php
+                /// @see https://www.php.net/manual/en/curl.constants.php,
+                ///      https://www.php.net/manual/en/function.stream-socket-enable-crypto.php
+                ///      https://www.php.net/manual/en/migration56.openssl.php,
+                ///      https://wiki.php.net/rfc/improved-tls-constants
                 switch($opts['sslversion']) {
-                    /// @todo what does this map to? 1.0-1.3?
-                    //case 1: // TLSv1
-                    //    break;
+                    case 1: // TLSv1x
+                        if (version_compare(PHP_VERSION, '7.2.0', '>=')) {
+                            $contextOptions['ssl']['crypto_method'] = STREAM_CRYPTO_METHOD_TLS_CLIENT;
+                        } else {
+                            return new static::$responseClass(0, PhpXmlRpc::$xmlrpcerr['unsupported_option'],
+                                PhpXmlRpc::$xmlrpcerr['unsupported_option'] . ': TLS-any only is supported with PHP 7.2 or later');
+                        }
+                        break;
                     case 2: // SSLv2
                         $contextOptions['ssl']['crypto_method'] = STREAM_CRYPTO_METHOD_SSLv2_CLIENT;
                         break;
                     case 3: // SSLv3
                         $contextOptions['ssl']['crypto_method'] = STREAM_CRYPTO_METHOD_SSLv3_CLIENT;
                         break;
-                    case 4: // TLSv1.0
+                    case 4: // TLSv1.0 - not always available?
                         $contextOptions['ssl']['crypto_method'] = STREAM_CRYPTO_METHOD_TLSv1_0_CLIENT;
                         break;
-                    case 5: // TLSv1.1
+                    case 5: // TLSv1.1 - not always available?
                         $contextOptions['ssl']['crypto_method'] = STREAM_CRYPTO_METHOD_TLSv1_1_CLIENT;
                         break;
-                    case 6: // TLSv1.2
+                    case 6: // TLSv1.2 - not always available?
                         $contextOptions['ssl']['crypto_method'] = STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT;
                         break;
-                    case 7: // TLSv1.3
+                    case 7: // TLSv1.3 - not always available
                         if (defined('STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT')) {
                             $contextOptions['ssl']['crypto_method'] = STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT;
                         } else {
@@ -1094,7 +1132,7 @@ class Client
             }
         }
 
-        foreach ($opts['extracurlopts'] as $proto => $protoOpts) {
+        foreach ($opts['extrasockopts'] as $proto => $protoOpts) {
             foreach ($protoOpts as $key => $val) {
                 $contextOptions[$proto][$key] = $val;
             }
@@ -1111,6 +1149,13 @@ class Client
         $this->errno = 0;
         $this->errstr = '';
 
+        /// @todo using `error_get_last` does not give us very detailed messages for connections errors, eg. for ssl
+        ///       problems on php 5.6 we get 'Connect error: stream_socket_client(): unable to connect to tls://localhost:443 (Unknown error) (0)',
+        ///       versus the more detailed warnings 'PHP Warning:  stream_socket_client(): SSL operation failed with code 1. OpenSSL Error messages:
+        ///         error:0A0C0103:SSL routines::internal error in /home/docker/workspace/src/Client.php on line 1121
+        ///         PHP Warning:  stream_socket_client(): Failed to enable crypto in /home/docker/workspace/src/Client.php on line 1121
+        ///         PHP Warning:  stream_socket_client(): unable to connect to tls://localhost:443 (Unknown error) in /home/docker/workspace/src/Client.php on line 1121'
+        ///       This could be obviated by removing the `@` and capturing warnings via ob_start and co
         $fp = @stream_socket_client("$transport://$connectServer:$connectPort", $this->errno, $this->errstr, $connectTimeout,
             STREAM_CLIENT_CONNECT, $context);
         if ($fp) {
@@ -1124,14 +1169,22 @@ class Client
             }
 
             $this->errstr = 'Connect error: ' . $this->errstr;
-            $r = new static::$responseClass(0, PhpXmlRpc::$xmlrpcerr['http_error'], $this->errstr . ' (' . $this->errno . ')');
-
-            return $r;
+            return new static::$responseClass(0, PhpXmlRpc::$xmlrpcerr['http_error'], $this->errstr . ' (' . $this->errno . ')');
         }
+
+        /// @todo from here onwards, we can inject the results of stream_get_meta_data in the response. We could
+        ///       do that f.e. only in new debug level 3, or starting at v1
 
         if (!fputs($fp, $op, strlen($op))) {
             fclose($fp);
             $this->errstr = 'Write error';
+            return new static::$responseClass(0, PhpXmlRpc::$xmlrpcerr['http_error'], $this->errstr);
+        }
+
+        $info = stream_get_meta_data($fp);
+        if ($info['timed_out']) {
+            fclose($fp);
+            $this->errstr = 'Write timeout';
             return new static::$responseClass(0, PhpXmlRpc::$xmlrpcerr['http_error'], $this->errstr);
         }
 
@@ -1142,6 +1195,14 @@ class Client
             // shall we check for $data === FALSE?
             // as per the manual, it signals an error
             $ipd .= fread($fp, 32768);
+
+            $info = stream_get_meta_data($fp);
+            if ($info['timed_out']) {
+                fclose($fp);
+                $this->errstr = 'Read timeout';
+                return new static::$responseClass(0, PhpXmlRpc::$xmlrpcerr['http_error'], $this->errstr);
+            }
+
         } while (!feof($fp));
         fclose($fp);
 
@@ -1215,19 +1276,19 @@ class Client
             $this->errstr = 'no response';
             $resp = new static::$responseClass(0, PhpXmlRpc::$xmlrpcerr['curl_fail'], PhpXmlRpc::$xmlrpcstr['curl_fail'] .
                 ': ' . curl_error($curl));
-            curl_close($curl);
+            if (PHP_MAJOR_VERSION < 8) curl_close($curl);
             if ($opts['keepalive']) {
                 $this->xmlrpc_curl_handle = null;
             }
         } else {
             if (!$opts['keepalive']) {
-                curl_close($curl);
+                if (PHP_MAJOR_VERSION < 8) curl_close($curl);
             }
             $resp = $req->parseResponse($result, true, $opts['return_type']);
             if ($opts['keepalive']) {
                 /// @todo if we got back a 302 or 308, we should not reuse the curl handle for later calls
-                if ($resp->faultCode() == PhpXmlRpc::$xmlrpcerr['http_error']) {
-                    curl_close($curl);
+                if (is_object($resp) && $resp->faultCode() == PhpXmlRpc::$xmlrpcerr['http_error']) {
+                    if (PHP_MAJOR_VERSION < 8) curl_close($curl);
                     $this->xmlrpc_curl_handle = null;
                 }
             }
@@ -1364,11 +1425,16 @@ class Client
         $headers[] = 'Expect:';
 
         curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
-        // timeout is borked
+        // previous note: "timeout is borked" (on some old php/curl versions? It seems to work on 8.1. Maybe the issue
+        // has to do with dns resolution...)
         if ($opts['timeout']) {
-            curl_setopt($curl, CURLOPT_TIMEOUT, $opts['timeout'] == 1 ? 1 : $opts['timeout'] - 1);
+            curl_setopt($curl, CURLOPT_TIMEOUT, $opts['timeout']);
         }
 
+        // nb: for 'http' and 'https' we leave it up to curl to decide
+        /// @see https://www.php.net/manual/en/curl.constants.php#constant.curl-http-version-1-0
+        /// @see https://curl.se/libcurl/c/CURLOPT_HTTP_VERSION.html
+        /// @todo add support for CURL_VERSION_HTTP3
         switch ($method) {
             case 'http10':
                 curl_setopt($curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
@@ -1381,7 +1447,7 @@ class Client
                     curl_setopt($curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE);
                 } else {
                     $this->getLogger()->error('XML-RPC: ' . __METHOD__ . ': warning. HTTP2 is not supported by the current PHP/curl install');
-                    curl_close($curl);
+                    if (PHP_MAJOR_VERSION < 8) curl_close($curl);
                     return false;
                 }
                 break;
@@ -1396,7 +1462,7 @@ class Client
                 curl_setopt($curl, CURLOPT_HTTPAUTH, $opts['authtype']);
             } elseif ($opts['authtype'] != 1) {
                 $this->getLogger()->error('XML-RPC: ' . __METHOD__ . ': warning. Only Basic auth is supported by the current PHP/curl install');
-                curl_close($curl);
+                if (PHP_MAJOR_VERSION < 8) curl_close($curl);
                 return false;
             }
         }
@@ -1447,7 +1513,7 @@ class Client
                     curl_setopt($curl, CURLOPT_PROXYAUTH, $opts['proxy_authtype']);
                 } elseif ($opts['proxy_authtype'] != 1) {
                     $this->getLogger()->error('XML-RPC: ' . __METHOD__ . ': warning. Only Basic auth to proxy is supported by the current PHP/curl install');
-                    curl_close($curl);
+                    if (PHP_MAJOR_VERSION < 8) curl_close($curl);
                     return false;
                 }
             }
@@ -1495,7 +1561,7 @@ class Client
      *                         docs for the send() method". Please use setOption instead to set a timeout
      * @param string $method deprecated. Was: "the http protocol variant to be used. See the details in the docs for the send() method."
      *                       Please use the constructor to set an http protocol variant.
-     * @param boolean $fallback deprecated. Was: "w"hen true, upon receiving an error during multicall, multiple single
+     * @param boolean $fallback deprecated. Was: "when true, upon receiving an error during multicall, multiple single
      *                          calls will be attempted"
      * @return Response[]
      */
@@ -1560,7 +1626,7 @@ class Client
      * @return Response[]|Response a single Response when the call returned a fault / does not conform to what we expect
      *                             from a multicall response
      */
-    private function _try_multicall($reqs, $timeout, $method)
+    protected function _try_multicall($reqs, $timeout, $method)
     {
         // Construct multicall request
         $calls = array();
@@ -1591,6 +1657,7 @@ class Client
 
         if ($this->return_type == 'xml') {
             for ($i = 0; $i < count($reqs); $i++) {
+                /// @todo can we do better? we set the complete xml into each response...
                 $response[] = new static::$responseClass($rets, 0, '', 'xml', $result->httpResponse());
             }
 
@@ -1683,17 +1750,17 @@ class Client
                                 'phpvals', $result->httpResponse());
                         }
                         /** @var Value $code */
-                        $code = $val['faultCode'];
-                        if ($code->kindOf() != 'scalar' || $code->scalarTyp() != 'int') {
+                        $code = @$val['faultCode'];
+                        if (!$code || $code->kindOf() != 'scalar' || $code->scalarTyp() != 'int') {
                             return new static::$responseClass(0, PhpXmlRpc::$xmlrpcerr['multicall_error'],
                                 PhpXmlRpc::$xmlrpcstr['multicall_error'] . ": response element $i has invalid or no faultCode",
                                 'xmlrpcvals', $result->httpResponse());
                         }
                         /** @var Value $str */
-                        $str = $val['faultString'];
-                        if ($str->kindOf() != 'scalar' || $str->scalarTyp() != 'string') {
+                        $str = @$val['faultString'];
+                        if (!$str || $str->kindOf() != 'scalar' || $str->scalarTyp() != 'string') {
                             return new static::$responseClass(0, PhpXmlRpc::$xmlrpcerr['multicall_error'],
-                                PhpXmlRpc::$xmlrpcstr['multicall_error'] . ": response element $i has invalid or no faultCode",
+                                PhpXmlRpc::$xmlrpcstr['multicall_error'] . ": response element $i has invalid or no faultString",
                                 'xmlrpcvals', $result->httpResponse());
                         }
                         $response[] = new static::$responseClass(0, $code->scalarVal(), $str->scalarVal(), 'xmlrpcvals', $result->httpResponse());
@@ -1712,6 +1779,8 @@ class Client
     // *** BC layer ***
 
     /**
+     * NB: always goes via socket, never curl
+     *
      * @deprecated
      *
      * @param Request $req
@@ -1740,6 +1809,8 @@ class Client
     }
 
     /**
+     * NB: always goes via curl, never socket
+     *
      * @deprecated
      *
      * @param Request $req
@@ -1798,7 +1869,7 @@ class Client
      * @param string $method 'http' (synonym for 'http10'), 'http10' or 'https'
      * @param string $key
      * @param string $keyPass @todo not implemented yet.
-     * @param int $sslVersion @todo not implemented yet. See http://php.net/manual/en/migration56.openssl.php
+     * @param int $sslVersion
      * @return Response
      */
     protected function sendPayloadSocket($req, $server, $port, $timeout = 0, $username = '', $password = '',
