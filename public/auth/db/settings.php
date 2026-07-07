@@ -41,13 +41,47 @@ if ($ADMIN->fulltree) {
             '127.0.0.1', PARAM_RAW));
 
     // Type.
-    $dboptions = array();
-    $dbtypes = array("access", "ado_access", "ado", "ado_mssql", "borland_ibase", "csv", "db2",
-        "fbsql", "firebird", "ibase", "informix72", "informix", "mssql", "mssql_n", "mssqlnative",
-        "mysql", "mysqli", "mysqlt", "oci805", "oci8", "oci8po", "odbc", "odbc_mssql", "odbc_oracle",
-        "oracle", "pdo", "postgres64", "postgres7", "postgres", "proxy", "sqlanywhere", "sybase", "vfp");
-    foreach ($dbtypes as $dbtype) {
-        $dboptions[$dbtype] = $dbtype;
+    // Each database type can be flagged as deprecated by setting its value to true.
+    $dbtypes = [
+                'access' => false,
+                'ado_access' => true,
+                'ado' => true,
+                'ado_mssql' => true,
+                'borland_ibase' => false,
+                'csv' => false,
+                'db2' => false,
+                'fbsql' => true,
+                'firebird' => false,
+                'ibase' => false,
+                'informix72' => true,
+                'informix' => true,
+                'mssql' => false,
+                'mssql_n' => false,
+                'mssqlnative' => false,
+                'mysql' => true,
+                'mysqli' => false,
+                'mysqlt' => true,
+                'oci805' => false,
+                'oci8' => false,
+                'oci8po' => false,
+                'odbc' => false,
+                'odbc_mssql' => false,
+                'odbc_oracle' => false,
+                'oracle' => false,
+                'pdo' => false,
+                'postgres64' => false,
+                'postgres7' => false,
+                'postgres' => false,
+                'proxy' => true,
+                'sqlanywhere' => true,
+                'sybase' => false,
+                'vfp' => true,
+        ];
+    $dboptions = [];
+    foreach ($dbtypes as $dbtype => $deprecated) {
+        $dboptions[$dbtype] = $deprecated
+            ? $dbtype . ' (' . get_string('auth_dbtype_deprecated', 'auth_db') . ')'
+            : $dbtype;
     }
 
     $settings->add(new admin_setting_configselect('auth_db/type',
@@ -58,6 +92,24 @@ if ($ADMIN->fulltree) {
         new lang_string('no'),
         new lang_string('yes'),
     );
+
+    $settings->add(new admin_setting_heading('auth_db/sqlserverconnoptions',
+    new lang_string('auth_dbsqlserverconnoptions', 'auth_db'),
+    new lang_string('auth_dbsqlserverconnoptionshelp', 'auth_db')));
+    
+    // SQL Server (mssqlnative) connection options.
+    $settings->add(new admin_setting_configselect('auth_db/mssqlnativeencrypt',
+        new lang_string('auth_dbmssqlnativeencrypt', 'auth_db'),
+        new lang_string('auth_dbmssqlnativeencrypthelp', 'auth_db'),
+        1,
+        $yesno));
+    $settings->hide_if('auth_db/mssqlnative_encrypt', 'auth_db/type', 'neq', 'mssqlnative');
+    $settings->add(new admin_setting_configselect('auth_db/mssqlnativetrustservercertificate',
+        new lang_string('auth_dbmssqlnativetrustservercertificate', 'auth_db'),
+        new lang_string('auth_dbmssqlnativetrustservercertificatehelp', 'auth_db'),
+        0,
+        $yesno));
+    $settings->hide_if('auth_db/mssqlnative_trustservercertificate', 'auth_db/type', 'neq', 'mssqlnative');
 
     // DB Name.
     $settings->add(new admin_setting_configtext('auth_db/name', get_string('auth_dbname_key', 'auth_db'),

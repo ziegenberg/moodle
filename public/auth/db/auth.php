@@ -162,6 +162,12 @@ class auth_plugin_db extends auth_plugin_base {
             $authdb->debug = true;
             ob_start(); //Start output buffer to allow later use of the page headers.
         }
+
+        if ($this->config->type === 'mssqlnative') {
+            $authdb->setConnectionParameter('Encrypt', empty($this->config->mssqlnativeencrypt) ? 0 : 1);
+            $authdb->setConnectionParameter('TrustServerCertificate', empty($this->config->mssqlnativetrustservercertificate) ? 0 : 1);
+        }
+
         $authdb->Connect($this->config->host, $this->config->user, $this->config->pass, $this->config->name, true);
         $authdb->SetFetchMode(ADODB_FETCH_ASSOC);
         if (!empty($this->config->setupsql)) {

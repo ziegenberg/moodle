@@ -1,0 +1,10 @@
+issueNumber: MDL-77678
+notes:
+  auth_db:
+    - message: >
+        Add new admin settings for configuring the connection paramter of MSSQL
+        database connections. We can now set 'Encrypt' and
+        'TrustServerCertificate' options.
+        We also marked deprecated adoDB database types as 'deprecated' in the
+        admin settings.
+      type: fixed
