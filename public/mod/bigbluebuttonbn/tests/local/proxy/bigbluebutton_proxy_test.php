@@ -65,7 +65,6 @@ final class bigbluebutton_proxy_test extends \advanced_testcase {
      * setting and every logged-in user bypasses the moderator waiting room (MDL-76880).
      *
      * @covers  \mod_bigbluebuttonbn\local\proxy\bigbluebutton_proxy::get_join_url
-     * @return void
      */
     public function test_get_join_url_omits_guest_param_when_guest_access_disabled(): void {
         $this->resetAfterTest();
@@ -84,7 +83,6 @@ final class bigbluebutton_proxy_test extends \advanced_testcase {
      * send guest=false so the server can tell the enrolled user apart from an external guest.
      *
      * @covers  \mod_bigbluebuttonbn\local\proxy\bigbluebutton_proxy::get_join_url
-     * @return void
      */
     public function test_get_join_url_sends_guest_false_when_guest_access_enabled(): void {
         global $CFG;
@@ -107,7 +105,6 @@ final class bigbluebutton_proxy_test extends \advanced_testcase {
      * (see mod/bigbluebuttonbn/guest.php).
      *
      * @covers  \mod_bigbluebuttonbn\local\proxy\bigbluebutton_proxy::get_guest_join_url
-     * @return void
      */
     public function test_get_guest_join_url_always_sends_guest_true(): void {
         global $CFG;
@@ -122,5 +119,23 @@ final class bigbluebutton_proxy_test extends \advanced_testcase {
         $params = $this->get_join_url_params($joinurl);
         $this->assertArrayHasKey('guest', $params);
         $this->assertEquals('true', $params['guest']);
+    }
+
+    /**
+     * A guest join url must never be built for an instance where guest access is disabled, since
+     * mod/bigbluebuttonbn/guest.php is the only caller and it already blocks that case; the proxy
+     * itself must fail loudly instead of silently building a URL that looks like an authenticated
+     * join (MDL-76880).
+     *
+     * @covers  \mod_bigbluebuttonbn\local\proxy\bigbluebutton_proxy::get_guest_join_url
+     */
+    public function test_get_guest_join_url_throws_when_guest_access_disabled(): void {
+        $this->resetAfterTest();
+        $this->initialise_mock_server();
+        [, , $bbbactivity] = $this->create_instance(null, ['guestallowed' => 0]);
+        $instance = instance::get_from_instanceid($bbbactivity->id);
+
+        $this->expectException(\coding_exception::class);
+        bigbluebutton_proxy::get_guest_join_url($instance, null, 'Guest user');
     }
 }
