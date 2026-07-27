@@ -275,11 +275,6 @@ class cmactions extends baseactions {
 
         global $CFG, $DB;
 
-        require_once($CFG->libdir . '/gradelib.php');
-        require_once($CFG->libdir . '/questionlib.php');
-        require_once($CFG->dirroot . '/blog/lib.php');
-        require_once($CFG->dirroot . '/calendar/lib.php');
-
         if (!$cm = $DB->get_record('course_modules', ['id' => $cmid])) {
             return;
         }
@@ -311,6 +306,89 @@ class cmactions extends baseactions {
                 debuginfo: "Cannot delete module $modulename (instance).",
             );
         }
+
+        // Clean up all surrounding data (questions, files, grades, calendar, completion,
+        // tags, competency, context, section sequence) and fire the deletion event.
+        $this->delete_surrounding($cm, $modulename);
+    }
+
+    /**
+     * Delete an orphan course module.
+     *
+     * An orphan course module is one whose activity instance row is already
+     * missing from its mdl_{modulename} table. This performs the same
+     * surrounding cleanup as a normal deletion (questions, files, calendar
+     * events, grade items, completion data, tags, competency data, context,
+     * section sequence and the course_modules row itself) and fires the
+     * course_module_deleted event, but skips the activity-instance deletion
+     * (the instance is already gone) and the pre_course_module_delete hooks
+     * (those are written for live instances).
+     *
+     * Unlike delete(), this method does NOT throw when the activity instance is
+     * missing - that missing instance is precisely what makes the module an
+     * orphan. Use delete() for normal deletions; use this only for integrity
+     * repair of orphaned modules.
+     *
+     * @param int $cmid The course module id.
+     */
+    public function delete_orphan(int $cmid): void {
+        global $DB;
+
+        if (!$cm = $DB->get_record('course_modules', ['id' => $cmid])) {
+            // Nothing to clean up.
+            return;
+        }
+        $modulename = $DB->get_field('modules', 'name', ['id' => $cm->module], MUST_EXIST);
+
+        // Guard against cannot-clean orphans up front. delete_surrounding() ends
+        // by calling delete_mod_from_section(), which removes the module from its
+        // section sequence - but that only works while the section row still
+        // exists. If the section (or course) is also missing the orphan is
+        // uncleanable, and we must NOT have performed any destructive cleanup by
+        // the time we discover that, otherwise we would leave partial state
+        // behind with no way to roll it back (Moodle's delegated transactions
+        // are all-or-nothing and cannot isolate a single orphan). Verifying the
+        // section here, before delete_surrounding() touches anything, makes a
+        // cannot-clean orphan fail clean so a caller deleting a batch can skip it
+        // and continue.
+        if (!$DB->record_exists('course_sections', ['id' => $cm->section])) {
+            throw new moodle_exception(
+                errorcode: 'cannotdeletemodulefromsection',
+                debuginfo: "Cannot delete orphan module with ID $cm->id: section "
+                    . "{$cm->section} does not exist (cannot-clean orphan).",
+            );
+        }
+
+        // The activity instance is already gone, so there is no delete_instance
+        // to call and no pre_course_module_delete hooks to run. Perform the full
+        // surrounding cleanup and fire the deletion event.
+        $this->delete_surrounding($cm, $modulename);
+    }
+
+    /**
+     * Remove all data surrounding a course module and fire the deletion event.
+     *
+     * This is the shared cleanup body common to both a normal module deletion
+     * (delete()) and an orphan module deletion (delete_orphan()). It removes the
+     * questions, files, calendar events, grade items, blogs, completion data,
+     * tags, competency data, the context, the course_modules row itself and the
+     * section-sequence entry, then triggers course_module_deleted and rebuilds
+     * the course cache.
+     *
+     * It does NOT delete the activity instance (the caller's job, or moot for an
+     * orphan whose instance is already gone) and does NOT run the
+     * pre_course_module_delete hooks (those are written for live instances).
+     *
+     * @param stdClass $cm The course module record.
+     * @param string $modulename The module name (e.g. 'assign').
+     */
+    private function delete_surrounding(stdClass $cm, string $modulename): void {
+        global $CFG, $DB;
+
+        require_once($CFG->libdir . '/gradelib.php');
+        require_once($CFG->libdir . '/questionlib.php');
+        require_once($CFG->dirroot . '/blog/lib.php');
+        require_once($CFG->dirroot . '/calendar/lib.php');
 
         // We delete the questions after the activity database is removed,
         // because questions are referenced via question reference tables
