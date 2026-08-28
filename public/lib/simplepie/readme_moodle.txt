@@ -9,7 +9,8 @@ To upgrade this library:
 4. Move the following files/directories from the extracted directory into lib/simplepie:
     - CHANGELOG.md
     - composer.json
-    - LICENSE.txt
+    - LICENSES/BSD-3-Clause.txt (rename to LICENSE.txt; since 1.9.0 upstream moved the licence
+      text out of a single LICENSE.txt into a LICENSES/ directory, split by SPDX identifier)
     - README.markdown
     - src/
 5. That should leave you with just the following. Do not move them. If there is any difference,
