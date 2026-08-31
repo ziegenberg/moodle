@@ -65,5 +65,13 @@ function xmldb_filter_mathjaxloader_upgrade($oldversion) {
     // Automatically generated Moodle v5.2.0 release upgrade line.
     // Put any upgrade step following this.
 
+    if ($oldversion < 2026083100) {
+        // Set value of "httpsurl" to the latest MathJax cdn version 4.1.3.
+        set_config('httpsurl', 'https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js', 'filter_mathjaxloader');
+
+        // Main savepoint reached.
+        upgrade_plugin_savepoint(true, 2026083100, 'filter', 'mathjaxloader');
+    }
+
     return true;
 }
