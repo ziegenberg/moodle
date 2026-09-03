@@ -47,8 +47,6 @@ function resolveSourceFile(specifier, rootDir) {
         const candidates = [
             path.join(base, `${module}.tsx`),
             path.join(base, `${module}.ts`),
-            path.join(base, module, 'index.tsx'),
-            path.join(base, module, 'index.ts'),
         ];
         return candidates.find(f => fs.existsSync(f)) ?? null;
     }
@@ -62,20 +60,8 @@ function resolveSourceFile(specifier, rootDir) {
     const candidates = [
         path.join(rootDir, componentPath, 'js', 'esm', 'src', `${module}.tsx`),
         path.join(rootDir, componentPath, 'js', 'esm', 'src', `${module}.ts`),
-        path.join(rootDir, componentPath, 'js', 'esm', 'src', module, 'index.tsx'),
-        path.join(rootDir, componentPath, 'js', 'esm', 'src', module, 'index.ts'),
     ];
     return candidates.find(f => fs.existsSync(f)) ?? null;
-}
-
-/**
- * True when a resolved source file is the index of a directory-based module.
- *
- * @param {string|null} filePath
- * @returns {boolean}
- */
-function isDirectoryBasedFile(filePath) {
-    return Boolean(filePath) && path.basename(filePath).replace(/\.(ts|tsx)$/, '') === 'index';
 }
 
 /**
@@ -91,24 +77,40 @@ function resolveSourceFiles(specifier, rootDir) {
         return null;
     }
 
-    if (isDirectoryBasedFile(primary)) {
-        const dir = path.dirname(primary);
-        const extras = fs.readdirSync(dir)
-            .filter(name => path.join(dir, name) !== primary)
-            .map(name => path.join(dir, name));
-        return {primary, extras};
+    return {primary, extras: siblingsWithStem(primary)};
+}
+
+/**
+ * Return files beside the given file that share its stem.
+ *
+ * @param {string} filePath
+ * @returns {string[]}
+ */
+function siblingsWithStem(filePath) {
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) {
+        return [];
     }
+    const stem = filePath.slice(0, filePath.lastIndexOf('.'));
+    return fs.readdirSync(dir)
+        .map(name => path.join(dir, name))
+        .filter(full => full !== filePath && full.startsWith(`${stem}.`));
+}
 
-    const stem = primary.slice(0, primary.lastIndexOf('.'));
-    const dir = path.dirname(primary);
-    const extras = fs.readdirSync(dir)
-        .filter(name => {
-            const full = path.join(dir, name);
-            return full !== primary && full.startsWith(`${stem}.`);
-        })
-        .map(name => path.join(dir, name));
-
-    return {primary, extras};
+/**
+ * Remove files a previous eject left beside an override being replaced by a wrap.
+ *
+ * @param {string} destFile
+ * @param {string} rootDir
+ * @returns {string[]} Relative paths of removed files.
+ */
+function removeStaleFiles(destFile, rootDir) {
+    const removed = [];
+    for (const full of siblingsWithStem(destFile)) {
+        fs.unlinkSync(full);
+        removed.push(path.relative(rootDir, full));
+    }
+    return removed;
 }
 
 /**
@@ -121,12 +123,8 @@ function resolveSourceFiles(specifier, rootDir) {
  */
 export function resolveDestFile(specifier, target, rootDir) {
     const {component, module} = parseSpecifier(specifier);
-    const isDirectoryBased = isDirectoryBasedFile(resolveSourceFile(specifier, rootDir));
     const base = path.join(rootDir, 'public', 'theme', target.name, 'js', 'esm', 'src', 'overrides');
 
-    if (isDirectoryBased) {
-        return path.join(base, component, module, 'index.tsx');
-    }
     return path.join(base, component, `${module}.tsx`);
 }
 
@@ -292,29 +290,6 @@ export function discoverTargets(rootDir) {
 }
 
 /**
- * Remove stale override files from a directory-based component's override dir.
- *
- * @param {string} destDir
- * @param {string} destFile
- * @param {string} rootDir
- * @returns {string[]} Relative paths of removed files.
- */
-function removeStaleFiles(destDir, destFile, rootDir) {
-    if (!fs.existsSync(destDir)) {
-        return [];
-    }
-    const removed = [];
-    for (const name of fs.readdirSync(destDir)) {
-        const full = path.join(destDir, name);
-        if (full !== destFile) {
-            fs.unlinkSync(full);
-            removed.push(path.relative(rootDir, full));
-        }
-    }
-    return removed;
-}
-
-/**
  * Perform the eject action: copy the original source into the target theme.
  *
  * @param {string} specifier
@@ -368,13 +343,10 @@ export function performWrap(specifier, target, destFile, rootDir) {
         );
     }
 
-    const staleRemoved = isDirectoryBasedFile(sourceFile)
-        ? removeStaleFiles(path.dirname(destFile), destFile, rootDir)
-        : [];
-
     const parentImport = resolveParentImport(specifier, target, rootDir);
     const scaffold = generateWrapScaffold(specifier, target, parentImport, componentExport);
     fs.mkdirSync(path.dirname(destFile), {recursive: true});
+    const staleRemoved = removeStaleFiles(destFile, rootDir);
     fs.writeFileSync(destFile, scaffold);
     return {parentImport, staleRemoved};
 }

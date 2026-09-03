@@ -123,19 +123,8 @@ function discoverModuleNames(srcDir, prefix = '') {
             continue;
         }
 
-        const indexFile = ['index.tsx', 'index.ts']
-            .map(name => path.join(srcDir, entry.name, name))
-            .find(candidate => fs.existsSync(candidate));
-
-        // A directory carrying an index is a module in its own right, so stop here.
-        if (indexFile) {
-            if (detectComponentExport(indexFile, moduleName)) {
-                names.push(moduleName);
-            }
-            continue;
-        }
-
-        // Anything else is just a folder; descend so views/ActivityIcon is found.
+        // Descend into every directory. An index file is a module like any other,
+        // named by its own path, because module specifiers carry no implicit index.
         names.push(...discoverModuleNames(path.join(srcDir, entry.name), moduleName));
     }
     return names;
