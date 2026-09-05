@@ -3,23 +3,35 @@ Description of SimplePie library import into Moodle
 Obtained from https://github.com/simplepie/simplepie/releases/
 
 To upgrade this library:
-1. Download the latest release of SimplePie from https://github.com/simplepie/simplepie/releases/
-2. Remove everything inside lib/simplepie/ directory except readme_moodle.txt (this file) and moodle_simplepie.php.
-3. Extract the contents of the release archive into a directory.
-4. Move the following files/directories from the extracted directory into lib/simplepie:
-    - CHANGELOG.md
-    - composer.json
-    - LICENSES/BSD-3-Clause.txt (rename to LICENSE.txt; since 1.9.0 upstream moved the licence
-      text out of a single LICENSE.txt into a LICENSES/ directory, split by SPDX identifier)
-    - README.markdown
-    - src/
-5. That should leave you with just the following. Do not move them. If there is any difference,
-   check if they also need to be moved and update this doc:
-    - autoloader.php
-    - db.sql
-    - idn (This is a third-party library that SimplePie can optionally use. We don't use this in Moodle)
-    - library
 
-Changes:
-  * None. This import contains _NO_CHANGES_ to the simplepie.inc file, changes are
-    controlled through OO extension of the classes instead.
+```sh
+# Preserve the Moodle-owned readme file.
+mv public/lib/simplepie/readme_moodle.txt ./
+rm -rf public/lib/simplepie/*
+
+tempdir=`mktemp -d`
+cd "${tempdir}"
+composer require simplepie/simplepie
+cd - >/dev/null
+
+# Copy only the files/dirs Moodle vendors.
+cp -f "${tempdir}/vendor/simplepie/simplepie/CHANGELOG.md" public/lib/simplepie/
+cp -f "${tempdir}/vendor/simplepie/simplepie/composer.json" public/lib/simplepie/
+cp -f "${tempdir}/vendor/simplepie/simplepie/README.markdown" public/lib/simplepie/
+cp -rf "${tempdir}/vendor/simplepie/simplepie/src" public/lib/simplepie/src
+
+# Upstream ships the licence text under LICENSES/ (split by SPDX identifier) since 1.9.0;
+# Moodle keeps a single BSD-3-Clause licence file named LICENSE.txt.
+cp -f "${tempdir}/vendor/simplepie/simplepie/LICENSES/BSD-3-Clause.txt" public/lib/simplepie/LICENSE.txt
+
+# Restore the Moodle-owned readme file.
+mv readme_moodle.txt public/lib/simplepie/
+rm -rf "${tempdir}"
+git add public/lib/simplepie
+```
+
+Now update `public/lib/thirdpartylibs.xml` with the new version and commit the changes.
+
+Verify the upgrade:
+- Check whether the release gained any new files or dependencies that should be moved into Moodle,
+  and update this doc if so.
