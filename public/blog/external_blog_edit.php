@@ -27,7 +27,6 @@
 require_once('../config.php');
 require_once('lib.php');
 require_once('external_blog_edit_form.php');
-require_once($CFG->libdir . '/simplepie/moodle_simplepie.php');
 
 require_login();
 $context = context_system::instance();
@@ -73,7 +72,7 @@ if ($externalblogform->is_cancelled()) {
     // Save stuff in db.
     switch ($action) {
         case 'add':
-            $rss = new moodle_simplepie($data->url);
+            $rss = new \core\rss\reader($data->url);
 
             $newexternal = new stdClass();
             $newexternal->name = (empty($data->name)) ? $rss->get_title() : $data->name;
@@ -100,7 +99,7 @@ if ($externalblogform->is_cancelled()) {
         case 'edit':
             if ($data->id && $DB->record_exists('blog_external', array('id' => $data->id))) {
 
-                $rss = new moodle_simplepie($data->url);
+                $rss = new \core\rss\reader($data->url);
 
                 $external->id = $data->id;
                 $external->name = (empty($data->name)) ? $rss->get_title() : $data->name;
