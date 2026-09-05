@@ -143,17 +143,18 @@ function blog_remove_associations_for_module($modcontextid) {
  * Also attempts to identify and remove deleted blog entries
  *
  * @param object $externalblog
+ * @param \Psr\Http\Client\ClientInterface|null $client An optional PSR-18 HTTP client used to fetch the feed.
+ *                                                 Defaults to Moodle's shared client; used by tests to inject a mock.
  * @return boolean False if the Feed is invalid
  */
-function blog_sync_external_entries($externalblog) {
-    global $CFG, $DB;
-    require_once($CFG->libdir . '/simplepie/moodle_simplepie.php');
+function blog_sync_external_entries($externalblog, ?\Psr\Http\Client\ClientInterface $client = null) {
+    global $DB;
 
-    $rss = new moodle_simplepie();
-    $rssfile = $rss->registry->create('File', array($externalblog->url));
-    $filetest = $rss->registry->create('Locator', array($rssfile));
+    $rss = new \core\rss\reader(null, 2, $client);
+    $rss->set_feed_url($externalblog->url);
+    $rss->init();
 
-    if (empty($rssfile->success) || !$filetest->is_feed($rssfile)) {
+    if ($rss->error()) {
         $externalblog->failedlastsync = 1;
         $DB->update_record('blog_external', $externalblog);
         return false;
@@ -161,9 +162,6 @@ function blog_sync_external_entries($externalblog) {
         $externalblog->failedlastsync = 0;
         $DB->update_record('blog_external', $externalblog);
     }
-
-    $rss->set_feed_url($externalblog->url);
-    $rss->init();
 
     if (empty($rss->data)) {
         return null;
