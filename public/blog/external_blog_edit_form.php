@@ -72,23 +72,16 @@ class blog_edit_external_form extends moodleform {
      * Additional validation includes checking URL and tags
      */
     public function validation($data, $files) {
-        global $CFG;
-
         $errors = parent::validation($data, $files);
 
-        require_once($CFG->libdir . '/simplepie/moodle_simplepie.php');
+        $rss = new \core\rss\reader();
+        $rss->set_feed_url($data['url']);
+        $rss->init();
 
-        $rss = new moodle_simplepie();
-        $rssfile = $rss->registry->create('File', array($data['url']));
-        $filetest = $rss->registry->create('Locator', array($rssfile));
-
-        if (empty($rssfile->success) || !$filetest->is_feed($rssfile)) {
+        if ($rss->error()) {
             $errors['url'] = get_string('feedisinvalid', 'blog');
-        } else {
-            $rss->set_feed_url($data['url']);
-            if (!$rss->init()) {
-                $errors['url'] = get_string('emptyrssfeed', 'blog');
-            }
+        } else if (empty($rss->data)) {
+            $errors['url'] = get_string('emptyrssfeed', 'blog');
         }
 
         return $errors;
@@ -103,7 +96,7 @@ class blog_edit_external_form extends moodleform {
         $url = $mform->getElementValue('url');
 
         if (empty($name) || empty($description)) {
-            $rss = new moodle_simplepie($url);
+            $rss = new \core\rss\reader($url);
 
             if (empty($name) && $rss->get_title()) {
                 $mform->setDefault('name', $rss->get_title());
