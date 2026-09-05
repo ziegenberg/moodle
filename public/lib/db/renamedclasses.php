@@ -64,4 +64,6 @@ $renamedclasses = [
     \external_files::class => \core_external\external_files::class,
     \external_warnings::class => \core_external\external_warnings::class,
     \external_settings::class => \core_external\external_settings::class,
+    \moodle_simplepie::class => \core\rss\reader::class,
+    \moodle_simplepie_sanitize::class => \core\rss\reader_sanitize::class,
 ];
