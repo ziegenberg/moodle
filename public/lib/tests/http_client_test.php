@@ -21,6 +21,7 @@ use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Uri;
+use core\test\http_mock;
 
 /**
  * Unit tests for guzzle integration in core.
@@ -57,7 +58,6 @@ final class http_client_test extends \advanced_testcase {
                     return $object->$attributename;
                 }
 
-
                 try {
                     return $attribute->getValue($object);
                 } finally {
@@ -93,7 +93,7 @@ final class http_client_test extends \advanced_testcase {
                 'base_uri' => $testhtml,
                 'timeout'  => 2,
                 'headers'  => ['bar' => 'baz'],
-                'mock'  => new MockHandler()
+                'mock'  => new MockHandler(),
         ]);
         $config = self::read_object_attribute($client, 'config');
 
@@ -115,7 +115,7 @@ final class http_client_test extends \advanced_testcase {
         $mock = new MockHandler([new Response()]);
         $c = new \core\http_client([
                 'headers' => ['User-agent' => 'foo'],
-                'mock' => $mock
+                'mock' => $mock,
         ]);
         $c->get($testhtml, ['headers' => ['User-Agent' => 'bar']]);
         $this->assertSame('bar', $mock->getLastRequest()->getHeaderLine('User-Agent'));
@@ -130,7 +130,7 @@ final class http_client_test extends \advanced_testcase {
         $mock = new MockHandler([new Response()]);
         $c = new \core\http_client([
                 'headers' => ['foo' => 'bar'],
-                'mock' => $mock
+                'mock' => $mock,
         ]);
         $c->get($testhtml, ['headers' => null]);
 
@@ -143,7 +143,7 @@ final class http_client_test extends \advanced_testcase {
     public function test_basic_cookie_jar(): void {
         $mock = new MockHandler([
                 new Response(200, ['Set-Cookie' => 'foo=bar']),
-                new Response()
+                new Response(),
         ]);
         $client = new \core\http_client(['mock' => $mock]);
         $jar = new CookieJar();
@@ -158,7 +158,7 @@ final class http_client_test extends \advanced_testcase {
     public function test_shared_cookie_jar(): void {
         $mock = new MockHandler([
                 new Response(200, ['Set-Cookie' => 'foo=bar']),
-                new Response()
+                new Response(),
         ]);
         $client = new \core\http_client(['mock' => $mock, 'cookies' => true]);
         $client->get('http://foo.com');
@@ -257,7 +257,7 @@ final class http_client_test extends \advanced_testcase {
 
         $mock = new MockHandler([
                 new Response(302, ['Location' => 'http://moodle.com']),
-                new Response(200)
+                new Response(200),
         ]);
         $client = new \core\http_client(['mock' => $mock]);
         $request = new Request('GET', "{$testurl}?redir=1&extdest=1");
@@ -275,7 +275,7 @@ final class http_client_test extends \advanced_testcase {
 
         $mock = new MockHandler([
                 new Response(302, ['Location' => $testurl]),
-                new Response(200, [], 'done')
+                new Response(200, [], 'done'),
         ]);
         $client = new \core\http_client(['mock' => $mock]);
         $request = new Request('GET', $testurl);
@@ -288,7 +288,7 @@ final class http_client_test extends \advanced_testcase {
         // Test different types of redirect types.
         $mock = new MockHandler([
                 new Response(302, ['Location' => $testurl]),
-                new Response(200, [], 'done')
+                new Response(200, [], 'done'),
         ]);
         $client = new \core\http_client(['mock' => $mock]);
         $request = new Request('GET', "$testurl?type=301");
@@ -300,7 +300,7 @@ final class http_client_test extends \advanced_testcase {
 
         $mock = new MockHandler([
                 new Response(302, ['Location' => $testurl]),
-                new Response(200, [], 'done')
+                new Response(200, [], 'done'),
         ]);
         $client = new \core\http_client(['mock' => $mock]);
         $request = new Request('GET', "$testurl?type=302");
@@ -312,7 +312,7 @@ final class http_client_test extends \advanced_testcase {
 
         $mock = new MockHandler([
                 new Response(302, ['Location' => $testurl]),
-                new Response(200, [], 'done')
+                new Response(200, [], 'done'),
         ]);
         $client = new \core\http_client(['mock' => $mock]);
         $request = new Request('GET', "$testurl?type=303");
@@ -324,7 +324,7 @@ final class http_client_test extends \advanced_testcase {
 
         $mock = new MockHandler([
                 new Response(302, ['Location' => $testurl]),
-                new Response(200, [], 'done')
+                new Response(200, [], 'done'),
         ]);
         $client = new \core\http_client(['mock' => $mock]);
         $request = new Request('GET', "$testurl?type=307");
@@ -348,7 +348,7 @@ final class http_client_test extends \advanced_testcase {
         // Test item is cached in the specified module.
         $client = new \core\http_client([
                 'cache' => true,
-                'module_cache' => $module
+                'module_cache' => $module,
         ]);
         $response = $client->get($testhtml);
 
@@ -380,5 +380,44 @@ final class http_client_test extends \advanced_testcase {
         $this->assertSame($content, $cacheitemobject->get());
 
         @unlink($cachefile);
+    }
+
+    /**
+     * A mock handler passed through the 'mock' constructor option is used.
+     */
+    public function test_mock_handler_from_constructor_is_used(): void {
+        $client = new http_client([
+            'mock' => new MockHandler([
+                new Response(200, [], 'from handler'),
+            ]),
+        ]);
+
+        $response = $client->request('GET', 'https://example.com/feed.xml');
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame('from handler', (string) $response->getBody());
+    }
+
+    /**
+     * Mocked responses installed via \core\test\http_mock take precedence over the constructor
+     * mock handler.
+     */
+    public function test_http_mock_responses_take_precedence(): void {
+        http_mock::set_responses([
+            'https://example.com/feed.xml' => [
+                new Response(200, [], 'from http_mock'),
+            ],
+        ]);
+
+        $client = new http_client([
+            'mock' => new MockHandler([
+                new Response(200, [], 'from handler'),
+            ]),
+        ]);
+
+        $response = $client->request('GET', 'https://example.com/feed.xml');
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame('from http_mock', (string) $response->getBody());
     }
 }

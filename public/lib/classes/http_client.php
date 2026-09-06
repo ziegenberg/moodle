@@ -35,6 +35,11 @@ use Kevinrob\GuzzleCache\Strategy\PrivateCacheStrategy;
  */
 class http_client extends Client {
 
+    /**
+     * Create a new Moodle HTTP client.
+     *
+     * @param array $config Guzzle client configuration options.
+     */
     public function __construct(array $config = []) {
         $config = $this->get_options($config);
 
@@ -89,9 +94,22 @@ class http_client extends Client {
      */
     protected function get_handlers(array $settings): HandlerStack {
         global $CFG;
-        // If a mock handler is set, add to stack. Mainly used for tests.
-        if (isset($settings['mock'])) {
-            $stack = HandlerStack::create($settings['mock']);
+
+        // Mocked responses installed via \core\test\http_mock (Behat) take precedence and are
+        // served by a routing handler which never reaches the real network. Otherwise a mock
+        // handler passed via the 'mock' constructor option (used by unit tests) is used, and
+        // finally the real network handlers.
+        if (($handler = \core\test\http_mock::get_handler()) === null) {
+            if (isset($settings['mock'])) {
+                // If a mock handler is set, add to stack. Mainly used for tests.
+                $handler = $settings['mock'];
+            } else {
+                $handler = null;
+            }
+        }
+
+        if ($handler !== null) {
+            $stack = HandlerStack::create($handler);
         } else {
             $stack = HandlerStack::create();
         }
