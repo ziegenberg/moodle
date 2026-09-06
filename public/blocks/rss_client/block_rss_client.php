@@ -182,7 +182,6 @@
      */
     public function get_feed($feedrecord, $maxentries, $showtitle) {
         global $CFG;
-        require_once($CFG->libdir.'/simplepie/moodle_simplepie.php');
 
         if ($feedrecord->skipuntil) {
             // Last attempt to gather this feed via cron failed - do not try to fetch it now.
@@ -190,7 +189,7 @@
             return null;
         }
 
-        $simplepiefeed = new moodle_simplepie($feedrecord->url);
+        $simplepiefeed = new \core\rss\reader($feedrecord->url);
 
         if(isset($CFG->block_rss_client_timeout)){
             $simplepiefeed->set_cache_duration($CFG->block_rss_client_timeout * 60);
