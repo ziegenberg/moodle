@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>NASA</title>
+    <link>http://www.nasa.gov/</link>
+    <description>News and features about NASA research, missions and programs.</description>
+    <item>
+      <title>NASA Test Feed Item</title>
+      <link>http://www.nasa.gov/press-release/test-feed-item</link>
+      <guid>http://www.nasa.gov/press-release/test-feed-item</guid>
+      <pubDate>Wed, 01 Jan 2025 00:00:00 +0000</pubDate>
+      <description>This is a test item for the RSS client block.</description>
+    </item>
+  </channel>
+</rss>
