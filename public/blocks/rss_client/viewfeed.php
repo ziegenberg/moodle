@@ -23,7 +23,6 @@
  */
 
 require_once(__DIR__ . '/../../config.php');
-require_once($CFG->libdir .'/simplepie/moodle_simplepie.php');
 
 require_login();
 
@@ -69,7 +68,7 @@ $rssrecord = $DB->get_record_select('block_rss_client', $select, [
     'userid' => $USER->id,
 ], '*', MUST_EXIST);
 
-$rss = new moodle_simplepie($rssrecord->url);
+$rss = new \core\rss\reader($rssrecord->url);
 if ($rss->error()) {
     debugging($rss->error());
     throw new \moodle_exception('errorfetchingrssfeed');

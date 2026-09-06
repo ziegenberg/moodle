@@ -24,8 +24,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->libdir .'/simplepie/moodle_simplepie.php');
-
 /**
  * Form for editing RSS client block instances.
  *
@@ -168,12 +166,10 @@ class block_rss_client_edit_form extends block_edit_form {
                     return $errors;
                 }
                 try {
-                    $rss = new moodle_simplepie();
-                    // Set timeout for longer than normal to try and grab the feed.
-                    $rss->set_timeout(10);
+                    $rss = new \core\rss\reader(null, 10);
                     $rss->set_feed_url($data['config_feedurl']);
                     $rss->set_autodiscovery_cache_duration(0);
-                    $rss->set_autodiscovery_level(moodle_simplepie::LOCATOR_ALL);
+                    $rss->set_autodiscovery_level(\core\rss\reader::LOCATOR_ALL);
                     $rss->init();
                     if ($rss->error()) {
                         $errors['config_feedurl'] = get_string('couldnotfindloadrssfeed', 'block_rss_client');

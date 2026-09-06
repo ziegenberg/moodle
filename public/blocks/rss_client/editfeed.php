@@ -25,7 +25,6 @@
 
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/formslib.php');
-require_once($CFG->libdir .'/simplepie/moodle_simplepie.php');
 
 class feed_edit_form extends moodleform {
     protected $isadding;
@@ -80,9 +79,8 @@ class feed_edit_form extends moodleform {
     function validation($data, $files) {
         $errors = parent::validation($data, $files);
 
-        $rss =  new moodle_simplepie();
-        // set timeout for longer than normal to try and grab the feed
-        $rss->set_timeout(10);
+        // Set timeout for longer than normal to try and grab the feed.
+        $rss = new \core\rss\reader(null, 10);
         $rss->set_feed_url($data['url']);
         $rss->set_autodiscovery_cache_duration(0);
         $rss->set_autodiscovery_level(\SimplePie\SimplePie::LOCATOR_NONE);
@@ -127,12 +125,11 @@ class feed_edit_form extends moodleform {
      * @return string URL of feed or original url if none found
      */
     public static function autodiscover_feed_url($url){
-            $rss =  new moodle_simplepie();
+            $rss = new \core\rss\reader(null, 20);
             $rss->set_feed_url($url);
             $rss->set_autodiscovery_level(\SimplePie\SimplePie::LOCATOR_ALL);
             // When autodiscovering an RSS feed, simplepie will try lots of
             // rss links on a page, so set the timeout high
-            $rss->set_timeout(20);
             $rss->init();
 
             if($rss->error()){
