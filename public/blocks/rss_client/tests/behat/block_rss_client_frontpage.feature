@@ -28,13 +28,19 @@ Feature: Enable RSS client block menu on the frontpage
     And I press "Save changes"
     And I should see "You must supply a value here."
 
-    # Test filling in with a non-valid URL in the input.
+    # Test filling in with a non-valid URL in the input. The feed URL is mocked so the
+    # request never leaves the test environment.
+    Given HTTP requests to "https://example.com/notvalid.rss" will respond with status code "404"
     And I set the field "config_feedurl" to "https://example.com/notvalid.rss"
     And I press "Save changes"
     And I should see "Could not find or load the RSS feed."
 
-    # Test filling in with the correct URL in the input.
-    And I set the field "config_feedurl" to "https://www.nasa.gov/rss/dyn/breaking_news.rss"
+    # Test filling in with the correct URL in the input. The feed is served from a fixture
+    # so the scenario does not depend on a live remote feed.
+    Given HTTP requests to "https://example.com/rss/breaking_news.xml" will respond with status code "200"
+    And HTTP requests to "https://example.com/rss/breaking_news.xml" will respond with the header "Content-Type" set to "application/rss+xml"
+    And HTTP requests to "https://example.com/rss/breaking_news.xml" will respond with the body in "blocks/rss_client/tests/fixtures/breaking_news.xml"
+    And I set the field "config_feedurl" to "https://example.com/rss/breaking_news.xml"
     And I set the field "config_block_rss_client_show_channel_link" to "Yes"
     And I press "Save changes"
     And I should see "NASA"

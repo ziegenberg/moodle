@@ -40,6 +40,21 @@ class refreshfeeds extends \core\task\scheduled_task {
     /** The maximum time in seconds that cron will wait between attempts to retry failing RSS feeds. */
     const CLIENT_MAX_SKIPTIME = HOURSECS * 12;
 
+    /** @var \Psr\Http\Client\ClientInterface|null The HTTP client to use when fetching feeds. */
+    protected $httpclient = null;
+
+    /**
+     * Set the HTTP client to use when fetching feeds.
+     *
+     * Allows tests to inject a mock client so that feed retrieval can be
+     * performed offline, deterministically.
+     *
+     * @param \Psr\Http\Client\ClientInterface $client The PSR-18 client
+     */
+    public function set_http_client(\Psr\Http\Client\ClientInterface $client): void {
+        $this->httpclient = $client;
+    }
+
     /**
      * Name for this task.
      *
@@ -67,9 +82,7 @@ class refreshfeeds extends \core\task\scheduled_task {
      * less often until they become available again.
      */
     public function execute() {
-        global $CFG, $DB;
-        require_once("{$CFG->libdir}/simplepie/moodle_simplepie.php");
-
+        global $DB;
         // We are going to measure execution times.
         $starttime = microtime();
         $starttimesec = time();
@@ -117,16 +130,14 @@ class refreshfeeds extends \core\task\scheduled_task {
      * Fetch a feed for the specified URL.
      *
      * @param   string  $url The URL to fetch
-     * @return  \moodle_simplepie
+     * @return  \core\rss\reader
      */
-    protected function fetch_feed(string $url): \moodle_simplepie {
+    protected function fetch_feed(string $url): \core\rss\reader {
         // Fetch the rss feed, using standard simplepie caching so feeds will be renewed only if cache has expired.
         \core_php_time_limit::raise(60);
 
-        $feed = new \moodle_simplepie();
-
-        // Set timeout for longer than normal to be agressive at fetching feeds if possible..
-        $feed->set_timeout(40);
+        // Set timeout for longer than normal to be aggressive at fetching feeds if possible.
+        $feed = new \core\rss\reader(null, 40, $this->httpclient);
         $feed->set_cache_duration(0);
         $feed->set_feed_url($url);
         $feed->init();

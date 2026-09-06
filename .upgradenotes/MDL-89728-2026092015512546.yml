@@ -1,0 +1,20 @@
+issueNumber: MDL-89728
+notes:
+  core:
+    - message: >
+        The legacy SimplePie integration classes have been moved to the autoloaded
+        `core\rss` namespace. The old class names remain available via
+        `lib/db/renamedclasses.php` (an alias is created and a deprecation notice
+        emitted when they are first used), so existing code keeps working, but should
+        be updated to the new classes:
+
+         | Old class                   | New class                    |
+         | ---                         | ---                          |
+         | `moodle_simplepie`          | `\core\rss\reader`           |
+         | `moodle_simplepie_sanitize` | `\core\rss\reader_sanitize`  |
+         | `moodle_simplepie_file`     | (no replacement)             |
+
+        `moodle_simplepie_file` has no replacement: SimplePie 1.9 fetches feeds through a
+        PSR-18 HTTP client, configured by `\core\rss\reader` to use the shared Moodle
+        HTTP client (`\core\http_client`) and the Moodle cache (MUC).
+      type: deprecated
