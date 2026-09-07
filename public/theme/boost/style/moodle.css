@@ -31290,7 +31290,7 @@ audio.mediaplugin_html5audio {
 }
 
 .moodle-dialogue-exception .param-stacktrace .stacktrace-line {
-  color: #f0ad4e;
+  color: var(--mds-text-feedback-warning);
   font-size: 0.875rem;
 }
 

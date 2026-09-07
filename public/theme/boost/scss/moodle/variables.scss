@@ -132,7 +132,7 @@ $dialogue-exception-label-border-color: var(--mds-border-default) !default;
 $dialogue-exception-pre-bg:             var(--mds-bg-surface-default) !default;
 $dialogue-exception-pre-border-color:   var(--mds-border-default) !default;
 $dialogue-exception-file-color:         var(--mds-text-feedback-primary) !default;
-$dialogue-exception-line-color:         var(--#{$prefix}warning-text-emphasis) !default;
+$dialogue-exception-line-color:         var(--mds-text-feedback-warning) !default;
 $dialogue-exception-call-color:         var(--mds-text-default) !default;
 $dialogue-exception-call-border-color:  var(--mds-border-default) !default;
 

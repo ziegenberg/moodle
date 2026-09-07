@@ -1186,7 +1186,7 @@ audio.mediaplugin_html5audio {
 }
 
 .moodle-dialogue-exception .param-stacktrace .stacktrace-line {
-    color: map-get($theme-colors, 'warning');
+    color: $dialogue-exception-line-color;
     font-size: $font-size-sm;
 }
 
