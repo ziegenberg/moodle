@@ -107,8 +107,9 @@ $divider-hover-color: $primary !default;
         }
 
         .course-content-item-content {
-            [data-for="sectioninfo"] {
-                padding-left: calc(#{$icon-height} + #{map-get($spacers, 6)});
+            // Direct child only, so the rule does not leak into nested subsections.
+            > [data-for="sectioninfo"] {
+                padding-left: map-get($spacers, 3);
                 padding-right: map-get($spacers, 3);
                 padding-bottom: map-get($spacers, 3);
             }
@@ -119,6 +120,11 @@ $divider-hover-color: $primary !default;
                 background-color: var(--#{$prefix}gray-100);
                 @include border-bottom-radius($activity-border-radius);
             }
+        }
+
+        // Align the section info with the section title when the header has a collapse toggle button.
+        .course-section-header:has(.icons-collapse-expand) ~ .course-content-item-content > [data-for="sectioninfo"] {
+            padding-left: calc(#{$icon-height} + #{map-get($spacers, 6)});
         }
     }
 

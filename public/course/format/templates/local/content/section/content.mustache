@@ -149,7 +149,7 @@
     {{/header}}
 </div>
 <div id="coursecontentcollapseid{{id}}"
-     class="content {{^iscoursedisplaymultipage}}{{^sitehome}}{{^displayonesection}}course-content-item-content collapse {{^contentcollapsed}}show{{/contentcollapsed}}{{/displayonesection}}{{/sitehome}}{{/iscoursedisplaymultipage}}">
+    class="content {{^displayonesection}}course-content-item-content{{/displayonesection}}{{^iscoursedisplaymultipage}}{{^sitehome}}{{^displayonesection}} collapse {{^contentcollapsed}}show{{/contentcollapsed}}{{/displayonesection}}{{/sitehome}}{{/iscoursedisplaymultipage}}">
     <div class="{{#hasavailability}}description{{/hasavailability}}" data-for="sectioninfo">
         {{#isstealth}}
         <div class="alert alert-warning">
