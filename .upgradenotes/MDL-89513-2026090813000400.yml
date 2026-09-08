@@ -1,0 +1,11 @@
+issueNumber: MDL-89513
+notes:
+  core:
+    - message: >-
+        \core\update\checker now sends two optional parameters with the
+        available updates check: siteidentifier, the md5() of the site's
+        registration secret, sent only when the site is registered with the
+        sites directory, and countrycode, the configured $CFG->country, sent
+        whenever it is set. Either parameter is omitted when it cannot be
+        determined and the update check is never blocked by them.
+      type: improved
