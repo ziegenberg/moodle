@@ -141,7 +141,38 @@ class api {
      */
     public static function update_registration(array $siteinfo) {
         $params = array('siteinfo' => $siteinfo, 'validateurl' => 1);
+        $params += self::sign_registration_update($siteinfo['url'] ?? '');
         self::call('hub_update_site_info', $params);
+    }
+
+    /**
+     * Signs a registration update so the hub can verify this site controls the registration.
+     *
+     * The signature proves control of the shared secret established at registration time without
+     * sending it, and without requiring any additional round trip. It signs a fixed, explicitly
+     * ordered field set (site URL and timestamp), not the variable statistics payload, so that
+     * signature verification can never depend on the payload shape matching between the two ends.
+     *
+     * If a signature cannot be computed for any reason, the update must still be sent: an absent
+     * signature simply results in the update being recorded as unverified at the hub, which is
+     * an accepted, ordinary outcome for sites that predate this feature.
+     *
+     * @param string $siteurl the site URL as sent in the registration payload
+     * @return array 'timestamp' and 'signature' entries, or an empty array if signing was not possible
+     */
+    protected static function sign_registration_update(string $siteurl): array {
+        try {
+            $secret = registration::get_secret();
+            if ($siteurl === '' || $secret === '') {
+                return [];
+            }
+            $timestamp = \core\di::get(\core\clock::class)->time();
+            $signature = hash_hmac('sha256', $siteurl . '|' . $timestamp, md5($secret));
+            return ['timestamp' => $timestamp, 'signature' => $signature];
+        } catch (\Throwable $e) {
+            debugging('Failed to sign registration update: ' . $e->getMessage(), DEBUG_DEVELOPER);
+            return [];
+        }
     }
 
     /**
