@@ -642,7 +642,7 @@ class override_manager {
      * Computes the effective overridden open and close times for a user for a given quiz.
      *
      * @deprecated Since Moodle 5.3. Use override_manager::get_effective_times() instead.
-     * @todo Final deprecation in Moodle 6.0. See MDL-89711.
+     * @todo Final deprecation in Moodle 7.0. See MDL-89747.
      * @param int $quizid The quiz ID.
      * @param int $userid The user ID.
      * @return array Array with optional keys 'timeopen' and 'timeclose'.
