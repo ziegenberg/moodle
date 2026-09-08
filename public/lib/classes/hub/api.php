@@ -88,16 +88,23 @@ class api {
         $curl = new curl();
         $serverurl = HUB_MOODLEORGHUBURL . "/local/hub/webservice/webservices.php";
         $query = http_build_query($params);
-        $curloutput = @json_decode($curl->post($serverurl, $query), true);
+        $rawresponse = $curl->post($serverurl, $query);
+        $curloutput = @json_decode((string)$rawresponse, true);
+        // The hub returns scalar JSON (true or 1) for hub_update_site_info, hub_site_is_registered
+        // and hub_unregister_site, so a decodable body of any JSON type is a valid response.
+        $validjson = json_last_error() === JSON_ERROR_NONE;
         $info = $curl->get_info();
         if ($curl->get_errno()) {
             // Connection error.
             throw new moodle_exception('errorconnect', 'hub', '', $curl->error);
-        } else if (isset($curloutput['exception'])) {
+        } else if (is_array($curloutput) && isset($curloutput['exception'])) {
             // Exception occurred on the remote side.
             self::process_curl_exception($token, $curloutput);
-        } else if (!empty($info['http_code']) && $info['http_code'] != 200) {
-            throw new moodle_exception('errorconnect', 'hub', '', $info['http_code']);
+        } else if (empty($info['http_code']) || $info['http_code'] != 200 || !$validjson) {
+            // Anything other than a 200 response carrying a decodable JSON body is a failure,
+            // not a quiet success: a blocked or unreachable URL leaves http_code empty, and an
+            // HTTP error, empty body or non-JSON body must not be mistaken for "nothing to report".
+            throw new moodle_exception('errorconnect', 'hub', '', $info['http_code'] ?? 0);
         } else {
             return $curloutput;
         }

@@ -415,9 +415,10 @@ class registration {
      * @param string $token
      * @param string $newtoken
      * @param string $hubname
+     * @return bool true if the full site info reached the hub, false if a retry was queued instead
      * @throws moodle_exception
      */
-    public static function confirm_registration($token, $newtoken, $hubname) {
+    public static function confirm_registration($token, $newtoken, $hubname): bool {
         global $DB;
 
         $registration = self::get_registration(false);
@@ -434,11 +435,23 @@ class registration {
         $DB->update_record('registration_hubs', $record);
         self::$registration = null;
 
-        $siteinfo = self::get_site_info();
-        if (strlen(http_build_query($siteinfo)) > 1800) {
-            // Update registration again because the initial request was too long and could have been truncated.
-            api::update_registration($siteinfo);
-            self::$registration = null;
+        // The redirect that led here only carried the token and site URL, so send the full site
+        // info now, unconditionally. If this fails, queue a retry rather than leaving a partial
+        // registration in place until the next scheduled registration_cron_task run.
+        $fullpayloadsent = true;
+        try {
+            api::update_registration(self::get_site_info());
+        } catch (moodle_exception $e) {
+            $fullpayloadsent = false;
+            if (!self::is_registered()) {
+                // The hub rejected the token: process_curl_exception() already called reset_token(),
+                // which deleted the record we just confirmed above. There is nothing left to retry,
+                // so send the site back through registration from scratch instead of queuing a retry
+                // task that would find no registration to act on. register() redirects and does not
+                // return.
+                self::register('');
+            }
+            \core\task\manager::queue_adhoc_task(new \core\task\complete_hub_registration_task(), true);
         }
 
         // Finally, allow other plugins to perform actions once a site is registered for first time.
@@ -448,6 +461,8 @@ class registration {
                 $pluginfunction($registration->id);
             }
         }
+
+        return $fullpayloadsent;
     }
 
     /**
@@ -534,20 +549,44 @@ class registration {
 
         $params = self::get_site_info();
 
-        // The most conservative limit for the redirect URL length is 2000 characters. Only pass parameters before
-        // we reach this limit. The next registration update will update all fields.
-        // We will also update registration after we receive confirmation from stats.moodle.org.
-        $url = new moodle_url(HUB_MOODLEORGHUBURL . '/local/hub/siteregistration.php',
-            ['token' => $hub->token, 'url' => $params['url']]);
-        foreach ($params as $key => $value) {
-            if (strlen($url->out(false, [$key => $value])) > 2000) {
-                break;
-            }
-            $url->param($key, $value);
-        }
+        // The redirect only needs to carry what the hub requires to process the initial
+        // registration request and what it matches the registration on: the admin's consent,
+        // enough contact detail for the hub to act on that consent, and the site identity. The
+        // full site info is sent unconditionally, immediately after confirmation, by
+        // confirm_registration(); there is no need to also try to fit it into the redirect URL.
+        $url = self::get_registration_redirect_url($hub->token, $params);
 
         $SESSION->registrationredirect = $returnurl;
         redirect($url);
+    }
+
+    /**
+     * Builds the redirect URL used to hand the initial registration off to the hub.
+     *
+     * This deliberately carries only a small, fixed subset of the site info: the token and site
+     * URL are what the hub matches the incoming request to the unconfirmed registration record
+     * on, and policyagreed/contactemail/language are required by the hub's own initial
+     * registration processing (consent, and enough contact detail to act on it). Everything else
+     * - the bulk of the payload, including fields like pluginusage that can be large on their
+     * own - is sent unconditionally, immediately after confirmation, by confirm_registration().
+     * There is no need to also try to fit it into the redirect URL. Kept as a separate method so
+     * the URL construction can be unit tested without going through {@see redirect()}.
+     *
+     * @param string $token
+     * @param array $siteinfo result of get_site_info()
+     * @return moodle_url
+     */
+    protected static function get_registration_redirect_url(string $token, array $siteinfo): moodle_url {
+        return new moodle_url(
+            HUB_MOODLEORGHUBURL . '/local/hub/siteregistration.php',
+            [
+                'token' => $token,
+                'url' => $siteinfo['url'],
+                'policyagreed' => $siteinfo['policyagreed'],
+                'contactemail' => $siteinfo['contactemail'],
+                'language' => $siteinfo['language'],
+            ]
+        );
     }
 
     /**

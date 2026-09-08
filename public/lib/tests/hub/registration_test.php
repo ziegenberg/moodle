@@ -16,17 +16,16 @@
 
 namespace core\hub;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 /**
  * Class containing unit tests for the site registration class.
  *
  * @package    core
  * @copyright  2023 Matt Porritt <matt.porritt@moodle.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers \core\hub\registration
  */
-#[\PHPUnit\Framework\Attributes\CoversMethod(registration::class, 'get_reporting_paused_reason')]
-#[\PHPUnit\Framework\Attributes\CoversMethod(registration::class, 'check_reporting_paused_notification')]
-#[\PHPUnit\Framework\Attributes\CoversMethod(registration::class, 'get_registration_page_notification')]
+#[CoversClass(registration::class)]
 final class registration_test extends \advanced_testcase {
     /**
      * Clear the static registration cache so each test sees the current database state.
@@ -316,26 +315,7 @@ final class registration_test extends \advanced_testcase {
     }
 
     /**
-     * Insert a confirmed registration record so the site is treated as registered.
-     */
-    private function register_site(): void {
-        global $DB;
-
-        $DB->insert_record('registration_hubs', [
-            'token' => 'testtoken',
-            'hubname' => 'moodle',
-            'huburl' => HUB_MOODLEORGHUBURL,
-            'confirmed' => 1,
-            'secret' => 'testsecret',
-            'timemodified' => time(),
-        ]);
-        registration::reset_caches();
-    }
-
-    /**
      * Test getting the title for the defaulthomepage setting value.
-     *
-     * @covers \core\hub\registration::get_defaulthomepage_name
      */
     public function test_get_defaulthomepage_name(): void {
         $this->resetAfterTest();
@@ -641,5 +621,161 @@ final class registration_test extends \advanced_testcase {
         $notification = registration::get_registration_page_notification(true, false);
         $this->assertSame(\core\output\notification::NOTIFY_INFO, $notification['type']);
         $this->assertNotSame('', $notification['message']);
+    }
+
+    /**
+     * The initial registration redirect must carry only the token, site URL, and the small
+     * fixed set of fields (policyagreed, contactemail, language) the hub's own initial
+     * registration processing requires - never the full site info payload that used to be
+     * silently truncated at a 2000-character URL cap.
+     */
+    public function test_get_registration_redirect_url_only_carries_required_fields(): void {
+        $this->resetAfterTest();
+
+        $siteinfo = [
+            'url' => 'https://example.com',
+            'policyagreed' => 1,
+            'contactemail' => 'admin@example.com',
+            'language' => 'en',
+            'pluginusage' => json_encode(['some' => 'large payload']),
+        ];
+
+        $method = new \ReflectionMethod(registration::class, 'get_registration_redirect_url');
+        $method->setAccessible(true);
+        $url = $method->invoke(null, 'sometoken123', $siteinfo);
+
+        $this->assertInstanceOf(\moodle_url::class, $url);
+        $this->assertEquals('sometoken123', $url->get_param('token'));
+        $this->assertEquals('https://example.com', $url->get_param('url'));
+        $this->assertEquals(1, $url->get_param('policyagreed'));
+        $this->assertEquals('admin@example.com', $url->get_param('contactemail'));
+        $this->assertEquals('en', $url->get_param('language'));
+        $this->assertCount(5, $url->params());
+    }
+
+    /**
+     * register() should create the unconfirmed registration record and attempt the hub redirect.
+     * In PHPUnit, redirect() throws instead of sending headers, which is what we assert on here.
+     */
+    public function test_register_creates_unconfirmed_registration_and_redirects(): void {
+        global $DB;
+        $this->resetAfterTest();
+        registration::reset_caches();
+
+        try {
+            registration::register('');
+            $this->fail('Expected moodle_exception from redirect() to propagate.');
+        } catch (\moodle_exception $e) {
+            $this->assertEquals('redirecterrordetected', $e->errorcode);
+        }
+
+        $this->assertTrue($DB->record_exists('registration_hubs', ['confirmed' => 0]));
+    }
+
+    /**
+     * When the post-confirmation full-payload push to the hub succeeds, confirm_registration()
+     * should report success and leave nothing queued for retry.
+     */
+    public function test_confirm_registration_returns_true_when_full_payload_push_succeeds(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->disable_airnotifier_post_registration_hook();
+
+        $hubid = $this->create_unconfirmed_registration('oldtoken');
+        // The hub's hub_update_site_info returns a JSON scalar (true) on success.
+        \curl::mock_response(json_encode(true));
+
+        $result = registration::confirm_registration('oldtoken', 'newtoken', 'moodle');
+
+        $this->assertTrue($result);
+        $this->assertTrue($DB->record_exists('registration_hubs', ['id' => $hubid, 'confirmed' => 1]));
+        $adhoctasks = \core\task\manager::get_adhoc_tasks(\core\task\complete_hub_registration_task::class);
+        $this->assertCount(0, $adhoctasks);
+    }
+
+    /**
+     * When the post-confirmation full-payload push fails for a reason unrelated to the token
+     * itself, the just-confirmed registration must be kept and a retry queued, rather than the
+     * partial record sitting untouched until the next weekly registration_cron_task run.
+     */
+    public function test_confirm_registration_queues_retry_when_full_payload_push_fails(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->disable_airnotifier_post_registration_hook();
+
+        $hubid = $this->create_unconfirmed_registration('oldtoken');
+        $response = json_encode(['exception' => 'some_other_exception', 'message' => 'hub is down']);
+        \curl::mock_response($response);
+
+        $result = registration::confirm_registration('oldtoken', 'newtoken', 'moodle');
+
+        $this->assertFalse($result);
+        $this->assertTrue($DB->record_exists('registration_hubs', ['id' => $hubid, 'confirmed' => 1]));
+        $adhoctasks = \core\task\manager::get_adhoc_tasks(\core\task\complete_hub_registration_task::class);
+        $this->assertCount(1, $adhoctasks);
+    }
+
+    /**
+     * When the hub rejects the token during the post-confirmation push, process_curl_exception()
+     * deletes the just-confirmed record via reset_token(). Queuing a retry task against that
+     * would be a silent no-op forever, so confirm_registration() must instead send the site back
+     * through registration from scratch.
+     */
+    public function test_confirm_registration_restarts_registration_when_token_rejected(): void {
+        global $DB;
+        $this->resetAfterTest();
+
+        $hubid = $this->create_unconfirmed_registration('oldtoken');
+        $response = json_encode([
+            'exception' => 'moodle_exception',
+            'errorcode' => 'invalidtoken',
+            'message' => 'bad token',
+        ]);
+        \curl::mock_response($response);
+
+        try {
+            registration::confirm_registration('oldtoken', 'newtoken', 'moodle');
+            $this->fail('Expected moodle_exception from redirect() to propagate.');
+        } catch (\moodle_exception $e) {
+            $this->assertEquals('redirecterrordetected', $e->errorcode);
+        }
+
+        // The rejected-token row must be gone, not left behind as a stale confirmed record, and
+        // nothing should be queued against a registration that no longer exists.
+        $this->assertFalse($DB->record_exists('registration_hubs', ['id' => $hubid]));
+        $adhoctasks = \core\task\manager::get_adhoc_tasks(\core\task\complete_hub_registration_task::class);
+        $this->assertCount(0, $adhoctasks);
+    }
+
+    /**
+     * confirm_registration() fires the post_site_registration_confirmed hook, which for
+     * message_airnotifier makes its own outbound request to obtain an access key. Give it a
+     * pre-set access key so the hook short-circuits, instead of that unrelated plugin's network
+     * call leaking into a test of the hub registration confirmation flow.
+     */
+    private function disable_airnotifier_post_registration_hook(): void {
+        set_config('airnotifieraccesskey', 'testkey');
+    }
+
+    /**
+     * Create an unconfirmed registration_hubs record ready to be confirmed in a test.
+     *
+     * @param string $token
+     * @return int id of the created record
+     */
+    private function create_unconfirmed_registration(string $token): int {
+        global $DB;
+
+        $hub = new \stdClass();
+        $hub->token = $token;
+        $hub->secret = $token;
+        $hub->huburl = HUB_MOODLEORGHUBURL;
+        $hub->hubname = 'moodle';
+        $hub->confirmed = 0;
+        $hub->timemodified = time();
+        $id = $DB->insert_record('registration_hubs', $hub);
+        registration::reset_caches();
+
+        return $id;
     }
 }
