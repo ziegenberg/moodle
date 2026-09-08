@@ -364,7 +364,7 @@ final class client_manager_test extends \advanced_testcase {
     }
 
     /**
-     * Test that revoking a client cascades to every credential it holds.
+     * Test that revoking a client cascades to every credential it holds apart from secrets.
      *
      * @return void
      */
@@ -389,7 +389,7 @@ final class client_manager_test extends \advanced_testcase {
             client_entity::STATUS_REVOKED,
             (int) $DB->get_field('oauth2_server_clients', 'status', ['id' => $record->id]),
         );
-        $this->assertSame(1, $DB->count_records('oauth2_server_client_secrets', [
+        $this->assertSame(0, $DB->count_records('oauth2_server_client_secrets', [
             'clientidentifier' => $record->clientidentifier,
             'revoked' => client_entity::SECRET_REVOKED_YES,
         ]));
@@ -448,8 +448,10 @@ final class client_manager_test extends \advanced_testcase {
             ['id' => $record->id],
         ));
 
-        // Every credential revoked alongside the client stays revoked.
-        $this->assertEmpty($manager->get_secrets((int) $record->id));
+        // Revoking a client does not revoke its secrets, ensure they remain preserved upon re-activation.
+        $this->assertNotEmpty($manager->get_secrets((int) $record->id));
+
+        // Every other credential revoked alongside the client stays revoked.
         $this->assertSame(0, $DB->count_records('oauth2_server_client_access_tokens', [
             'clientidentifier' => $record->clientidentifier,
             'revoked' => access_token_entity::REVOKED_NO,
@@ -675,25 +677,20 @@ final class client_manager_test extends \advanced_testcase {
     }
 
     /**
-     * Test that a revoked client cannot be issued a new secret.
+     * Test that a revoked client can issue a new secret.
      *
      * @return void
      */
-    public function test_create_secret_rejects_revoked_client(): void {
+    public function test_create_secret_does_not_reject_revoked_client(): void {
         $this->resetAfterTest();
 
         $manager = $this->get_manager();
         $record = $this->create_fixture_client($manager);
         $manager->revoke_client((int) $record->id);
 
-        try {
-            $manager->create_secret((int) $record->id);
-            $this->fail('A moodle_exception was expected.');
-        } catch (moodle_exception $e) {
-            $this->assertSame('oauth2clientrevoked', $e->errorcode);
-        }
+        $manager->create_secret((int) $record->id);
 
-        $this->assertEmpty($manager->get_secrets((int) $record->id, true));
+        $this->assertNotEmpty($manager->get_secrets((int) $record->id));
     }
 
     /**

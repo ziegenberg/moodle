@@ -16,6 +16,7 @@
 
 namespace core_admin\reportbuilder\local\systemreports;
 
+use core\oauth2\server\entity\client_entity;
 use core\output\help_icon;
 use core_reportbuilder\local\report\column;
 use core_reportbuilder\system_report;
@@ -92,6 +93,10 @@ class oauth2_server_client_secrets extends system_report {
             }));
 
         // Status.
+        $clientjoinsql = "LEFT JOIN {oauth2_server_clients} client
+                              ON client.clientidentifier = client_secret.clientidentifier";
+        $this->add_join($clientjoinsql);
+
         $this->add_column((new column(
             'status',
             new lang_string('status', 'core'),
@@ -99,17 +104,23 @@ class oauth2_server_client_secrets extends system_report {
         ))
             ->add_joins($this->get_joins())
             ->set_type(column::TYPE_TEXT)
-            ->add_fields('client_secret.expirytime')
+            ->add_fields('client_secret.expirytime, client.status as clientstatus')
             ->set_is_sortable(true)
-            ->add_callback(function ($value) {
-                $isexpired = $value <= time();
+            ->add_callback(function ($value, \stdClass $row) {
+                $isexpired = $row->expirytime <= time();
+                $isclientrevoked = (int) $row->clientstatus === client_entity::STATUS_REVOKED;
 
-                if ($isexpired) {
+                if ($isexpired) { // Secret is expired.
                     $statusstring = get_string('oauth2server_statusexpired', 'admin');
                     $badgetype = 'danger';
                 } else {
-                    $statusstring = get_string('oauth2server_statusactive', 'admin');
-                    $badgetype = 'success';
+                    if ($isclientrevoked) { // Secret is inactive because the client is revoked.
+                        $statusstring = get_string('oauth2server_statusinactive', 'admin');
+                        $badgetype = 'warning';
+                    } else { // Secret is active.
+                        $statusstring = get_string('oauth2server_statusactive', 'admin');
+                        $badgetype = 'success';
+                    }
                 }
 
                 return \html_writer::tag(

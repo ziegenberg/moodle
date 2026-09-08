@@ -508,7 +508,6 @@ $string['oauth1requesttoken'] = 'OAuth 1.0 error: We did not obtain the request 
 $string['oauth2clientinvalidredirecturi'] = 'The redirect URI \'{$a}\' is not valid. Redirect URIs must use HTTPS, unless they point at the loopback interface, and must not contain a fragment.';
 $string['oauth2clientnotconfidential'] = 'The OAuth 2 client \'{$a}\' is a public client, so it cannot be issued a secret.';
 $string['oauth2clientnotrevoked'] = 'The OAuth 2 client \'{$a}\' must be revoked before it can be permanently deleted.';
-$string['oauth2clientrevoked'] = 'The OAuth 2 client \'{$a}\' has been revoked.';
 $string['oauth2clientsecretlimitreached'] = 'This OAuth 2 client already has the maximum of {$a} active secrets. Revoke one of them before generating another.';
 $string['oauth2upgradetokenerror'] = 'Could not upgrade OAuth 2 token. HTTP status for remote endpoint: {$a}';
 $string['oauth2refreshtokenerror'] = 'Could not refresh OAuth 2 token. HTTP status for remote endpoint: {$a}';

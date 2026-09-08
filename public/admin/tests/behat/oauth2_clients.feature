@@ -132,7 +132,7 @@ Feature: Create OAuth2 clients
     And I press "Create client"
     And "Test Confidential Client" "heading" should exist
     And "Secrets" "heading" should exist
-    And I should see "No active client secrets are currently configured."
+    And I should see "No client secrets are currently configured."
     And "Generate secret" "button" should be visible
     And "reportbuilder-table" "table" should not exist
     When I press "Generate secret"
@@ -167,7 +167,7 @@ Feature: Create OAuth2 clients
     And I should see "Any external applications or active integrations using this specific credential will instantly lose API access. This action is permanent and cannot be undone." in the "Revoke client secret?" "dialogue"
     And I click on "Revoke" "button" in the "Revoke client secret?" "dialogue"
     And "reportbuilder-table" "table" should not exist
-    And I should see "No active client secrets are currently configured."
+    And I should see "No client secrets are currently configured."
 
   Scenario: More than 2 secrets cannot be generated for a confidential OAuth2 client
     Given I click on "Create client" "link"
@@ -188,11 +188,13 @@ Feature: Create OAuth2 clients
       | Active | Revoke  |
       | Active | Revoke  |
     And "Generate secret" "button" should not be visible
-    And I should see "Maximum of 2 active secrets reached. Revoke one before generating another."
+    And I should see "Maximum of 2 secrets reached."
+    And I should see "To generate a new secret, you must first revoke one of the existing Active secrets."
     And I click on "Revoke" "button" in the "reportbuilder-table" "table"
     And I click on "Revoke" "button" in the "Revoke client secret?" "dialogue"
     And "Generate secret" "button" should be visible
-    And I should not see "Maximum of 2 active secrets reached. Revoke one before generating another."
+    And I should not see "Maximum of 2 secrets reached."
+    And I should not see "To generate a new secret, you must first revoke one of the existing Active secrets."
 
   Scenario: Edit confidential OAuth2 client that supports client credentials flow only
     Given I click on "Create client" "link"
@@ -365,16 +367,28 @@ Feature: Create OAuth2 clients
     # Revoke the client.
     And I click on "Revoke" "button" in the "Test Confidential Client" "table_row"
     And "Revoke \"Test Confidential Client\"?" "dialogue" should exist
-    And I should see "This immediately revokes all active secrets and stops the client from authenticating. The client and its configuration are kept, and it can be re-enabled later. To permanently remove it instead, revoke it first, then delete." in the "Revoke \"Test Confidential Client\"?" "dialogue"
+    And I should see "This immediately inactivates all secrets and stops the client from authenticating. The client, its configuration and secrets are kept, and it can be re-enabled later. To permanently remove it instead, revoke it first, then delete." in the "Revoke \"Test Confidential Client\"?" "dialogue"
     When I click on "Revoke" "button" in the "Revoke \"Test Confidential Client\"?" "dialogue"
     Then the following should exist in the "reportbuilder-table" table:
       | Name                     | Status  |
       | Test Confidential Client | Revoked |
     And "Revoke" "button" should not exist in the "Test Confidential Client" "table_row"
-    # Client secrets should be revoked and not longer managed when the client is revoked and cannot be .
-    And "Manage secrets" "link" should not exist in the "Test Confidential Client" "table_row"
+    # Client secrets should not be revoked when the client is revoked, but marked as inactive.
+    And "Manage secrets" "link" should exist in the "Test Confidential Client" "table_row"
     And I click on "Edit" "link" in the "Test Confidential Client" "table_row"
-    And "#client-active-secrets" "css_element" should not exist
+    And "#client-active-secrets" "css_element" should exist
+    And I should see "0" in the "#client-active-secrets" "css_element"
+    And I click on "Manage secrets" "link" in the "#client-active-secrets" "css_element"
+    And I should see "This client is currently revoked."
+    And I should see "Any existing or new secrets will remain inactive and cannot be used for authentication until you re-enable the client."
+    And the following should exist in the "reportbuilder-table" table:
+      | Status   | Actions |
+      | Inactive | Revoke  |
+    And I press "Generate secret"
+    And I click on "Close" "button" in the "Secret generated" "dialogue"
+    And "Generate secret" "button" should not be visible
+    And I should see "Maximum of 2 secrets reached."
+    And I should see "To generate a new secret, you must first revoke one of the existing Inactive secrets."
 
   Scenario: Enable OAuth2 client
     # Create a confidential OAuth2 client supporting authorization code and client credentials flows.
@@ -409,9 +423,12 @@ Feature: Create OAuth2 clients
     And "Manage secrets" "link" should exist in the "Test Confidential Client" "table_row"
     And I click on "Edit" "link" in the "Test Confidential Client" "table_row"
     And "#client-active-secrets" "css_element" should exist
+    And I should see "1" in the "#client-active-secrets" "css_element"
     And I click on "Manage secrets" "link" in the "#client-active-secrets" "css_element"
-    # Revoked secrets cannot be re-enabled and must be regenerated.
-    And I should see "No active client secrets are currently configured."
+    # The secret should be active again after the client is re-enabled.
+    And the following should exist in the "reportbuilder-table" table:
+      | Status  | Actions |
+      | Active  | Revoke  |
 
   Scenario: Delete OAuth2 client
     # Create a public OAuth2 client.

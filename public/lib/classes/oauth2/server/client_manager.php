@@ -205,9 +205,13 @@ class client_manager {
     /**
      * Revoke a client, cutting off all of its existing access immediately.
      *
-     * Revoking marks the client as revoked and cascades to every credential it holds: its secrets,
-     * its access tokens, its refresh tokens and its outstanding authorisation codes. Access is
-     * therefore withdrawn straight away rather than merely being blocked for future requests.
+     * Revoking marks the client as revoked and cascades to its access tokens, its refresh tokens and its outstanding
+     * authorisation codes. Access is therefore withdrawn straight away rather than merely being blocked for future
+     * requests.
+     *
+     * Client secrets are not explicitly revoked as part of the client revocation, but will remain invalid for use
+     * as long as the client is revoked. The reason why explicit secret revocation is skipped is to allow existing
+     * secrets to still be used in the case of re-enabling the client.
      *
      * @param int $clientid The client ID.
      * @return void
@@ -222,14 +226,6 @@ class client_manager {
         $client->status = client_entity::STATUS_REVOKED;
         $client->timemodified = $this->clock->time();
         $this->db->update_record('oauth2_server_clients', $client);
-
-        $this->db->set_field_select(
-            'oauth2_server_client_secrets',
-            'revoked',
-            client_entity::SECRET_REVOKED_YES,
-            'clientidentifier = :clientidentifier',
-            $params,
-        );
 
         $this->db->set_field_select(
             'oauth2_server_client_refresh_tokens',
@@ -326,15 +322,11 @@ class client_manager {
      * @param int|null $expirytime When the secret expires. Defaults to self::SECRET_LIFETIME from now.
      * @return string The plain text secret.
      * @throws \dml_missing_record_exception If the client does not exist.
-     * @throws moodle_exception If the client is public or revoked, or already holds the maximum
-     *      number of active secrets.
+     * @throws moodle_exception If the client is public or already holds the maximum
+     *                          number of active secrets.
      */
     public function create_secret(int $clientid, ?int $expirytime = null): string {
         $client = $this->get_client_record($clientid);
-
-        if ((int) $client->status !== client_entity::STATUS_ACTIVE) {
-            throw new moodle_exception('oauth2clientrevoked', 'error', '', $client->clientidentifier);
-        }
 
         // A public client cannot keep a secret confidential, so it is never issued one.
         if (!(int) $client->isconfidential) {

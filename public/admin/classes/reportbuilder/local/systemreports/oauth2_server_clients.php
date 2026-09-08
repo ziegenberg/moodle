@@ -244,6 +244,16 @@ class oauth2_server_clients extends system_report {
 
                 $actions[] = \html_writer::link($editurl, get_string('edit', 'moodle'));
 
+                if ($row->isconfidential) {
+                    // Manage secrets link.
+                    $editurl = \core\router\util::get_path_for_callable(
+                        [\core_admin\route\controller\oauth2\server\client_management::class, 'manage_client_secrets'],
+                        ['client' => $row->id],
+                    );
+
+                    $actions[] = \html_writer::link($editurl, get_string('oauth2server_managesecrets', 'admin'));
+                }
+
                 // Display the relevant actions when the client status is revoked.
                 if ((int) $row->status === client_entity::STATUS_REVOKED) {
                     // Enable link.
@@ -273,16 +283,6 @@ class oauth2_server_clients extends system_report {
 
                 // Display the relevant actions when the client status is active.
                 if ((int) $row->status === client_entity::STATUS_ACTIVE) {
-                    if ($row->isconfidential) {
-                        // Manage secrets link.
-                        $editurl = \core\router\util::get_path_for_callable(
-                            [\core_admin\route\controller\oauth2\server\client_management::class, 'manage_client_secrets'],
-                            ['client' => $row->id],
-                        );
-
-                        $actions[] = \html_writer::link($editurl, get_string('oauth2server_managesecrets', 'admin'));
-                    }
-
                     // Revoke link.
                     $actions[] = \html_writer::tag(
                         'button',
