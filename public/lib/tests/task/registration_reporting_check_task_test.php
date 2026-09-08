@@ -16,14 +16,16 @@
 
 namespace core\task;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 /**
  * Unit tests for the registration_reporting_check_task scheduled task.
  *
  * @package    core
  * @copyright  2026 Matt Porritt <matt.porritt@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers \core\task\registration_reporting_check_task
  */
+#[CoversClass(registration_reporting_check_task::class)]
 final class registration_reporting_check_task_test extends \advanced_testcase {
     /**
      * Clear the static registration cache so each test sees the current database state.

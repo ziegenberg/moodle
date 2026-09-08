@@ -227,9 +227,6 @@ final class registration_test extends \advanced_testcase {
 
     /**
      * Test that get_site_info() excludes fields pending admin confirmation when requested.
-     *
-     * @covers \core\hub\registration::get_site_info
-     * @covers \core\hub\registration::get_new_registration_fields
      */
     public function test_get_site_info_excludes_unconfirmed_fields(): void {
         $this->resetAfterTest();
@@ -255,9 +252,6 @@ final class registration_test extends \advanced_testcase {
 
     /**
      * Test that the full payload resumes once the admin confirms the pending fields.
-     *
-     * @covers \core\hub\registration::get_site_info
-     * @covers \core\hub\registration::save_site_info
      */
     public function test_get_site_info_resumes_full_payload_after_confirmation(): void {
         $this->resetAfterTest();
@@ -284,8 +278,6 @@ final class registration_test extends \advanced_testcase {
     /**
      * Test that update_cron() keeps updating registration, instead of returning early, while fields are
      * pending admin confirmation.
-     *
-     * @covers \core\hub\registration::update_cron
      */
     public function test_update_cron_continues_while_fields_pending_confirmation(): void {
         global $DB;
