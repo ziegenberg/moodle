@@ -24,7 +24,23 @@ namespace core\hub;
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers \core\hub\registration
  */
+#[\PHPUnit\Framework\Attributes\CoversMethod(registration::class, 'get_reporting_paused_reason')]
+#[\PHPUnit\Framework\Attributes\CoversMethod(registration::class, 'check_reporting_paused_notification')]
+#[\PHPUnit\Framework\Attributes\CoversMethod(registration::class, 'get_registration_page_notification')]
 final class registration_test extends \advanced_testcase {
+    /**
+     * Clear the static registration cache so each test sees the current database state.
+     *
+     * \core\hub\registration caches the registration record in a static property that is not
+     * reset between tests, so without this a record from an earlier test leaks into this one.
+     */
+    protected function setUp(): void {
+        parent::setUp();
+
+        $property = new \ReflectionProperty(\core\hub\registration::class, 'registration');
+        $property->setValue(null, null);
+    }
+
 
     /**
      * Test getting site registration information.
@@ -285,5 +301,239 @@ final class registration_test extends \advanced_testcase {
         $content = str_repeat('ab', 1048576);
         $fs->create_file_from_string($record + ['itemid' => 3, 'filename' => 'anotherfile.txt'], $content);
         $this->assertEquals($expectedsize, registration::get_filepool_usage());
+    }
+
+    /**
+     * Register the site locally so is_registered() returns true.
+     *
+     * @return int id of the inserted registration_hubs record
+     */
+    private function register_site(): int {
+        global $CFG, $DB;
+
+        // Paused reporting is only detected for publicly accessible sites.
+        $CFG->site_is_public = true;
+
+        return $DB->insert_record('registration_hubs', [
+            'token' => 'abc123',
+            'hubname' => 'Moodle.org',
+            'huburl' => HUB_MOODLEORGHUBURL,
+            'confirmed' => 1,
+            'secret' => 'secret123',
+            'timemodified' => time(),
+        ]);
+    }
+
+    /**
+     * Test get_reporting_paused_reason() for an unregistered site.
+     */
+    public function test_get_reporting_paused_reason_not_registered(): void {
+        $this->resetAfterTest();
+
+        $this->assertSame('', registration::get_reporting_paused_reason());
+    }
+
+    /**
+     * Test get_reporting_paused_reason() for a registered site reporting normally.
+     */
+    public function test_get_reporting_paused_reason_reporting_normally(): void {
+        $this->resetAfterTest();
+        $this->register_site();
+        set_config('site_regupdateversion', max(array_keys(registration::CONFIRM_NEW_FIELDS)), 'hub');
+
+        $this->assertSame('', registration::get_reporting_paused_reason());
+    }
+
+    /**
+     * Test get_reporting_paused_reason() when new registration fields need confirming.
+     */
+    public function test_get_reporting_paused_reason_new_fields(): void {
+        $this->resetAfterTest();
+        $this->register_site();
+        set_config('site_regupdateversion', 0, 'hub');
+
+        $this->assertSame(registration::REPORTING_PAUSED_NEW_FIELDS, registration::get_reporting_paused_reason());
+    }
+
+    /**
+     * Test get_reporting_paused_reason() when the registration cron task is disabled.
+     */
+    public function test_get_reporting_paused_reason_task_disabled(): void {
+        $this->resetAfterTest();
+        $this->register_site();
+        set_config('site_regupdateversion', max(array_keys(registration::CONFIRM_NEW_FIELDS)), 'hub');
+
+        $task = \core\task\manager::get_scheduled_task(\core\task\registration_cron_task::class);
+        $task->set_disabled(true);
+        \core\task\manager::configure_scheduled_task($task);
+
+        $this->assertSame(registration::REPORTING_PAUSED_TASK_DISABLED, registration::get_reporting_paused_reason());
+    }
+
+    /**
+     * Test get_reporting_paused_reason() for a site that is not publicly accessible.
+     *
+     * Such a site is deliberately not reported as paused: the registration task only sends updates when
+     * site_is_public(), so there is nothing the admin could usefully do about it.
+     */
+    public function test_get_reporting_paused_reason_not_public(): void {
+        global $CFG;
+
+        $this->resetAfterTest();
+        $this->register_site();
+        set_config('site_regupdateversion', 0, 'hub');
+        $CFG->site_is_public = false;
+
+        $this->assertSame('', registration::get_reporting_paused_reason());
+    }
+
+    /**
+     * Test that check_reporting_paused_notification() notifies admins once and does not repeat until cleared.
+     */
+    public function test_check_reporting_paused_notification(): void {
+        $this->resetAfterTest();
+        $sink = $this->redirectMessages();
+
+        $this->register_site();
+        set_config('site_regupdateversion', 0, 'hub');
+
+        // First check should send a notification to the admin(s).
+        registration::check_reporting_paused_notification();
+        $messages = $sink->get_messages();
+        $this->assertCount(1, $messages);
+        $this->assertSame('registrationreportingpaused', $messages[0]->eventtype);
+
+        // A second check while still paused for the same reason should not send another notification.
+        registration::check_reporting_paused_notification();
+        $this->assertCount(1, $sink->get_messages());
+
+        // Once reporting resumes, the flag is cleared and a fresh pause notifies again.
+        set_config('site_regupdateversion', max(array_keys(registration::CONFIRM_NEW_FIELDS)), 'hub');
+        registration::check_reporting_paused_notification();
+        $this->assertCount(1, $sink->get_messages());
+
+        set_config('site_regupdateversion', 0, 'hub');
+        registration::check_reporting_paused_notification();
+        $this->assertCount(2, $sink->get_messages());
+
+        $sink->close();
+    }
+
+    /**
+     * Test that check_reporting_paused_notification() sends the task-disabled wording, not the
+     * new-fields wording, when the registration cron task is the reason reporting has paused.
+     */
+    public function test_check_reporting_paused_notification_task_disabled(): void {
+        global $CFG;
+
+        $this->resetAfterTest();
+        $sink = $this->redirectMessages();
+
+        $this->register_site();
+        set_config('site_regupdateversion', max(array_keys(registration::CONFIRM_NEW_FIELDS)), 'hub');
+
+        $task = \core\task\manager::get_scheduled_task(\core\task\registration_cron_task::class);
+        $task->set_disabled(true);
+        \core\task\manager::configure_scheduled_task($task);
+
+        registration::check_reporting_paused_notification();
+
+        $messages = $sink->get_messages();
+        $this->assertCount(1, $messages);
+        $message = reset($messages);
+        $this->assertSame('registrationreportingpaused', $message->eventtype);
+        $expected = get_string(
+            'registrationreportingpausedtaskdisabledmessage',
+            'admin',
+            (object) ['siteurl' => $CFG->wwwroot],
+        );
+        $this->assertSame($expected, $message->fullmessage);
+        $this->assertStringNotContainsString(
+            get_string('registrationreportingpausednewfieldsmessage', 'admin', (object) ['siteurl' => $CFG->wwwroot]),
+            $message->fullmessage,
+        );
+
+        $sink->close();
+    }
+
+    /**
+     * Test get_registration_page_notification() for an unregistered, non-initial-registration site.
+     */
+    public function test_get_registration_page_notification_unregistered(): void {
+        $this->resetAfterTest();
+
+        $notification = registration::get_registration_page_notification(false, false);
+        $this->assertSame(get_string('registrationwarning', 'admin'), $notification['message']);
+        $this->assertSame(\core\output\notification::NOTIFY_ERROR, $notification['type']);
+    }
+
+    /**
+     * Test get_registration_page_notification() for an unregistered site pending its initial registration.
+     */
+    public function test_get_registration_page_notification_initial_registration(): void {
+        $this->resetAfterTest();
+
+        $notification = registration::get_registration_page_notification(false, true);
+        $this->assertSame('', $notification['message']);
+    }
+
+    /**
+     * Test get_registration_page_notification() for a registered site that has never successfully updated.
+     */
+    public function test_get_registration_page_notification_unknown_last_updated(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        $id = $this->register_site();
+        $DB->set_field('registration_hubs', 'timemodified', 0, ['id' => $id]);
+
+        $notification = registration::get_registration_page_notification(true, false);
+        $this->assertSame(get_string('pleaserefreshregistrationunknown', 'admin'), $notification['message']);
+        $this->assertSame(\core\output\notification::NOTIFY_ERROR, $notification['type']);
+    }
+
+    /**
+     * Test get_registration_page_notification() for a registered site with new fields pending confirmation.
+     */
+    public function test_get_registration_page_notification_new_fields(): void {
+        $this->resetAfterTest();
+        $this->register_site();
+        set_config('site_regupdateversion', 0, 'hub');
+
+        $notification = registration::get_registration_page_notification(true, false);
+        $this->assertSame(get_string('pleaserefreshregistrationnewdata', 'admin'), $notification['message']);
+        $this->assertSame(\core\output\notification::NOTIFY_ERROR, $notification['type']);
+    }
+
+    /**
+     * Test get_registration_page_notification() when the registration cron task is disabled.
+     */
+    public function test_get_registration_page_notification_task_disabled(): void {
+        $this->resetAfterTest();
+        $this->register_site();
+        set_config('site_regupdateversion', max(array_keys(registration::CONFIRM_NEW_FIELDS)), 'hub');
+
+        $task = \core\task\manager::get_scheduled_task(\core\task\registration_cron_task::class);
+        $task->set_disabled(true);
+        \core\task\manager::configure_scheduled_task($task);
+
+        $notification = registration::get_registration_page_notification(true, false);
+        $this->assertSame(get_string('registrationtaskdisabled', 'admin', (new \moodle_url(
+            '/admin/tool/task/scheduledtasks.php'
+        ))->out(false)), $notification['message']);
+        $this->assertSame(\core\output\notification::NOTIFY_WARNING, $notification['type']);
+    }
+
+    /**
+     * Test get_registration_page_notification() for a registered site reporting normally.
+     */
+    public function test_get_registration_page_notification_reporting_normally(): void {
+        $this->resetAfterTest();
+        $this->register_site();
+        set_config('site_regupdateversion', max(array_keys(registration::CONFIRM_NEW_FIELDS)), 'hub');
+
+        $notification = registration::get_registration_page_notification(true, false);
+        $this->assertSame(\core\output\notification::NOTIFY_INFO, $notification['type']);
+        $this->assertNotSame('', $notification['message']);
     }
 }
