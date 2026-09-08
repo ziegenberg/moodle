@@ -50,8 +50,9 @@ class registration {
         'geolocation', 'street', 'organisationtype', 'commnewsfirstname', 'commnewslastname'];
 
     /** @var array List of new FORM_FIELDS or siteinfo fields added indexed by the version when they were added.
-     * If site was already registered, admin will be promted to confirm new registration data manually. Until registration is manually confirmed,
-     * the scheduled task updating registration will be paused.
+     * If site was already registered, admin will be promted to confirm new registration data manually. Until
+     * registration is manually confirmed, the scheduled task updating registration will continue to run but will
+     * omit these fields from the payload, sending only the previously confirmed field set.
      * Keys of this array are not important as long as they increment, use current date to avoid confusions.
      */
     const CONFIRM_NEW_FIELDS = [
@@ -183,9 +184,12 @@ class registration {
      * Calculates and prepares site information to send to the sites directory as a part of registration.
      *
      * @param array $defaults default values for inputs in the registration form (if site was never registered before)
+     * @param array $excludefields siteinfo keys to omit from the payload, typically the result of
+     *        {@see self::get_new_registration_fields()}, so the payload only contains data the admin has
+     *        already confirmed sending
      * @return array site info
      */
-    public static function get_site_info($defaults = []) {
+    public static function get_site_info($defaults = [], array $excludefields = []) {
         global $CFG, $DB;
         require_once($CFG->libdir . '/badgeslib.php');
         require_once($CFG->dirroot . "/course/lib.php");
@@ -257,6 +261,10 @@ class registration {
         $siteinfo['analyticsactionsnotuseful'] = \core_analytics\stats::actions_not_useful();
 
         // IMPORTANT: any new fields in siteinfo have to be added to the constant CONFIRM_NEW_FIELDS.
+
+        if ($excludefields) {
+            $siteinfo = array_diff_key($siteinfo, array_flip($excludefields));
+        }
 
         return $siteinfo;
     }
@@ -375,6 +383,10 @@ class registration {
     /**
      * Updates site registration via cron
      *
+     * If there are registration fields awaiting admin confirmation, the update still proceeds but the
+     * payload is filtered down to the previously confirmed field set so already-agreed data keeps flowing
+     * while the new fields remain withheld until the admin confirms them.
+     *
      * @throws moodle_exception
      */
     public static function update_cron() {
@@ -385,12 +397,12 @@ class registration {
             return;
         }
 
-        if (self::get_new_registration_fields()) {
+        $fieldsneedconfirm = self::get_new_registration_fields();
+        if ($fieldsneedconfirm) {
             mtrace(get_string('pleaserefreshregistrationnewdata', 'admin'));
-            return;
         }
 
-        $siteinfo = self::get_site_info();
+        $siteinfo = self::get_site_info([], $fieldsneedconfirm);
         api::update_registration($siteinfo);
         $DB->update_record('registration_hubs', ['id' => $registration->id, 'timemodified' => time()]);
         mtrace(get_string('siteregistrationupdated', 'hub'));
@@ -669,7 +681,8 @@ class registration {
     /**
      * Returns the list of the fields in the registration form that were added since registration or last manual update
      *
-     * If this list is not empty the scheduled task will be paused and admin will be reminded to update registration manually.
+     * If this list is not empty, the scheduled task will omit these fields from the registration payload and the
+     * admin will be reminded to update registration manually to confirm and resume sending them.
      *
      * @return array
      */

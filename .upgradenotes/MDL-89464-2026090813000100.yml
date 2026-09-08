@@ -1,0 +1,12 @@
+issueNumber: MDL-89464
+notes:
+  core_hub:
+    - message: >-
+        \core\hub\registration::get_site_info() accepts a new optional
+        $excludefields parameter listing site info keys to omit from the
+        payload. \core\hub\registration::update_cron() no longer returns
+        early while new registration fields await administrator
+        confirmation; it now sends the previously confirmed field set,
+        omitting only the fields returned by get_new_registration_fields(),
+        until the administrator confirms them on the registration form.
+      type: changed
