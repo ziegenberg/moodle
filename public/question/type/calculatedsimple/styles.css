@@ -3,10 +3,6 @@
     display: inline;
 }
 
-.que.calculatedsimple .answer input[type="text"] {
-    width: 30%;
-}
-
 /* Editing form. */
 body#page-question-type-calculatedsimple div[id^=fgroup_id_][id*=answeroptions_] {
     background: #eee;
