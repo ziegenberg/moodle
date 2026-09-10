@@ -149,6 +149,31 @@ final class ip_utils {
     }
 
     /**
+     * Syntax validation for partial IPv4 addresses.
+     *
+     * A partial IPv4 address matches any full IPv4 address starting with the supplied octets
+     * (eg. 192.168 matches 192.168.10.1). Between one and three octets are allowed, as the full
+     * four octet form is validated by is_ipv4_address() or is_ip_address(). An optional trailing
+     * dot may also be supplied (eg. 192.168.).
+     *
+     * @param string $address the address to check.
+     * @return bool true if the string is a valid partial IPv4 address, false otherwise.
+     */
+    public static function is_ipv4_partial_address($address) {
+        if (!is_string($address)) {
+            return false;
+        }
+        // Match between one and three octets, with an optional trailing dot (eg. 192, 192.168 or 192.168.).
+        if (!preg_match('#^(\d{1,3})(?:\.(\d{1,3}))?(?:\.(\d{1,3}))?\.?$#', $address, $match)) {
+            return false;
+        }
+        // Rebuild the address with any missing octets zeroed (eg. 192.168 becomes 192.168.0.0), so that
+        // filter_var, via is_ipv4_address(), can verify each supplied octet is in the range 0-255.
+        $octets = array_values(array_filter([$match[1] ?? '', $match[2] ?? '', $match[3] ?? ''], fn($octet) => $octet !== ''));
+        return self::is_ipv4_address(implode('.', array_pad($octets, 4, '0')));
+    }
+
+    /**
      * Syntax validation for IPv6 addresses.
      * This function does not check whether the address is assigned, only its syntactical correctness.
      *
@@ -184,6 +209,23 @@ final class ip_utils {
             && strlen($rangeend) <= 4 && strlen($rangestart) <= 4 && hexdec($rangeend) >= hexdec($rangestart);
         }
         return false;
+    }
+
+    /**
+     * Syntax validation for partial IPv6 addresses.
+     *
+     * A partial IPv6 address consists of between two and seven leading groups (eg. fe80:1), and matches
+     * any full IPv6 address beginning with those groups. The full eight group form, and all forms making
+     * use of the :: compression, are validated by is_ipv6_address() or is_ip_address().
+     *
+     * @param string $address the address to check.
+     * @return bool true if the string is a valid partial IPv6 address, false otherwise.
+     */
+    public static function is_ipv6_partial_address($address) {
+        if (!is_string($address)) {
+            return false;
+        }
+        return (bool) preg_match('#^[0-9a-f]{1,4}(:[0-9a-f]{1,4}){1,6}$#i', $address);
     }
 
     /**
