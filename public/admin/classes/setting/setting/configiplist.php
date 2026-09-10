@@ -16,6 +16,8 @@
 
 namespace core_admin\setting\setting;
 
+use core\ip_utils;
+
 /**
  * Used to validate a textarea used for ip addresses
  *
@@ -35,13 +37,13 @@ class configiplist extends \core_admin\setting\setting\configtextarea {
      */
     #[\Override]
     public function validate($data) {
-        if (!empty($data)) {
-            $lines = explode("\n", $data);
-        } else {
+        if (empty($data)) {
             return true;
         }
-        $result = true;
+
+        $lines = explode("\n", $data);
         $badips = [];
+
         foreach ($lines as $line) {
             $tokens = explode('#', $line);
             $ip = trim($tokens[0]);
@@ -49,22 +51,43 @@ class configiplist extends \core_admin\setting\setting\configtextarea {
                 continue;
             }
 
-            // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedIf
-            if (
-                preg_match('#^(\d{1,3})(\.\d{1,3}){0,3}$#', $ip, $match) ||
-                preg_match('#^(\d{1,3})(\.\d{1,3}){0,3}(\/\d{1,2})$#', $ip, $match) ||
-                preg_match('#^(\d{1,3})(\.\d{1,3}){3}(-\d{1,3})$#', $ip, $match)
-            ) {
-            } else {
-                $result = false;
+            if (!self::is_valid_iplist_entry($ip)) {
                 $badips[] = $ip;
             }
         }
-        if ($result) {
-            return true;
-        } else {
+
+        if (count($badips) !== 0) {
             return get_string('validateiperror', 'admin', join(', ', $badips));
         }
+
+        return true;
+    }
+
+    /**
+     * Check whether a single entry is a valid IP address, address range or partial address.
+     *
+     * Validation is delegated to the well tested ip_utils where possible. In addition, the
+     * partial-address formats understood by the IP blocker's subnet matching are supported
+     * (eg. 192.168 or fe80:1).
+     *
+     * @param string $entry The entry to validate.
+     * @return bool
+     */
+    private static function is_valid_iplist_entry(string $entry): bool {
+        // Full IPv4 and IPv6 addresses.
+        if (ip_utils::is_ip_address($entry)) {
+            return true;
+        }
+        // Full IPv4 and IPv6 address ranges, using both CIDR and last-group range notation.
+        // Eg. 231.54.211.0/20, 231.3.56.10-20, fe80::/64 and fe80::1111-bbbb.
+        if (ip_utils::is_ipv4_range($entry) || ip_utils::is_ipv6_range($entry)) {
+            return true;
+        }
+        // Partial IPv4 and IPv6 addresses.
+        if (ip_utils::is_ipv4_partial_address($entry) || ip_utils::is_ipv6_partial_address($entry)) {
+            return true;
+        }
+        return false;
     }
 }
 
