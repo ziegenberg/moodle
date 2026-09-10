@@ -1,0 +1,14 @@
+issueNumber: MDL-81461
+notes:
+  core:
+    - message: >
+        Added `\core\ip_utils::is_ipv4_partial_address()` and
+        `\core\ip_utils::is_ipv6_partial_address()` methods to validate the
+        partial IP address formats understood by the IP blocker's subnet
+        matching (eg. `192.168`, `192.168.` or `fe80:1`). A partial IPv4
+        address may contain between one and three octets, with an optional
+        trailing dot, and each octet must be in the range 0-255. A partial
+        IPv6 address must contain between two and seven leading groups. These
+        complement the existing `is_ip_address()`, `is_ipv4_range()` and
+        `is_ipv6_range()` methods.
+      type: improved

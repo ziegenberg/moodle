@@ -332,6 +332,110 @@ final class ip_utils_test extends \basic_testcase {
     }
 
     /**
+     * Test for \core\ip_utils::is_ipv4_partial_address().
+     *
+     * @param string $address the address to validate.
+     * @param bool $expected the expected result.
+     * @dataProvider ipv4_partial_address_data_provider
+     */
+    public function test_is_ipv4_partial_address($address, $expected): void {
+        $this->assertEquals($expected, \core\ip_utils::is_ipv4_partial_address($address));
+    }
+
+    /**
+     * Data provider for test_is_ipv4_partial_address().
+     *
+     * @return array
+     */
+    public static function ipv4_partial_address_data_provider(): array {
+        return [
+            // One to three octets, with an optional trailing dot and/or CIDR mask.
+            'Single octet' => ["192", true],
+            'Single octet, trailing dot' => ["192.", true],
+            'Two octets' => ["192.168", true],
+            'Two octets, trailing dot' => ["192.168.", true],
+            'Three octets' => ["192.168.10", true],
+            'Three zero octets' => ["0.0.0", true],
+            'Two octets including zero' => ["10.0", true],
+            'Three octets, trailing dot' => ["255.255.255.", true],
+            // Full addresses and ranges are not partial addresses.
+            'Full IPv4 address' => ["192.168.10.1", false],
+            'Full IPv4 address, trailing dot' => ["192.168.10.1.", false],
+            'Full IPv4 address with CIDR mask' => ["192.168.10.1/24", false],
+            'Full IPv4 address range' => ["192.168.10.1-20", false],
+            'Full IPv4 address range with full end' => ["192.168.10.1-192.168.10.5", false],
+            // Out of range octets.
+            'Out of range octets' => ["999.999.999", false],
+            'First octet out of range' => ["256.1.1", false],
+            'Second octet out of range' => ["192.256", false],
+            'Out of range octet with trailing dot' => ["192.999.", false],
+            // Invalid masks, formatting and other input.
+            'Partial address with /8 mask' => ["192/8", false],
+            'Partial address with /16 mask' => ["192.168/16", false],
+            'Mask larger than 32' => ["192.168/33", false],
+            'Empty mask' => ["192.168/", false],
+            'Too many octets' => ["1.2.3.4.5", false],
+            'Double dot' => ["192..", false],
+            'Non-numeric octets' => ["a.b.c", false],
+            'Range notation on partial address' => ["192.168.10-a", false],
+            'Leading whitespace' => [" 192.168", false],
+            'Trailing whitespace' => ["192.168 ", false],
+            'Full IPv6 address' => ["fe80::1", false],
+            'Partial IPv6 address' => ["fe80:1", false],
+            'Hostname' => ["localhost", false],
+            'Empty string' => ["", false],
+            'null' => [null, false],
+        ];
+    }
+
+    /**
+     * Test for \core\ip_utils::is_ipv6_partial_address().
+     *
+     * @param string $address the address to validate.
+     * @param bool $expected the expected result.
+     * @dataProvider ipv6_partial_address_data_provider
+     */
+    public function test_is_ipv6_partial_address($address, $expected): void {
+        $this->assertEquals($expected, \core\ip_utils::is_ipv6_partial_address($address));
+    }
+
+    /**
+     * Data provider for test_is_ipv6_partial_address().
+     *
+     * @return array
+     */
+    public static function ipv6_partial_address_data_provider(): array {
+        return [
+            // Between two and seven leading groups.
+            'Two groups' => ["fe80:1", true],
+            'Three groups' => ["fe80:1:2", true],
+            'Seven groups' => ["fe80:1:2:3:4:5:6", true],
+            'Uppercase groups' => ["FE80:1", true],
+            'Groups of four hex digits' => ["fe80:1:ffff", true],
+            'Two zero groups' => ["0:0", true],
+            // Full addresses, :: compressed forms and ranges are not partial addresses.
+            'Compressed IPv6 address' => ["fe80::1", false],
+            'Compressed IPv6 address, zeros only' => ["fe80::", false],
+            'Single group with trailing colon' => ["fe80:", false],
+            'Full eight group address' => ["0:0:0:0:0:0:0:1", false],
+            'Eight groups' => ["fe80:1:2:3:4:5:6:7", false],
+            'Nine groups' => ["fe80:1:2:3:4:5:6:7:8", false],
+            'CIDR range' => ["fe80::/64", false],
+            'Range notation' => ["fe80:1-2", false],
+            // Non-hex groups and other input.
+            'Non-hex group' => ["fe80:gggg", false],
+            'Non-hex group in compressed address' => ["fe80::1:gggg", false],
+            'Trailing whitespace' => ["fe80:1 ", false],
+            'Leading whitespace' => [" fe80:1", false],
+            'Trailing colon' => ["fe80:1:", false],
+            'IPv4 address' => ["192.168", false],
+            'Single group without colon' => ["fe80", false],
+            'Empty string' => ["", false],
+            'null' => [null, false],
+        ];
+    }
+
+    /**
      * Test checking domains against a list of allowed domains.
      *
      * @param  bool $expected Expected result
