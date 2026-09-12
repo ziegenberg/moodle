@@ -75,6 +75,23 @@ final class moodlelib_test extends \advanced_testcase {
         $this->assertSame('1:1:0:0:0:0:0:0', cleanremoteaddr('01:1::', false));
         $this->assertSame('10:0:0:0:0:0:0:10', cleanremoteaddr('10::10', false));
         $this->assertSame('::ffff:c0a8:11', cleanremoteaddr('::ffff:192.168.1.1', true));
+
+        // Addresses ending in '::', including when '::' stands for only one or two groups.
+        $this->assertSame('fe80:0:0:0:0:0:0:0', cleanremoteaddr('fe80::', false));
+        $this->assertSame('2001:db8:0:0:0:0:0:0', cleanremoteaddr('2001:db8::', false));
+        $this->assertSame('0:0:0:0:0:0:0:0', cleanremoteaddr('::', false));
+        $this->assertSame('2001:db8:0:0:0:0:0:0', cleanremoteaddr('2001:db8:0::', false));
+        $this->assertSame('1:2:3:4:5:6:0:0', cleanremoteaddr('1:2:3:4:5:6::', false));
+        $this->assertSame('1:2:3:4:5:6:7:0', cleanremoteaddr('1:2:3:4:5:6:7::', false));
+        $this->assertSame('0:0:0:0:0:0:0:0', cleanremoteaddr('0:0:0:0:0:0:0::', false));
+        $this->assertSame('0:0:0:0:0:0:0:1', cleanremoteaddr('::1', false));
+        $this->assertSame('0:1:2:3:4:5:6:7', cleanremoteaddr('::1:2:3:4:5:6:7', false));
+
+        // Malformed IPv6, including strings with more than one '::' marker, must be rejected.
+        $this->assertNull(cleanremoteaddr(':::', false));
+        $this->assertNull(cleanremoteaddr('a:b::c::', false));
+        $this->assertNull(cleanremoteaddr('1::2::3', false));
+        $this->assertNull(cleanremoteaddr('1:2:3:4:5:6:7:8::', false));
     }
 
     public function test_address_in_subnet(): void {
@@ -163,6 +180,23 @@ final class moodlelib_test extends \advanced_testcase {
         $this->assertTrue(address_in_subnet('baba:baba::bab', 'baba:baba'));
         $this->assertTrue(address_in_subnet('baba:baba::bab', 'baba:'));
         $this->assertFalse(address_in_subnet('bab:baba::bab', 'baba:'));
+
+        // IPv6 addresses ending in '::' must match (and be matched by) their exact address, just like
+        // their uncompressed and otherwise compressed equivalents (MDL-89786).
+        $this->assertTrue(address_in_subnet('fe80::', 'fe80::'));
+        $this->assertTrue(address_in_subnet('fe80::', 'fe80:0:0:0:0:0:0:0'));
+        $this->assertTrue(address_in_subnet('fe80:0:0:0:0:0:0:0', 'fe80::'));
+        $this->assertTrue(address_in_subnet('2001:db8::', '2001:db8::'));
+        $this->assertTrue(address_in_subnet('::', '::'));
+        $this->assertTrue(address_in_subnet('1:2:3:4:5:6:7::', '1:2:3:4:5:6:7::'));
+        // A mask can still be used to cover a whole subnet, including one written in '::' notation.
+        $this->assertTrue(address_in_subnet('fe80::', 'fe80::/64'));
+        $this->assertTrue(address_in_subnet('fe80::1', 'fe80::/64'));
+        // An address ending in '::' is a single host address, not a network prefix, so it must not
+        // match other hosts in the same subnet (use an explicit mask, e.g. 'fe80::/64', for that).
+        $this->assertFalse(address_in_subnet('fe80::1', 'fe80::'));
+        $this->assertFalse(address_in_subnet('fe80::1', 'fe80:0:0:0:0:0:0:0'));
+        $this->assertFalse(address_in_subnet('::1', '::'));
 
         // Multiple subnets.
         $this->assertTrue(address_in_subnet('123.121.234.12', '::1/64, 124., 123.121.234.10-30'));
