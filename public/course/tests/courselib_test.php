@@ -2109,6 +2109,41 @@ final class courselib_test extends advanced_testcase {
     }
 
     /**
+     * Tests that the before_course_deleted hook is dispatched once when a course
+     * is deleted asynchronously.
+     * @covers ::delete_course
+     */
+    public function test_delete_course_async_dispatches_before_course_deleted_once(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        set_config('enablecourseasyncdeletion', 1, 'moodlecourse');
+        $course = $this->getDataGenerator()->create_course();
+
+        $hookcount = 0;
+        $this->redirectHook(
+            \core_course\hook\before_course_deleted::class,
+            function (\core_course\hook\before_course_deleted $hook) use (&$hookcount, $course): void {
+                $hookcount++;
+                $this->assertSame($course->id, $hook->course->id);
+            }
+        );
+
+        // Queues the deletion: the hook runs now.
+        delete_course($course, false);
+        $this->assertSame(1, $hookcount);
+
+        // Cron performs the deletion: the hook must not run again.
+        ob_start();
+        $this->run_all_adhoc_tasks();
+        ob_end_clean();
+
+        $this->assertFalse($DB->record_exists('course', ['id' => $course->id]));
+        $this->assertSame(1, $hookcount);
+    }
+
+    /**
      * Test deleting a course synchronously
      * @covers ::delete_course
      */
