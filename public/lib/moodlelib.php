@@ -8419,7 +8419,6 @@ function address_in_subnet($addr, $subnetstr, $checkallzeros = false) {
     }
 
     $subnets = explode(',', $subnetstr);
-    $found = false;
 
     $addr = cleanremoteaddr($addr, false); // Normalise.
     if ($addr === null) {
@@ -8568,20 +8567,25 @@ function address_in_subnet($addr, $subnetstr, $checkallzeros = false) {
                 if (!$ipv6) {
                     continue;
                 }
-                $parts = explode(':', $subnet);
-                $count = count($parts);
-                if ($parts[$count-1] === '') {
-                    unset($parts[$count-1]); // Trim trailing :'s.
-                    $count--;
-                    $subnet = implode('.', $parts);
-                }
-                $isip = cleanremoteaddr($subnet, false); // Normalise.
+                // The subnet may already be a complete (and perhaps compressed) IPv6 address, e.g.
+                // 'fe80::' or '::'. Normalise it as-is so that such entries match the exact same
+                // address, consistently with their uncompressed (e.g. 'fe80:0:0:0:0:0:0:0') and
+                // otherwise compressed (e.g. '::1') equivalents.
+                $isip = cleanremoteaddr($subnet, false);
                 if ($isip !== null) {
                     if ($isip === $addr) {
                         return true;
                     }
                     continue;
-                } else if ($count > 8) {
+                }
+                $parts = explode(':', $subnet);
+                $count = count($parts);
+                if ($parts[$count-1] === '') {
+                    unset($parts[$count-1]); // Trim trailing :'s.
+                    $count--;
+                    $subnet = implode(':', $parts);
+                }
+                if ($count > 8) {
                     continue;
                 }
                 $zeros = array_fill(0, 8-$count, '0');
@@ -8776,9 +8780,8 @@ function cleanremoteaddr($addr, $compress=false) {
     if (strpos($addr, ':') !== false) {
         // Can be only IPv6.
         $parts = explode(':', $addr);
-        $count = count($parts);
 
-        if (strpos($parts[$count-1], '.') !== false) {
+        if (strpos($parts[count($parts) - 1], '.') !== false) {
             // Legacy ipv4 notation.
             $last = array_pop($parts);
             $ipv4 = cleanremoteaddr($last, true);
@@ -8788,26 +8791,31 @@ function cleanremoteaddr($addr, $compress=false) {
             $bits = explode('.', $ipv4);
             $parts[] = dechex($bits[0]).dechex($bits[1]);
             $parts[] = dechex($bits[2]).dechex($bits[3]);
-            $count = count($parts);
             $addr = implode(':', $parts);
         }
 
-        if ($count < 3 or $count > 8) {
-            return null; // Severly malformed.
-        }
-
-        if ($count != 8) {
-            if (strpos($addr, '::') === false) {
-                return null; // Malformed.
+        if (strpos($addr, '::') !== false) {
+            // Expand the '::' compression (RFC 4291) into the required number of zero groups.
+            // It must be the only compression marker and must stand for at least one zero group,
+            // so at most seven real groups are allowed on either side of it.
+            if (substr_count($addr, '::') != 1) {
+                return null; // Malformed - more than one '::'.
             }
-            // Uncompress.
-            $insertat = array_search('', $parts, true);
-            $missing = array_fill(0, 1 + 8 - $count, '0');
-            array_splice($parts, $insertat, 1, $missing);
-            foreach ($parts as $key => $part) {
-                if ($part === '') {
-                    $parts[$key] = '0';
-                }
+            [$head, $tail] = explode('::', $addr, 2);
+            $headparts = ($head === '') ? [] : explode(':', $head);
+            $tailparts = ($tail === '') ? [] : explode(':', $tail);
+            if (in_array('', $headparts, true) || in_array('', $tailparts, true)) {
+                return null; // Malformed - empty group next to '::'.
+            }
+            if (count($headparts) + count($tailparts) > 7) {
+                return null; // Malformed - '::' must stand for at least one zero group.
+            }
+            $parts = array_merge($headparts, array_fill(0, 8 - count($headparts) - count($tailparts), '0'), $tailparts);
+        } else {
+            // No compression - all eight groups must be present.
+            $parts = explode(':', $addr);
+            if (count($parts) != 8) {
+                return null; // Malformed.
             }
         }
 
