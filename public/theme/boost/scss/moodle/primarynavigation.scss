@@ -18,12 +18,6 @@
         height: $navbar-height;
     }
 
-    // The navbar sits on $body-bg rather than the page background the design system's nav-pill was
-    // drawn against, where --mds-text-subtle reads as washed out. Match the navbar links instead.
-    .mds-nav-pill {
-        color: $gray-900;
-    }
-
     // The "More" toggle keeps Bootstrap's .dropdown-toggle class (for the caret and dropdown JS),
     // which makes it match core.scss's `a.dropdown-toggle:focus`. That rule's box-shadow would
     // stack with the design system's own focus ring, and its outline: 0 outweighs

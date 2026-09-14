@@ -46932,15 +46932,41 @@ div.editor_atto_toolbar button .icon {
   padding: 0;
   border: 0;
 }
-.dropdownmoremenu > .dropdown-menu .dropdown-submenu > .dropdown-menu .dropdown-item:not(.active) {
-  background-color: #f8f9fa;
+.dropdownmoremenu > .dropdown-menu .dropdown-submenu > .dropdown-menu .dropdown-item {
+  background-color: var(--bs-gray-100);
 }
-.dropdownmoremenu > .dropdown-menu .dropdown-submenu > .dropdown-menu .dropdown-item:not(.active):hover, .dropdownmoremenu > .dropdown-menu .dropdown-submenu > .dropdown-menu .dropdown-item:not(.active):focus {
+.dropdownmoremenu > .dropdown-menu .dropdown-submenu > .dropdown-menu .dropdown-item:hover, .dropdownmoremenu > .dropdown-menu .dropdown-submenu > .dropdown-menu .dropdown-item:focus {
   color: #ffffff;
   background-color: #0f6cbf;
 }
 .dropdownmoremenu > .dropdown-menu .dropdown-submenu > .dropdown-menu .dropdown-divider {
   display: none;
+}
+
+.more-nav .dropdown-item[aria-current=page],
+.more-nav .dropdown-item.active {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background-color: transparent;
+  color: var(--mds-text-default);
+}
+.more-nav .dropdown-item[aria-current=page]:focus-within, .more-nav .dropdown-item[aria-current=page]:hover,
+.more-nav .dropdown-item.active:focus-within,
+.more-nav .dropdown-item.active:hover {
+  background-color: var(--bs-dropdown-link-active-bg);
+  color: #ffffff;
+}
+.more-nav .dropdown-item[aria-current=page]::before,
+.more-nav .dropdown-item.active::before {
+  font: var(--fa-font-solid);
+  content: "\f00c";
+  position: absolute;
+  left: 0.4rem;
+  font-size: 0.7rem;
+}
+.more-nav .dropdown-menu:has(.dropdown-item[aria-current=page], .dropdown-item.active) .dropdown-item {
+  padding-left: 1.5rem;
 }
 
 .primary-navigation .navigation {
@@ -46957,9 +46983,6 @@ div.editor_atto_toolbar button .icon {
 }
 .primary-navigation .navigation.primarynav-navbar .nav-item {
   height: 60px;
-}
-.primary-navigation .navigation.primarynav-navbar .mds-nav-pill {
-  color: #1d2125;
 }
 .primary-navigation .navigation.primarynav-navbar .mds-nav-pill.dropdown-toggle:focus {
   box-shadow: none;
