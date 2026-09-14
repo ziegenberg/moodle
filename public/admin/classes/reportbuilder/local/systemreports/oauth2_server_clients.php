@@ -180,7 +180,7 @@ class oauth2_server_clients extends system_report {
 
                 $clientstatus = $isactive
                     ? get_string('oauth2server_statusactive', 'admin')
-                    : get_string('oauth2server_statusrevoked', 'admin');
+                    : get_string('oauth2server_statusdisabled', 'admin');
 
                 // Set the badge type based on status.
                 $badgetype = $isactive ? 'success' : 'danger';
@@ -244,8 +244,18 @@ class oauth2_server_clients extends system_report {
 
                 $actions[] = \html_writer::link($editurl, get_string('edit', 'moodle'));
 
-                // Display the relevant actions when the client status is revoked.
-                if ((int) $row->status === client_entity::STATUS_REVOKED) {
+                if ($row->isconfidential) {
+                    // Manage secrets link.
+                    $editurl = \core\router\util::get_path_for_callable(
+                        [\core_admin\route\controller\oauth2\server\client_management::class, 'manage_client_secrets'],
+                        ['client' => $row->id],
+                    );
+
+                    $actions[] = \html_writer::link($editurl, get_string('oauth2server_managesecrets', 'admin'));
+                }
+
+                // Display the relevant actions when the client is disabled.
+                if ((int) $row->status === client_entity::STATUS_DISABLED) {
                     // Enable link.
                     $actions[] = \html_writer::tag(
                         'button',
@@ -273,23 +283,13 @@ class oauth2_server_clients extends system_report {
 
                 // Display the relevant actions when the client status is active.
                 if ((int) $row->status === client_entity::STATUS_ACTIVE) {
-                    if ($row->isconfidential) {
-                        // Manage secrets link.
-                        $editurl = \core\router\util::get_path_for_callable(
-                            [\core_admin\route\controller\oauth2\server\client_management::class, 'manage_client_secrets'],
-                            ['client' => $row->id],
-                        );
-
-                        $actions[] = \html_writer::link($editurl, get_string('oauth2server_managesecrets', 'admin'));
-                    }
-
-                    // Revoke link.
+                    // Disabled link.
                     $actions[] = \html_writer::tag(
                         'button',
-                        get_string('oauth2server_clientrevoke', 'admin'),
+                        get_string('disable', 'core'),
                         [
                             'class' => 'btn btn-link text-danger p-0',
-                            'data-action' => 'client-revoke',
+                            'data-action' => 'client-disable',
                             'data-id' => $row->id,
                             'data-name' => $row->name,
                         ],
@@ -339,7 +339,7 @@ class oauth2_server_clients extends system_report {
             ->add_joins($this->get_joins())
             ->set_options([
                 client_entity::STATUS_ACTIVE => get_string('oauth2server_statusactive', 'admin'),
-                client_entity::STATUS_REVOKED => get_string('oauth2server_statusrevoked', 'admin'),
+                client_entity::STATUS_DISABLED => get_string('disabled', 'admin'),
             ]));
     }
 }
