@@ -1888,37 +1888,6 @@ function xmldb_main_upgrade($oldversion) {
         upgrade_main_savepoint(true, 2026052500.03);
     }
 
-    if ($oldversion < 2026060500.01) {
-        [$informatsql, $params] = $DB->get_in_or_equal(['weeks', 'topics'], SQL_PARAMS_NAMED);
-
-        $insert = <<<EOF
-        INSERT INTO {course_format_options} (
-            courseid,
-            format,
-            sectionid,
-            name,
-            value
-        ) SELECT
-            c.id as courseid,
-            c.format AS format,
-            0 AS sectionid,
-            :settingname1 AS name,
-            0 AS value
-            FROM {course} c
-            LEFT JOIN {course_format_options} cfo
-                ON cfo.courseid = c.id
-                AND cfo.name = :settingname2
-            WHERE cfo.id IS NULL AND c.format $informatsql
-        EOF;
-
-        $params += [
-            'settingname1' => \core_courseformat\local\linearnavigationsettings::SETTING_ENABLE_LINEAR_NAV,
-            'settingname2' => \core_courseformat\local\linearnavigationsettings::SETTING_ENABLE_LINEAR_NAV,
-        ];
-        $DB->execute($insert, $params);
-        upgrade_main_savepoint(true, 2026060500.01);
-    }
-
     if ($oldversion < 2026061600.01) {
         // Define field deletioninprogress to be added to course.
         $table = new xmldb_table('course');
@@ -2349,6 +2318,43 @@ function xmldb_main_upgrade($oldversion) {
 
         // Main savepoint reached.
         upgrade_main_savepoint(true, 2026091400.00);
+    }
+
+    if ($oldversion < 2026091400.01) {
+        // Step 2026060500.01 inserted an enablelinearnav row for every course using the topics or
+        // weeks format. That step has since been removed, but a site that already ran it before the
+        // removal landed may still hold those rows, so clean them up here.
+        [$informatsql, $params] = $DB->get_in_or_equal(['weeks', 'topics'], SQL_PARAMS_NAMED);
+        $params['name'] = \core_courseformat\local\linearnavigationsettings::SETTING_ENABLE_LINEAR_NAV;
+
+        // Delete in batches keyed on id, rather than a single delete, so that a large
+        // course_format_options table is not held under a single lock-heavy full table scan.
+        $batchsize = 500;
+        $lastid = 0;
+        do {
+            $params['lastid'] = $lastid;
+            $rows = $DB->get_records_sql(
+                "SELECT id
+                   FROM {course_format_options}
+                  WHERE id > :lastid
+                        AND name = :name
+                        AND format $informatsql
+               ORDER BY id",
+                $params,
+                0,
+                $batchsize,
+            );
+            $recordcount = count($rows);
+            if ($recordcount > 0) {
+                $ids = array_keys($rows);
+                $DB->delete_records_list('course_format_options', 'id', $ids);
+                // Reset timeout after each batch to avoid timeouts on large sites.
+                upgrade_set_timeout();
+                $lastid = end($ids);
+            }
+        } while ($recordcount === $batchsize);
+
+        upgrade_main_savepoint(true, 2026091400.01);
     }
 
     return true;
