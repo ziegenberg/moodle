@@ -1141,13 +1141,13 @@ class core_admin_renderer extends plugin_renderer_base {
     /**
      * Display services and support content.
      *
-     * @deprecated Since Moodle 5.3. The services and support banner has been replaced by the Certified Moodle Partners
+     * @deprecated Since Moodle 5.3. The services and support banner has been replaced by the Moodle Services
      * call to action card on the admin notifications page. $CFG->showservicesandsupportcontent now only controls the
      * "Services and support" link in the help popover, see core_renderer::services_support_link().
      */
     #[\core\attribute\deprecated(
         since: '5.3',
-        reason: 'Replaced by the Certified Moodle Partners call to action card.',
+        reason: 'Replaced by the Moodle Services call to action card.',
         mdl: 'MDL-89290',
     )]
     protected function services_and_support_content(bool $showservicesandsupport): string {

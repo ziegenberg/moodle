@@ -34223,7 +34223,7 @@ img.icon {
 }
 .admin-notification-ctas .admin-notification-cta .admin-notification-cta-ticks li {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--mds-spacing-xxs, 0.25rem);
 }
 .admin-notification-ctas .admin-notification-cta .admin-notification-cta-ticks .admin-notification-cta-tick {
