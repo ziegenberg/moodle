@@ -108,13 +108,13 @@ class oauth2_server_client_secrets extends system_report {
             ->set_is_sortable(true)
             ->add_callback(function ($value, \stdClass $row) {
                 $isexpired = $row->expirytime <= time();
-                $isclientrevoked = (int) $row->clientstatus === client_entity::STATUS_REVOKED;
+                $isclientdisabled = (int) $row->clientstatus === client_entity::STATUS_DISABLED;
 
                 if ($isexpired) { // Secret is expired.
                     $statusstring = get_string('oauth2server_statusexpired', 'admin');
                     $badgetype = 'danger';
                 } else {
-                    if ($isclientrevoked) { // Secret is inactive because the client is revoked.
+                    if ($isclientdisabled) { // Secret is inactive because the client is disabled.
                         $statusstring = get_string('oauth2server_statusinactive', 'admin');
                         $badgetype = 'warning';
                     } else { // Secret is active.
@@ -158,7 +158,7 @@ class oauth2_server_client_secrets extends system_report {
                 // Revoke link.
                 return \html_writer::tag(
                     'button',
-                    get_string('oauth2server_clientrevoke', 'admin'),
+                    get_string('oauth2server_revoke', 'admin'),
                     [
                         'class' => 'btn btn-link text-danger p-0',
                         'data-action' => 'client-secret-revoke',

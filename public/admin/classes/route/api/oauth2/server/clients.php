@@ -31,7 +31,7 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class clients {
     /**
-     * Revoke a client.
+     * Disable a client.
      *
      * @param ServerRequestInterface $request The request object
      * @param ResponseInterface $response The response object
@@ -39,7 +39,7 @@ class clients {
      * @return payload_response The response object with the success status
      */
     #[route(
-        path: '/oauth2/server/clients/{client}/revoke',
+        path: '/oauth2/server/clients/{client}/disable',
         method: ['POST'],
         pathtypes: [
             new \core_admin\route\parameters\oauth2\server\path_client(),
@@ -49,7 +49,7 @@ class clients {
             autologinguest: false,
         ),
     )]
-    public function revoke_client(
+    public function disable_client(
         ServerRequestInterface $request,
         ResponseInterface $response,
         \core\oauth2\server\entity\client_entity $cliententity,
@@ -57,7 +57,7 @@ class clients {
         require_capability('moodle/site:manageoauth2clients', \core\context\system::instance());
 
         $manager = \core\di::get(\core\oauth2\server\client_manager::class);
-        $manager->revoke_client($cliententity->get_id());
+        $manager->disable_client($cliententity->get_id());
 
         return new payload_response(
             payload: [
@@ -69,7 +69,7 @@ class clients {
     }
 
     /**
-     * Reactivate a revoked client.
+     * Reactivate a disabled client.
      *
      * @param ServerRequestInterface $request The request object
      * @param ResponseInterface $response The response object

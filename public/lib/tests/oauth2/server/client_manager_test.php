@@ -352,7 +352,7 @@ final class client_manager_test extends \advanced_testcase {
         $manager->update_client((int) $record->id, [
             'clientidentifier' => 'hijacked',
             'ownercontext' => 1,
-            'status' => client_entity::STATUS_REVOKED,
+            'status' => client_entity::STATUS_DISABLED,
             'isconfidential' => 0,
         ]);
 
@@ -383,10 +383,10 @@ final class client_manager_test extends \advanced_testcase {
         $manager->create_secret((int) $other->id);
         $this->issue_credentials($other->clientidentifier);
 
-        $manager->revoke_client((int) $record->id);
+        $manager->disable_client((int) $record->id);
 
         $this->assertSame(
-            client_entity::STATUS_REVOKED,
+            client_entity::STATUS_DISABLED,
             (int) $DB->get_field('oauth2_server_clients', 'status', ['id' => $record->id]),
         );
         $this->assertSame(0, $DB->count_records('oauth2_server_client_secrets', [
@@ -439,7 +439,7 @@ final class client_manager_test extends \advanced_testcase {
         $manager->create_secret((int) $record->id);
         $this->issue_credentials($record->clientidentifier);
 
-        $manager->revoke_client((int) $record->id);
+        $manager->disable_client((int) $record->id);
         $manager->reactivate_client((int) $record->id);
 
         $this->assertSame(client_entity::STATUS_ACTIVE, (int) $DB->get_field(
@@ -484,7 +484,7 @@ final class client_manager_test extends \advanced_testcase {
             $manager->delete_client((int) $record->id);
             $this->fail('A moodle_exception was expected.');
         } catch (moodle_exception $e) {
-            $this->assertSame('oauth2clientnotrevoked', $e->errorcode);
+            $this->assertSame('oauth2clientnotdisabled', $e->errorcode);
         }
 
         $this->assertTrue($DB->record_exists('oauth2_server_clients', ['id' => $record->id]));
@@ -509,7 +509,7 @@ final class client_manager_test extends \advanced_testcase {
         $manager->create_secret((int) $other->id);
         $this->issue_credentials($other->clientidentifier);
 
-        $manager->revoke_client((int) $record->id);
+        $manager->disable_client((int) $record->id);
         $manager->delete_client((int) $record->id);
 
         $params = ['clientidentifier' => $record->clientidentifier];
@@ -686,7 +686,7 @@ final class client_manager_test extends \advanced_testcase {
 
         $manager = $this->get_manager();
         $record = $this->create_fixture_client($manager);
-        $manager->revoke_client((int) $record->id);
+        $manager->disable_client((int) $record->id);
 
         $manager->create_secret((int) $record->id);
 

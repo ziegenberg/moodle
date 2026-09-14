@@ -321,7 +321,7 @@ final class client_entity_test extends \advanced_testcase {
                     'name' => 'Client One',
                     'description' => 'Description One',
                     'ownercontext' => 1,
-                    'status' => 1,
+                    'status' => client_entity::STATUS_ACTIVE,
                     'isconfidential' => 1,
                     'granttypes' => client_entity::GRANT_TYPE_CLIENT_CREDENTIALS,
                     'ispkceenabled' => false,
@@ -331,20 +331,20 @@ final class client_entity_test extends \advanced_testcase {
                 'client-1',
                 'Client One',
                 'Description One',
-                1,
+                client_entity::STATUS_ACTIVE,
                 true,
                 [client_entity::GRANT_TYPE_CLIENT_CREDENTIALS],
                 false,
                 ['https://example.test/callback'],
             ],
-            'revoked, public client with multiple redirect uris' => [
+            'disabled, public client with multiple redirect uris' => [
                 (object) [
                     'id' => 20,
                     'clientidentifier' => 'client-2',
                     'name' => 'Client Two',
                     'description' => null,
                     'ownercontext' => 1,
-                    'status' => 2,
+                    'status' => client_entity::STATUS_DISABLED,
                     'isconfidential' => 0,
                     'granttypes' => implode(
                         ',',
@@ -363,7 +363,7 @@ final class client_entity_test extends \advanced_testcase {
                 'client-2',
                 'Client Two',
                 null,
-                2,
+                client_entity::STATUS_DISABLED,
                 false,
                 [
                     client_entity::GRANT_TYPE_CLIENT_CREDENTIALS,

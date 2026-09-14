@@ -203,27 +203,27 @@ class client_manager {
     }
 
     /**
-     * Revoke a client, cutting off all of its existing access immediately.
+     * Disable a client, cutting off all of its existing access immediately.
      *
-     * Revoking marks the client as revoked and cascades to its access tokens, its refresh tokens and its outstanding
+     * Disabling marks the client as disabled and cascades to its access tokens, its refresh tokens and its outstanding
      * authorisation codes. Access is therefore withdrawn straight away rather than merely being blocked for future
      * requests.
      *
-     * Client secrets are not explicitly revoked as part of the client revocation, but will remain invalid for use
-     * as long as the client is revoked. The reason why explicit secret revocation is skipped is to allow existing
+     * Client secrets are not explicitly revoked as part of this action, but will remain invalid for use
+     * as long as the client is disabled. The reason why explicit secret revocation is skipped is to allow existing
      * secrets to still be used in the case of re-enabling the client.
      *
      * @param int $clientid The client ID.
      * @return void
      * @throws \dml_missing_record_exception If the client does not exist.
      */
-    public function revoke_client(int $clientid): void {
+    public function disable_client(int $clientid): void {
         $client = $this->get_client_record($clientid);
         $params = ['clientidentifier' => $client->clientidentifier];
 
         $transaction = $this->db->start_delegated_transaction();
 
-        $client->status = client_entity::STATUS_REVOKED;
+        $client->status = client_entity::STATUS_DISABLED;
         $client->timemodified = $this->clock->time();
         $this->db->update_record('oauth2_server_clients', $client);
 
@@ -255,11 +255,10 @@ class client_manager {
     }
 
     /**
-     * Reactivate a revoked client.
+     * Reactivate a disabled client.
      *
-     * Only the client record itself is restored. Secrets and tokens revoked when the client was
-     * revoked stay revoked, so the client must be issued a new secret and must be authorised again
-     * before it can obtain new tokens.
+     * Only the client record itself is restored. Tokens that were revoked when the client was disabled remain revoked,
+     * so the client must be authorized again before it can obtain new tokens.
      *
      * @param int $clientid The client ID.
      * @return void
@@ -277,19 +276,19 @@ class client_manager {
     /**
      * Permanently delete a client and everything belonging to it.
      *
-     * The client must already be revoked. Requiring revocation first guards against destroying a
+     * The client must already be disabled. Requiring disabling first guards against destroying a
      * live integration in a single step.
      *
      * @param int $clientid The client ID.
      * @return void
      * @throws \dml_missing_record_exception If the client does not exist.
-     * @throws moodle_exception If the client has not been revoked yet.
+     * @throws moodle_exception If the client has not been disabled yet.
      */
     public function delete_client(int $clientid): void {
         $client = $this->get_client_record($clientid);
 
-        if ((int) $client->status !== client_entity::STATUS_REVOKED) {
-            throw new moodle_exception('oauth2clientnotrevoked', 'error', '', $client->clientidentifier);
+        if ((int) $client->status !== client_entity::STATUS_DISABLED) {
+            throw new moodle_exception('oauth2clientnotdisabled', 'error', '', $client->clientidentifier);
         }
 
         $params = ['clientidentifier' => $client->clientidentifier];

@@ -28,7 +28,7 @@ Feature: Create OAuth2 clients
       | Test Confidential Client | Confidential | Active |
     And "Edit" "link" should exist in the "Test Confidential Client" "table_row"
     And "Manage secrets" "link" should exist in the "Test Confidential Client" "table_row"
-    And "Revoke" "button" should exist in the "Test Confidential Client" "table_row"
+    And "Disable" "button" should exist in the "Test Confidential Client" "table_row"
     And "Delete" "button" should not exist in the "Test Confidential Client" "table_row"
 
   Scenario: Create a confidential OAuth2 client supporting client credentials flow only
@@ -50,7 +50,7 @@ Feature: Create OAuth2 clients
       | Test Confidential Client | Confidential | Active |
     And "Edit" "link" should exist in the "Test Confidential Client" "table_row"
     And "Manage secrets" "link" should exist in the "Test Confidential Client" "table_row"
-    And "Revoke" "button" should exist in the "Test Confidential Client" "table_row"
+    And "Disable" "button" should exist in the "Test Confidential Client" "table_row"
     And "Delete" "button" should not exist in the "Test Confidential Client" "table_row"
 
   Scenario: Create a confidential OAuth2 client supporting authorization code flow only
@@ -73,7 +73,7 @@ Feature: Create OAuth2 clients
       | Test Confidential Client | Confidential | Active |
     And "Edit" "link" should exist in the "Test Confidential Client" "table_row"
     And "Manage secrets" "link" should exist in the "Test Confidential Client" "table_row"
-    And "Revoke" "button" should exist in the "Test Confidential Client" "table_row"
+    And "Disable" "button" should exist in the "Test Confidential Client" "table_row"
     And "Delete" "button" should not exist in the "Test Confidential Client" "table_row"
 
   Scenario: Create a public OAuth2 client
@@ -93,7 +93,7 @@ Feature: Create OAuth2 clients
       | Name               | Type   | Status |
       | Test Public Client | Public | Active |
     And "Edit" "link" should exist in the "Test Public Client" "table_row"
-    And "Revoke" "button" should exist in the "Test Public Client" "table_row"
+    And "Disable" "button" should exist in the "Test Public Client" "table_row"
     And "Manage secrets" "link" should not exist in the "Test Public Client" "table_row"
     And "Delete" "button" should not exist in the "Test Public Client" "table_row"
 
@@ -347,7 +347,7 @@ Feature: Create OAuth2 clients
       | redirecturi[0] | https://example.com/callback-updated |
       | redirecturi[1] | https://example.com/another-callback |
 
-  Scenario: Revoke OAuth2 client
+  Scenario: Disable OAuth2 client
     # Create a confidential OAuth2 client supporting authorization code and client credentials flows.
     Given I click on "Create client" "link"
     And I set the field "Name" to "Test Confidential Client"
@@ -364,23 +364,23 @@ Feature: Create OAuth2 clients
       | Status  | Actions |
       | Active  | Revoke  |
     And I click on "Go back to OAuth 2 clients" "link"
-    # Revoke the client.
-    And I click on "Revoke" "button" in the "Test Confidential Client" "table_row"
-    And "Revoke \"Test Confidential Client\"?" "dialogue" should exist
-    And I should see "This immediately inactivates all secrets and stops the client from authenticating. The client, its configuration and secrets are kept, and it can be re-enabled later. To permanently remove it instead, revoke it first, then delete." in the "Revoke \"Test Confidential Client\"?" "dialogue"
-    When I click on "Revoke" "button" in the "Revoke \"Test Confidential Client\"?" "dialogue"
+    # Disable the client.
+    And I click on "Disable" "button" in the "Test Confidential Client" "table_row"
+    And "Disable \"Test Confidential Client\"?" "dialogue" should exist
+    And I should see "Disabling the client immediately deactivates all of its secrets, preventing it from authenticating. The client, its configuration, and secrets are preserved, so it can be re-enabled later." in the "Disable \"Test Confidential Client\"?" "dialogue"
+    When I click on "Disable" "button" in the "Disable \"Test Confidential Client\"?" "dialogue"
     Then the following should exist in the "reportbuilder-table" table:
-      | Name                     | Status  |
-      | Test Confidential Client | Revoked |
-    And "Revoke" "button" should not exist in the "Test Confidential Client" "table_row"
-    # Client secrets should not be revoked when the client is revoked, but marked as inactive.
+      | Name                     | Status   |
+      | Test Confidential Client | Disabled |
+    And "Disable" "button" should not exist in the "Test Confidential Client" "table_row"
+    # Client secrets should not be revoked when the client is disabled, but marked as inactive.
     And "Manage secrets" "link" should exist in the "Test Confidential Client" "table_row"
     And I click on "Edit" "link" in the "Test Confidential Client" "table_row"
     And "#client-active-secrets" "css_element" should exist
     And I should see "0" in the "#client-active-secrets" "css_element"
     And I click on "Manage secrets" "link" in the "#client-active-secrets" "css_element"
-    And I should see "This client is currently revoked."
-    And I should see "Any existing or new secrets will remain inactive and cannot be used for authentication until you re-enable the client."
+    And I should see "This client is currently disabled."
+    And I should see "Secrets cannot be used for authentication until the client is re-enabled."
     And the following should exist in the "reportbuilder-table" table:
       | Status   | Actions |
       | Inactive | Revoke  |
@@ -407,9 +407,9 @@ Feature: Create OAuth2 clients
       | Status  | Actions |
       | Active  | Revoke  |
     And I click on "Go back to OAuth 2 clients" "link"
-    # Revoke the client.
-    And I click on "Revoke" "button" in the "Test Confidential Client" "table_row"
-    And I click on "Revoke" "button" in the "Revoke \"Test Confidential Client\"?" "dialogue"
+    # Disable the client.
+    And I click on "Disable" "button" in the "Test Confidential Client" "table_row"
+    And I click on "Disable" "button" in the "Disable \"Test Confidential Client\"?" "dialogue"
     # Enable the client.
     And "Enable" "button" should exist in the "Test Confidential Client" "table_row"
     And I click on "Enable" "button" in the "Test Confidential Client" "table_row"
@@ -419,7 +419,7 @@ Feature: Create OAuth2 clients
     Then the following should exist in the "reportbuilder-table" table:
       | Name                     | Status  |
       | Test Confidential Client | Active  |
-    And "Revoke" "button" should exist in the "Test Confidential Client" "table_row"
+    And "Disable" "button" should exist in the "Test Confidential Client" "table_row"
     And "Manage secrets" "link" should exist in the "Test Confidential Client" "table_row"
     And I click on "Edit" "link" in the "Test Confidential Client" "table_row"
     And "#client-active-secrets" "css_element" should exist
@@ -446,14 +446,14 @@ Feature: Create OAuth2 clients
     And I set the field "redirecturi[0]" to "https://example.com/callback"
     And I press "Create client"
     And "Delete" "button" should not exist in the "Test Public Client" "table_row"
-    # Revoke the client.
-    And I click on "Revoke" "button" in the "Test Public Client" "table_row"
-    And I click on "Revoke" "button" in the "Revoke \"Test Public Client\"?" "dialogue"
+    # Disable the client.
+    And I click on "Disable" "button" in the "Test Public Client" "table_row"
+    And I click on "Disable" "button" in the "Disable \"Test Public Client\"?" "dialogue"
     # Delete the client.
     And "Delete" "button" should exist in the "Test Public Client" "table_row"
     And I click on "Delete" "button" in the "Test Public Client" "table_row"
     And "Delete \"Test Public Client\"?" "dialogue" should exist
-    And I should see "This permanently removes the client, its secrets, and its redirect URIs. Unlike revoking, this can't be undone. Any integration using this client will stop working immediately." in the "Delete \"Test Public Client\"?" "dialogue"
+    And I should see "This permanently removes the client, its secrets, and its redirect URIs. Unlike disabling, this can't be undone. Any integration using this client will stop working immediately." in the "Delete \"Test Public Client\"?" "dialogue"
     When I click on "Delete" "button" in the "Delete \"Test Public Client\"?" "dialogue"
     Then the following should not exist in the "reportbuilder-table" table:
       | Name               |

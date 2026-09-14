@@ -36,8 +36,8 @@ class client_entity implements ClientEntityInterface {
     /** @var int Active client status */
     public const int STATUS_ACTIVE = 1;
 
-    /** @var int Revoked client status */
-    public const int STATUS_REVOKED = 2;
+    /** @var int Disabled client status */
+    public const int STATUS_DISABLED = 2;
 
     /** @var int Client secret is not revoked */
     public const int SECRET_REVOKED_NO = 0;
@@ -69,7 +69,7 @@ class client_entity implements ClientEntityInterface {
     /** @var \core\context The owner context */
     protected \core\context $ownercontext;
 
-    /** @var int The status of the client (STATUS_ACTIVE|STATUS_REVOKED) */
+    /** @var int The status of the client (STATUS_ACTIVE|STATUS_DISABLED) */
     protected int $status;
 
     /** @var string|null The description of the client */
@@ -100,7 +100,7 @@ class client_entity implements ClientEntityInterface {
     }
 
     /**
-     * Get the status of the client (STATUS_ACTIVE|STATUS_REVOKED).
+     * Get the status of the client (STATUS_ACTIVE|STATUS_DISABLED).
      *
      * @return int
      */

@@ -124,7 +124,7 @@ final class client_repository_test extends \advanced_testcase {
                     'name' => 'Revoked Client',
                     'clientidentifier' => 'client-identifier-1',
                     'description' => null,
-                    'status' => client_entity::STATUS_REVOKED,
+                    'status' => client_entity::STATUS_DISABLED,
                     'isconfidential' => 0,
                     'granttypes' => implode(
                         ',' ,

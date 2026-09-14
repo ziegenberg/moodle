@@ -14,9 +14,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Revoke OAuth2 client confirmation action.
+ * Disable OAuth2 client confirmation action.
  *
- * @module     core_admin/oauth2/server/client/actions/client_revoke
+ * @module     core_admin/oauth2/server/client/actions/client_disable
  * @copyright  2026 Mihail Geshoski <mihailgesoski@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -28,14 +28,14 @@ import * as reportSelectors from 'core_reportbuilder/local/selectors';
 import {dispatchEvent} from 'core/event_dispatcher';
 import * as reportEvents from 'core_reportbuilder/local/events';
 
-class RevokeClientAction extends baseClientAction {
+class DisableClientAction extends baseClientAction {
     /**
      * Return the CSS selector used for triggering the action modal.
      *
      * @returns {string} The CSS selector used for triggering the action modal.
      */
     getActionSelector() {
-        return '[data-action="client-revoke"]';
+        return '[data-action="client-disable"]';
     }
 
     /**
@@ -44,10 +44,10 @@ class RevokeClientAction extends baseClientAction {
     async executeConfirmAction() {
         const clientId = this.target.dataset.id;
 
-        // Revoke the client.
+        // Disable the client.
         await Fetch.performPost(
             'core_admin',
-            `oauth2/server/clients/${clientId}/revoke`,
+            `oauth2/server/clients/${clientId}/disable`,
             {}
         );
 
@@ -62,7 +62,7 @@ class RevokeClientAction extends baseClientAction {
      * @returns {Promise<string>} Resolved title string or HTML text.
      */
     async getTitleText() {
-        return await getString('oauth2server_clientrevokeactiontitle', 'admin', this.target.dataset.name);
+        return await getString('oauth2server_clientdisableactiontitle', 'admin', this.target.dataset.name);
     }
 
     /**
@@ -71,7 +71,7 @@ class RevokeClientAction extends baseClientAction {
      * @returns {Promise<string>} Resolved body string or HTML text.
      */
     async getBody() {
-        return await getString('oauth2server_clientrevokeactiondesc', 'admin');
+        return await getString('oauth2server_clientdisableactiondesc', 'admin');
     }
 
     /**
@@ -80,7 +80,7 @@ class RevokeClientAction extends baseClientAction {
      * @returns {Promise<string>} Resolved button string text.
      */
     async getConfirmationButtonText() {
-        return await getString('oauth2server_clientrevoke', 'admin');
+        return await getString('disable', 'core');
     }
 
     /**
@@ -94,8 +94,8 @@ class RevokeClientAction extends baseClientAction {
 }
 
 /**
- * Initialize the client revoke action.
+ * Initialize the client disable action.
  */
 export const init = () => {
-    (new RevokeClientAction()).init();
+    (new DisableClientAction()).init();
 };
