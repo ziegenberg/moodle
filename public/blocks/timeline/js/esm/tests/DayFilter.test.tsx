@@ -86,6 +86,28 @@ describe('DayFilter', () => {
         expect(onChange).toHaveBeenCalledWith('overdue');
     });
 
+    it('exposes the collapsed state on the toggle before the dropdown is first opened', async() => {
+        await renderFilter(<DayFilter activeFilter="all" onChange={jest.fn()} />);
+
+        const toggle = screen.getByRole('button');
+        expect(toggle).toHaveAttribute('aria-expanded', 'false');
+        expect(toggle).toHaveAttribute('aria-controls', 'menudayfilter');
+    });
+
+    it('leaves the expanded state Bootstrap set alone when the component re-renders', async() => {
+        const {rerender} = await renderFilter(<DayFilter activeFilter="all" onChange={jest.fn()} />);
+
+        // Stand in for Bootstrap's dropdown JS, which owns the attribute once the menu opens.
+        const toggle = screen.getByRole('button');
+        toggle.setAttribute('aria-expanded', 'true');
+
+        await act(async() => {
+            rerender(<DayFilter activeFilter="overdue" onChange={jest.fn()} />);
+        });
+
+        expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    });
+
     it('renders all top-level and grouped date-range options', async() => {
         const {container} = await renderFilter(<DayFilter activeFilter="all" onChange={jest.fn()} />);
 

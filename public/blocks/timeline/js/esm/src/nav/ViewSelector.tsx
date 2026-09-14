@@ -16,13 +16,15 @@
 /**
  * Sort-order (dates / courses) selector for the Timeline block.
  *
- * Matches the DOM structure of the legacy nav-view-selector.mustache template.
+ * Matches the DOM structure of the legacy nav-view-selector.mustache template, except for the
+ * ARIA roles: this is a dropdown of two sort options, so it uses the menu pattern that DayFilter
+ * and Bootstrap's own dropdown JS already implement, rather than the tablist the legacy template
+ * declared but never wired up.
  *
  * @module     block_timeline/nav/ViewSelector
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-import {useId} from 'react';
 import String from '@moodle/lms/core/String';
 import type {OrderName} from '../common/types';
 import {useAriaLabels} from '../common/useAriaLabels';
@@ -51,15 +53,7 @@ interface ViewSelectorProps {
  * so the gap and outside-click behaviour match the original exactly.
  */
 export default function ViewSelector({activeOrder, onChange}: ViewSelectorProps) {
-    const uid = useId().replace(/:/g, '');
     const menuId = 'menusortby';
-    const datesId = `view_dates_${uid}`;
-    const coursesId = `view_courses_${uid}`;
-
-    const panelId: Record<OrderName, string> = {
-        sortbydates:   datesId,
-        sortbycourses: coursesId,
-    };
 
     const {buttonLabel, itemLabels} = useAriaLabels('ariaviewselector', 'ariaviewselectoroption', VIEW_OPTIONS);
 
@@ -72,6 +66,10 @@ export default function ViewSelector({activeOrder, onChange}: ViewSelectorProps)
                 className="btn btn-outline-secondary dropdown-toggle icon-no-margin"
                 data-bs-toggle="dropdown"
                 aria-haspopup="true"
+                // Bootstrap's dropdown JS flips this to "true" on open and owns it from then
+                // on. The literal never changes between renders, so React's reconciler leaves
+                // the attribute alone and will not reset it while the menu is open.
+                aria-expanded="false"
                 aria-label={buttonLabel}
                 aria-controls={menuId}
                 title={buttonLabel}
@@ -84,7 +82,7 @@ export default function ViewSelector({activeOrder, onChange}: ViewSelectorProps)
 
             <div
                 id={menuId}
-                role="tablist"
+                role="menu"
                 className="dropdown-menu dropdown-menu-end"
                 data-show-active-item=""
             >
@@ -92,12 +90,11 @@ export default function ViewSelector({activeOrder, onChange}: ViewSelectorProps)
                     <a
                         key={option.name}
                         className={`dropdown-item${activeOrder === option.name ? ' active dropdown-item-active' : ''}`}
-                        href={`#${panelId[option.name]}`}
+                        href="#"
                         data-filtername={option.name}
                         aria-current={activeOrder === option.name ? 'true' : undefined}
                         aria-label={itemLabels[option.name]}
-                        aria-controls={panelId[option.name]}
-                        role="tab"
+                        role="menuitem"
                         onClick={(e) => {
                             e.preventDefault();
                             onChange(option.name);

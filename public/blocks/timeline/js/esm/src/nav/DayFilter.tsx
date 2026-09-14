@@ -97,6 +97,10 @@ export default function DayFilter({activeFilter, onChange}: DayFilterProps) {
                 className="btn btn-outline-secondary dropdown-toggle icon-no-margin"
                 data-bs-toggle="dropdown"
                 aria-haspopup="true"
+                // Bootstrap's dropdown JS flips this to "true" on open and owns it from then
+                // on. The literal never changes between renders, so React's reconciler leaves
+                // the attribute alone and will not reset it while the menu is open.
+                aria-expanded="false"
                 aria-label={buttonLabel}
                 aria-controls={MENU_ID}
                 title={buttonLabel}

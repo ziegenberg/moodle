@@ -66,6 +66,7 @@ function DayFilter({ activeFilter, onChange }) {
         className: "btn btn-outline-secondary dropdown-toggle icon-no-margin",
         "data-bs-toggle": "dropdown",
         "aria-haspopup": "true",
+        "aria-expanded": "false",
         "aria-label": buttonLabel,
         "aria-controls": MENU_ID,
         title: buttonLabel,
@@ -81,13 +82,13 @@ function DayFilter({ activeFilter, onChange }) {
           false,
           {
             fileName: "public/blocks/timeline/js/esm/src/nav/DayFilter.tsx",
-            lineNumber: 106,
+            lineNumber: 110,
             columnNumber: 21
           },
           this
         ) }, void 0, false, {
           fileName: "public/blocks/timeline/js/esm/src/nav/DayFilter.tsx",
-          lineNumber: 105,
+          lineNumber: 109,
           columnNumber: 17
         }, this)
       },
@@ -104,28 +105,28 @@ function DayFilter({ activeFilter, onChange }) {
       TOP_OPTIONS.map(renderItem),
       /* @__PURE__ */ jsxDEV("div", { className: "dropdown-divider", role: "separator" }, void 0, false, {
         fileName: "public/blocks/timeline/js/esm/src/nav/DayFilter.tsx",
-        lineNumber: 116,
+        lineNumber: 120,
         columnNumber: 17
       }, this),
       /* @__PURE__ */ jsxDEV("div", { role: "group", "aria-labelledby": GROUP_ID, children: [
         /* @__PURE__ */ jsxDEV("div", { className: "h6 dropdown-header", role: "presentation", id: GROUP_ID, children: /* @__PURE__ */ jsxDEV(String, { identifier: "duedate", component: "block_timeline", children: "" }, void 0, false, {
           fileName: "public/blocks/timeline/js/esm/src/nav/DayFilter.tsx",
-          lineNumber: 120,
+          lineNumber: 124,
           columnNumber: 25
         }, this) }, void 0, false, {
           fileName: "public/blocks/timeline/js/esm/src/nav/DayFilter.tsx",
-          lineNumber: 119,
+          lineNumber: 123,
           columnNumber: 21
         }, this),
         GROUP_OPTIONS.map(renderItem)
       ] }, void 0, true, {
         fileName: "public/blocks/timeline/js/esm/src/nav/DayFilter.tsx",
-        lineNumber: 118,
+        lineNumber: 122,
         columnNumber: 17
       }, this)
     ] }, void 0, true, {
       fileName: "public/blocks/timeline/js/esm/src/nav/DayFilter.tsx",
-      lineNumber: 113,
+      lineNumber: 117,
       columnNumber: 13
     }, this)
   ] }, void 0, true, {
