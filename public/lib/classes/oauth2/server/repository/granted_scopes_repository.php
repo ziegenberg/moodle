@@ -66,9 +66,11 @@ class granted_scopes_repository {
 
         $scopes = array_filter(explode(' ', $scope), static fn($s) => !empty($s));
 
-        return array_map(
-            fn(string $scope): ScopeEntityInterface => $this->scoperepository->getScopeEntityByIdentifier($scope),
-            $scopes,
+        return array_filter(
+            array_map(
+                fn(string $scope): ?ScopeEntityInterface => $this->scoperepository->getScopeEntityByIdentifier($scope),
+                $scopes,
+            )
         );
     }
 
