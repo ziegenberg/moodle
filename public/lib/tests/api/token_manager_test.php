@@ -40,23 +40,21 @@ final class token_manager_test extends \advanced_testcase {
      * @return token_manager
      */
     private function get_manager(): token_manager {
-        return new token_manager(
-            new api_token_repository(),
-            $this->mock_clock_with_frozen(self::NOW),
-            new scope_repository(),
-        );
+        return \core\di::make(token_manager::class, [
+            'clock' => $this->mock_clock_with_frozen(self::NOW),
+        ]);
     }
 
     /**
      * The returned string carries the token id, so the secret can later be matched against a row.
      */
-    public function test_create_token_returns_identifiable_secret(): void {
+    public function test_issue_token_returns_identifiable_secret(): void {
         global $DB;
 
         $this->resetAfterTest();
         $user = $this->getDataGenerator()->create_user();
 
-        $token = $this->get_manager()->create_token(
+        $token = $this->get_manager()->issue_token(
             'Attendance export',
             $user->id,
             ['core_grades:grade:read'],
@@ -64,10 +62,13 @@ final class token_manager_test extends \advanced_testcase {
             self::NOW + WEEKSECS,
         );
 
-        $this->assertMatchesRegularExpression('/^pat_\d+_[A-Za-z0-9]{32}$/', $token);
+        // The token is a base64-encoded string with the token ID and secret, prefixed by 'pat_'.
+        // It follows the pattern 'pat_' + base64_encode(token_id/secret) with the trailing '=' stripped.
+        $this->assertMatchesRegularExpression('/^pat_[A-Za-z0-9]+$/', $token);
 
         // The id in the string must address the row that was just written.
-        [, $id, $secret] = explode('_', $token, 3);
+        [, $encoded] = explode('_', $token, 2);
+        [$id, $secret] = explode('/', base64_decode($encoded), 2);
         $record = $DB->get_record('rest_api_tokens', ['id' => (int) $id], '*', MUST_EXIST);
 
         $this->assertEquals('Attendance export', $record->name);
@@ -84,13 +85,13 @@ final class token_manager_test extends \advanced_testcase {
     /**
      * Every generated secret differs, even for identical input.
      */
-    public function test_create_token_secrets_are_unique(): void {
+    public function test_issue_token_secrets_are_unique(): void {
         $this->resetAfterTest();
         $user = $this->getDataGenerator()->create_user();
         $manager = $this->get_manager();
 
-        $first = $manager->create_token('One', $user->id, ['core_admin:config:read'], null, self::NOW + DAYSECS);
-        $second = $manager->create_token('Two', $user->id, ['core_admin:config:read'], null, self::NOW + DAYSECS);
+        $first = $manager->issue_token('One', $user->id, ['core_admin:config:read'], null, self::NOW + DAYSECS);
+        $second = $manager->issue_token('Two', $user->id, ['core_admin:config:read'], null, self::NOW + DAYSECS);
 
         $this->assertNotEquals($first, $second);
     }
@@ -98,13 +99,13 @@ final class token_manager_test extends \advanced_testcase {
     /**
      * Multiple scopes are stored space separated, as the repository expects.
      */
-    public function test_create_token_joins_scopes(): void {
+    public function test_issue_token_joins_scopes(): void {
         global $DB;
 
         $this->resetAfterTest();
         $user = $this->getDataGenerator()->create_user();
 
-        $token = $this->get_manager()->create_token(
+        $token = $this->get_manager()->issue_token(
             'Multi',
             $user->id,
             ['core_grades:grade:read', 'core_course:course:read'],
@@ -112,25 +113,25 @@ final class token_manager_test extends \advanced_testcase {
             self::NOW + DAYSECS,
         );
 
-        [, $id] = explode('_', $token, 3);
+        $apitoken = \core\di::make(api_token_repository::class)->get_from_token($token);
 
         $this->assertEquals(
             'core_grades:grade:read core_course:course:read',
-            $DB->get_field('rest_api_tokens', 'scopes', ['id' => (int) $id]),
+            $DB->get_field('rest_api_tokens', 'scopes', ['id' => (int) $apitoken->get_id()], MUST_EXIST),
         );
     }
 
     /**
      * An expiry beyond the maximum lifetime is refused.
      */
-    public function test_create_token_rejects_expiry_beyond_maximum(): void {
+    public function test_issue_token_rejects_expiry_beyond_maximum(): void {
         $this->resetAfterTest();
         $user = $this->getDataGenerator()->create_user();
 
         $this->expectException(moodle_exception::class);
         $this->expectExceptionMessageMatches('/expiry/i');
 
-        $this->get_manager()->create_token(
+        $this->get_manager()->issue_token(
             'Too far',
             $user->id,
             ['core_admin:config:read'],
@@ -142,11 +143,11 @@ final class token_manager_test extends \advanced_testcase {
     /**
      * An expiry on the maximum boundary is accepted.
      */
-    public function test_create_token_accepts_expiry_on_boundary(): void {
+    public function test_issue_token_accepts_expiry_on_boundary(): void {
         $this->resetAfterTest();
         $user = $this->getDataGenerator()->create_user();
 
-        $token = $this->get_manager()->create_token(
+        $token = $this->get_manager()->issue_token(
             'Exactly a year',
             $user->id,
             ['core_admin:config:read'],
@@ -160,14 +161,14 @@ final class token_manager_test extends \advanced_testcase {
     /**
      * An expiry in the past is refused.
      */
-    public function test_create_token_rejects_expiry_in_the_past(): void {
+    public function test_issue_token_rejects_expiry_in_the_past(): void {
         $this->resetAfterTest();
         $user = $this->getDataGenerator()->create_user();
 
         $this->expectException(moodle_exception::class);
         $this->expectExceptionMessageMatches('/expiry/i');
 
-        $this->get_manager()->create_token(
+        $this->get_manager()->issue_token(
             'Already gone',
             $user->id,
             ['core_admin:config:read'],
@@ -179,27 +180,27 @@ final class token_manager_test extends \advanced_testcase {
     /**
      * A token must carry at least one scope, or it could do nothing at all.
      */
-    public function test_create_token_rejects_empty_scopes(): void {
+    public function test_issue_token_rejects_empty_scopes(): void {
         $this->resetAfterTest();
         $user = $this->getDataGenerator()->create_user();
 
         $this->expectException(moodle_exception::class);
         $this->expectExceptionMessageMatches('/scope/i');
 
-        $this->get_manager()->create_token('No scopes', $user->id, [], null, self::NOW + DAYSECS);
+        $this->get_manager()->issue_token('No scopes', $user->id, [], null, self::NOW + DAYSECS);
     }
 
     /**
      * Unknown scope identifiers are refused, so a token cannot be minted against a typo.
      */
-    public function test_create_token_rejects_unknown_scope(): void {
+    public function test_issue_token_rejects_unknown_scope(): void {
         $this->resetAfterTest();
         $user = $this->getDataGenerator()->create_user();
 
         $this->expectException(moodle_exception::class);
         $this->expectExceptionMessageMatches('/scope/i');
 
-        $this->get_manager()->create_token(
+        $this->get_manager()->issue_token(
             'Bogus',
             $user->id,
             ['core:not:a:real:scope'],
@@ -232,7 +233,7 @@ final class token_manager_test extends \advanced_testcase {
         $manager = $this->get_manager();
 
         foreach ($manager->get_expiry_presets() as $days => $timestamp) {
-            $token = $manager->create_token("Preset {$days}", $user->id, ['core_admin:config:read'], null, $timestamp);
+            $token = $manager->issue_token("Preset {$days}", $user->id, ['core_admin:config:read'], null, $timestamp);
             $this->assertStringStartsWith('pat_', $token);
         }
     }
@@ -330,7 +331,7 @@ final class token_manager_test extends \advanced_testcase {
         $this->assertSame(self::NOW + token_manager::MAX_LIFETIME, $manager->get_maximum_expiry());
 
         // The boundary it reports must be one it would then mint a token for.
-        $token = $manager->create_token('At the ceiling', $user->id, ['core_admin:config:read'], null, $manager->get_maximum_expiry());
+        $token = $manager->issue_token('At the ceiling', $user->id, ['core_admin:config:read'], null, $manager->get_maximum_expiry());
         $this->assertStringStartsWith(token_manager::TOKEN_PREFIX, $token);
     }
 

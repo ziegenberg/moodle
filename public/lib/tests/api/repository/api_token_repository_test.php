@@ -19,6 +19,7 @@ namespace core\api\repository;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use core\api\entity\api_token_entity;
+use core\api\token_manager;
 
 /**
  * Tests for {@see api_token_repository}.
@@ -44,7 +45,7 @@ final class api_token_repository_test extends \advanced_testcase {
             'Token 1',
             'secret',
             $user->id,
-            'scope',
+            ['scope'],
             'A description',
             1700000000
         );
@@ -76,7 +77,7 @@ final class api_token_repository_test extends \advanced_testcase {
             'Test',
             'secret',
             $user->id,
-            'scope'
+            ['scope']
         )->get_id();
 
         $token = $repository->get_by_id($tokenid);
@@ -84,7 +85,7 @@ final class api_token_repository_test extends \advanced_testcase {
         $this->assertEquals($tokenid, $token->get_id());
         $this->assertEquals('Test', $token->get_name());
         $this->assertEquals($user->id, $token->get_userid());
-        $this->assertEquals('scope', $token->get_scopes());
+        $this->assertEquals(['scope'], $token->get_scopes());
     }
 
     /**
@@ -110,7 +111,7 @@ final class api_token_repository_test extends \advanced_testcase {
             'Original Name',
             'secret',
             $user->id,
-            'scope',
+            ['scope'],
             'Original Description',
             1700000000
         );
@@ -131,7 +132,7 @@ final class api_token_repository_test extends \advanced_testcase {
         // Verify allowed updates successfully persisted.
         $this->assertEquals('Updated Name', $updatedtoken->get_name());
         $this->assertEquals('Updated Description', $updatedtoken->get_description());
-        $this->assertEquals('updatedscope', $updatedtoken->get_scopes());
+        $this->assertEquals(['updatedscope'], $updatedtoken->get_scopes());
         $this->assertEquals(1800000000, $updatedtoken->get_expirytime());
         // Verify that protected fields were NOT modified.
         // The user ID should not have changed.
@@ -149,7 +150,7 @@ final class api_token_repository_test extends \advanced_testcase {
         $user = $this->getDataGenerator()->create_user();
         $repository = new api_token_repository();
 
-        $token = $repository->create_token('Test', 'secret', $user->id, 'scope');
+        $token = $repository->create_token('Test', 'secret', $user->id, ['scope']);
         $this->assertFalse($token->is_revoked());
 
         $repository->revoke_token($token->get_id());
@@ -167,7 +168,7 @@ final class api_token_repository_test extends \advanced_testcase {
         $user = $this->getDataGenerator()->create_user();
         $repository = new api_token_repository();
 
-        $token = $repository->create_token('Test', 'secret', $user->id, 'scope');
+        $token = $repository->create_token('Test', 'secret', $user->id, ['scope']);
 
         $repository->delete_token($token->get_id());
 
@@ -199,7 +200,7 @@ final class api_token_repository_test extends \advanced_testcase {
             'Test',
             'correctsecret',
             $user->id,
-            'scope',
+            ['scope'],
             null,
             $expirytime
         );
@@ -252,6 +253,139 @@ final class api_token_repository_test extends \advanced_testcase {
     }
 
     /**
+     * Build a token string in the same shape {@see token_manager::issue_token} hands out.
+     *
+     * @param int $tokenid The token ID.
+     * @param string $secret The raw secret.
+     * @return string
+     */
+    private function build_token_string(int $tokenid, string $secret): string {
+        return rtrim(
+            token_manager::TOKEN_PREFIX . base64_encode("{$tokenid}/{$secret}"),
+            '=',
+        );
+    }
+
+    /**
+     * Test that a well-formed, active token resolves back to its entity.
+     */
+    public function test_get_from_token_valid(): void {
+        $this->resetAfterTest();
+
+        $user = $this->getDataGenerator()->create_user();
+        $repository = new api_token_repository();
+
+        $token = $repository->create_token('Test', 'correctsecret', $user->id, ['scope']);
+        $tokenstring = $this->build_token_string($token->get_id(), 'correctsecret');
+
+        $resolved = $repository->get_from_token($tokenstring);
+
+        $this->assertEquals($token->get_id(), $resolved->get_id());
+        $this->assertEquals($user->id, $resolved->get_userid());
+    }
+
+    /**
+     * A token missing the expected prefix is rejected before it is even decoded.
+     */
+    public function test_get_from_token_missing_prefix_throws(): void {
+        $this->resetAfterTest();
+
+        $repository = new api_token_repository();
+
+        $this->expectException(\core\exception\invalid_api_token_exception::class);
+        $repository->get_from_token(base64_encode('1/somesecret'));
+    }
+
+    /**
+     * A token whose ID does not correspond to any stored record is rejected.
+     */
+    public function test_get_from_token_missing_record_throws(): void {
+        $this->resetAfterTest();
+
+        $repository = new api_token_repository();
+
+        $this->expectException(\dml_missing_record_exception::class);
+        $repository->get_from_token($this->build_token_string(999999, 'somesecret'));
+    }
+
+    /**
+     * A token whose secret does not match the stored hash is rejected.
+     */
+    public function test_get_from_token_wrong_secret_throws(): void {
+        $this->resetAfterTest();
+
+        $user = $this->getDataGenerator()->create_user();
+        $repository = new api_token_repository();
+
+        $token = $repository->create_token('Test', 'correctsecret', $user->id, ['scope']);
+        $tokenstring = $this->build_token_string($token->get_id(), 'wrongsecret');
+
+        $this->expectException(\core\exception\invalid_api_token_exception::class);
+        $repository->get_from_token($tokenstring);
+    }
+
+    /**
+     * An expired token is rejected even though the secret is correct.
+     */
+    public function test_get_from_token_expired_throws(): void {
+        $this->resetAfterTest();
+
+        $user = $this->getDataGenerator()->create_user();
+        $repository = new api_token_repository();
+
+        $token = $repository->create_token('Test', 'correctsecret', $user->id, ['scope'], null, time() - 3600);
+        $tokenstring = $this->build_token_string($token->get_id(), 'correctsecret');
+
+        $this->expectException(\core\exception\expired_api_token_exception::class);
+        $repository->get_from_token($tokenstring);
+    }
+
+    /**
+     * A revoked token is rejected even though the secret is correct.
+     */
+    public function test_get_from_token_revoked_throws(): void {
+        $this->resetAfterTest();
+
+        $user = $this->getDataGenerator()->create_user();
+        $repository = new api_token_repository();
+
+        $token = $repository->create_token('Test', 'correctsecret', $user->id, ['scope']);
+        $repository->revoke_token($token->get_id());
+        $tokenstring = $this->build_token_string($token->get_id(), 'correctsecret');
+
+        $this->expectException(\core\exception\revoked_api_token_exception::class);
+        $repository->get_from_token($tokenstring);
+    }
+
+    /**
+     * A token with an invalid format is rejected.
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('invalid_token_strings')]
+    public function test_get_from_token_invalid_format_throws(string $token): void {
+        $this->resetAfterTest();
+
+        $user = $this->getDataGenerator()->create_user();
+        $repository = new api_token_repository();
+
+        $this->expectException(\core\exception\invalid_api_token_exception::class);
+        $repository->get_from_token($token);
+    }
+
+    /**
+     * Data providerfor invalid token format tests.
+     *
+     * @return array<string, string[]>
+     */
+    public static function invalid_token_strings(): array {
+        return [
+            'empty' => [''],
+            'not base64 encoded' => ['invalidformat'],
+            'does not contain a / in the encoded string' => [base64_encode('invalidstring')],
+            'tokenid is not numeric' => [base64_encode('notanumber/secret')],
+        ];
+    }
+
+    /**
      * Logging access records where the token was used from, not just when.
      */
     public function test_log_token_access_records_the_address(): void {
@@ -261,7 +395,7 @@ final class api_token_repository_test extends \advanced_testcase {
 
         $user = $this->getDataGenerator()->create_user();
         $repository = new api_token_repository();
-        $token = $repository->create_token('Token', 'secret', $user->id, 'scope');
+        $token = $repository->create_token('Token', 'secret', $user->id, ['scope']);
 
         $_SERVER['REMOTE_ADDR'] = '203.0.113.42';
         $repository->log_token_access($token->get_id());
@@ -287,7 +421,7 @@ final class api_token_repository_test extends \advanced_testcase {
         $user = $this->getDataGenerator()->create_user();
         $repository = new api_token_repository();
 
-        $token = $repository->create_token('Test', 'secret', $user->id, 'scope');
+        $token = $repository->create_token('Test', 'secret', $user->id, ['scope']);
         $this->assertNull($token->get_lastaccessed());
 
         // Capture the time windows before and after execution.
@@ -326,16 +460,16 @@ final class api_token_repository_test extends \advanced_testcase {
         $repository = new api_token_repository();
 
         // Create an active token for user1.
-        $repository->create_token('Active Token 1', 'secret', $users['user1']->id, 'scope');
+        $repository->create_token('Active Token 1', 'secret', $users['user1']->id, ['scope']);
         // Create revoked token for user 1.
-        $token2 = $repository->create_token('Revoked Token', 'secret', $users['user1']->id, 'scope');
+        $token2 = $repository->create_token('Revoked Token', 'secret', $users['user1']->id, ['scope']);
         $repository->revoke_token($token2->get_id());
         // Create an expired token for user1.
-        $token3 = $repository->create_token('Expired Token', 'secret', $users['user1']->id, 'scope');
+        $token3 = $repository->create_token('Expired Token', 'secret', $users['user1']->id, ['scope']);
         $DB->set_field('rest_api_tokens', 'expirytime', time() - 3600, ['id' => $token3->get_id()]);
 
         // Create an active token for user2.
-        $repository->create_token('Active Token 2', 'secret', $users['user2']->id, 'scope');
+        $repository->create_token('Active Token 2', 'secret', $users['user2']->id, ['scope']);
 
         // No tokens for user3.
 
