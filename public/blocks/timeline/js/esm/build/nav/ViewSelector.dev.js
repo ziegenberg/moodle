@@ -15,6 +15,7 @@ import { jsxDEV } from "react/jsx-dev-runtime";
 import String from "@moodle/lms/core/String";
 import { useAriaLabels } from "../common/useAriaLabels";
 const SPAN_ID = "timeline-view-selector-current-selection";
+const LABEL_ID = "timeline-view-selector-label";
 const VIEW_OPTIONS = [
   { name: "sortbydates", labelKey: "sortbydates" },
   { name: "sortbycourses", labelKey: "sortbycourses" }
@@ -32,25 +33,30 @@ function ViewSelector({ activeOrder, onChange }) {
         "data-bs-toggle": "dropdown",
         "aria-haspopup": "true",
         "aria-expanded": "false",
-        "aria-label": buttonLabel,
         "aria-controls": menuId,
         title: buttonLabel,
-        "aria-describedby": SPAN_ID,
-        children: /* @__PURE__ */ jsxDEV("span", { id: SPAN_ID, "data-active-item-text": "", children: /* @__PURE__ */ jsxDEV(String, { identifier: activeOption.labelKey, component: "block_timeline", children: "" }, void 0, false, {
-          fileName: "public/blocks/timeline/js/esm/src/nav/ViewSelector.tsx",
-          lineNumber: 79,
-          columnNumber: 21
-        }, this) }, void 0, false, {
-          fileName: "public/blocks/timeline/js/esm/src/nav/ViewSelector.tsx",
-          lineNumber: 78,
-          columnNumber: 17
-        }, this)
+        children: [
+          /* @__PURE__ */ jsxDEV("span", { id: SPAN_ID, "data-active-item-text": "", children: /* @__PURE__ */ jsxDEV(String, { identifier: activeOption.labelKey, component: "block_timeline", children: "" }, void 0, false, {
+            fileName: "public/blocks/timeline/js/esm/src/nav/ViewSelector.tsx",
+            lineNumber: 82,
+            columnNumber: 21
+          }, this) }, void 0, false, {
+            fileName: "public/blocks/timeline/js/esm/src/nav/ViewSelector.tsx",
+            lineNumber: 81,
+            columnNumber: 17
+          }, this),
+          /* @__PURE__ */ jsxDEV("span", { id: LABEL_ID, className: "visually-hidden", children: ` ${buttonLabel}` }, void 0, false, {
+            fileName: "public/blocks/timeline/js/esm/src/nav/ViewSelector.tsx",
+            lineNumber: 84,
+            columnNumber: 17
+          }, this)
+        ]
       },
       void 0,
-      false,
+      true,
       {
         fileName: "public/blocks/timeline/js/esm/src/nav/ViewSelector.tsx",
-        lineNumber: 64,
+        lineNumber: 65,
         columnNumber: 13
       },
       this
@@ -60,6 +66,7 @@ function ViewSelector({ activeOrder, onChange }) {
       {
         id: menuId,
         role: "menu",
+        "aria-labelledby": LABEL_ID,
         className: "dropdown-menu dropdown-menu-end",
         "data-show-active-item": "",
         children: VIEW_OPTIONS.map((option) => /* @__PURE__ */ jsxDEV(
@@ -77,7 +84,7 @@ function ViewSelector({ activeOrder, onChange }) {
             },
             children: /* @__PURE__ */ jsxDEV(String, { identifier: option.labelKey, component: "block_timeline", children: "" }, void 0, false, {
               fileName: "public/blocks/timeline/js/esm/src/nav/ViewSelector.tsx",
-              lineNumber: 103,
+              lineNumber: 108,
               columnNumber: 25
             }, this)
           },
@@ -85,7 +92,7 @@ function ViewSelector({ activeOrder, onChange }) {
           false,
           {
             fileName: "public/blocks/timeline/js/esm/src/nav/ViewSelector.tsx",
-            lineNumber: 90,
+            lineNumber: 95,
             columnNumber: 21
           },
           this
@@ -95,14 +102,14 @@ function ViewSelector({ activeOrder, onChange }) {
       false,
       {
         fileName: "public/blocks/timeline/js/esm/src/nav/ViewSelector.tsx",
-        lineNumber: 83,
+        lineNumber: 87,
         columnNumber: 13
       },
       this
     )
   ] }, void 0, true, {
     fileName: "public/blocks/timeline/js/esm/src/nav/ViewSelector.tsx",
-    lineNumber: 63,
+    lineNumber: 64,
     columnNumber: 9
   }, this);
 }

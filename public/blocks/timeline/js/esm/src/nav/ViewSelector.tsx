@@ -30,6 +30,7 @@ import type {OrderName} from '../common/types';
 import {useAriaLabels} from '../common/useAriaLabels';
 
 const SPAN_ID = 'timeline-view-selector-current-selection';
+const LABEL_ID = 'timeline-view-selector-label';
 
 interface ViewOption {
     name: OrderName;
@@ -70,19 +71,23 @@ export default function ViewSelector({activeOrder, onChange}: ViewSelectorProps)
                 // on. The literal never changes between renders, so React's reconciler leaves
                 // the attribute alone and will not reset it while the menu is open.
                 aria-expanded="false"
-                aria-label={buttonLabel}
                 aria-controls={menuId}
                 title={buttonLabel}
-                aria-describedby={SPAN_ID}
             >
+                {/* The visible selection leads the accessible name, so someone driving the page
+                    by voice can activate the button by saying the words they can see (WCAG
+                    2.5.3). The qualifier that used to be an aria-label follows it, hidden, and
+                    names the menu below. */}
                 <span id={SPAN_ID} data-active-item-text="">
                     <String identifier={activeOption.labelKey} component="block_timeline">{''}</String>
                 </span>
+                <span id={LABEL_ID} className="visually-hidden">{` ${buttonLabel}`}</span>
             </button>
 
             <div
                 id={menuId}
                 role="menu"
+                aria-labelledby={LABEL_ID}
                 className="dropdown-menu dropdown-menu-end"
                 data-show-active-item=""
             >

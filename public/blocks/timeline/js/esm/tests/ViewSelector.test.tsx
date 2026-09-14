@@ -122,4 +122,23 @@ describe('ViewSelector', () => {
 
         expect(toggle).toHaveAttribute('aria-expanded', 'true');
     });
+
+    it('leads the toggle accessible name with the visible selection (WCAG 2.5.3)', async() => {
+        await renderSelector(<ViewSelector activeOrder="sortbydates" onChange={jest.fn()} />);
+
+        // Someone driving the page by voice says the words they can see, so the visible text
+        // has to be in the accessible name, and lead it.
+        await waitFor(() => {
+            expect(screen.getByRole('button', {name: /^Sort by dates\b/})).toBeInTheDocument();
+        });
+        expect(screen.getByRole('button')).not.toHaveAttribute('aria-label');
+    });
+
+    it('gives the dropdown menu an accessible name', async() => {
+        await renderSelector(<ViewSelector activeOrder="sortbydates" onChange={jest.fn()} />);
+
+        await waitFor(() => {
+            expect(screen.getByRole('menu', {name: 'Sort by'})).toBeInTheDocument();
+        });
+    });
 });

@@ -118,4 +118,23 @@ describe('DayFilter', () => {
         expect(optionFor(container, 'next3months')).toHaveTextContent('Next 3 months');
         expect(optionFor(container, 'next6months')).toHaveTextContent('Next 6 months');
     });
+
+    it('leads the toggle accessible name with the visible selection (WCAG 2.5.3)', async() => {
+        await renderFilter(<DayFilter activeFilter="all" onChange={jest.fn()} />);
+
+        // Someone driving the page by voice says the words they can see, so the visible text
+        // has to be in the accessible name, and lead it.
+        await waitFor(() => {
+            expect(screen.getByRole('button', {name: /^All\b/})).toBeInTheDocument();
+        });
+        expect(screen.getByRole('button')).not.toHaveAttribute('aria-label');
+    });
+
+    it('gives the dropdown menu an accessible name', async() => {
+        await renderFilter(<DayFilter activeFilter="all" onChange={jest.fn()} />);
+
+        await waitFor(() => {
+            expect(screen.getByRole('menu', {name: 'Filter by date due'})).toBeInTheDocument();
+        });
+    });
 });
