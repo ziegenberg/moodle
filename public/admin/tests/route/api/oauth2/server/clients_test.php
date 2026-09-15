@@ -50,7 +50,7 @@ final class clients_test extends route_testcase {
      */
     public static function required_scopes_provider(): array {
         return [
-            'revoke_client' => ['revoke_client'],
+            'disable_client' => ['disable_client'],
             'reactivate_client' => ['reactivate_client'],
             'delete_client' => ['delete_client'],
         ];
