@@ -132,6 +132,23 @@ Feature: Manage personal access tokens
     Then I should see "Gradebook sync" in the "reportbuilder-table" "table"
     And I should not see "Mobile app testing" in the "reportbuilder-table" "table"
 
+  Scenario: Each scope offered is labelled by its identifier as well as its summary
+    Given I am on the "user > Personal access tokens" page logged in as "user1"
+    When I click on "Create token" "link"
+    Then I should see "View gradebook"
+    And I should see "core_grades:grade:read"
+
+  Scenario: A listed scope carries the identifier an error names it by
+    Given I am on the "user > Personal access tokens" page logged in as "user1"
+    And I click on "Create token" "link"
+    And I set the following fields to these values:
+      | Name                         | Gradebook sync |
+      | scope_core_grades_grade_read | 1              |
+    When I press "Create token"
+    # The column has room for the name only, so the identifier rides on the badge itself.
+    Then I should see "View gradebook" in the "reportbuilder-table" "table"
+    And the "title" attribute of ".reportbuilder-table [data-bs-toggle='tooltip']" "css_element" should contain "core_grades:grade:read"
+
   Scenario: The expiry field offers fixed periods only
     Given I am on the "user > Personal access tokens" page logged in as "user1"
     When I click on "Create token" "link"
