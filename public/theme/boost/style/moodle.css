@@ -46969,7 +46969,7 @@ div.editor_atto_toolbar button .icon {
   left: 0.4rem;
   font-size: 0.7rem;
 }
-.more-nav .dropdown-menu:has(.dropdown-item[aria-current=page], .dropdown-item.active) .dropdown-item {
+.more-nav .dropdown-menu:has(.dropdown-item.active) .dropdown-item {
   padding-left: 1.5rem;
 }
 

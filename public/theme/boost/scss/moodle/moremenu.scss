@@ -198,7 +198,7 @@
     // Room for the tick, which ".dropdown-menu:has(.dropdown-item-active)" in dropdown.scss gives
     // to the legacy markup only. Kept on the same spacer as that rule for the reason above; the MDS
     // spacing scale has no 1.5rem step either.
-    .dropdown-menu:has(.dropdown-item[aria-current="page"], .dropdown-item.active) .dropdown-item {
+    .dropdown-menu:has(.dropdown-item.active) .dropdown-item {
         padding-left: map-get($spacers, 4);
     }
 }
