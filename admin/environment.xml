@@ -4722,6 +4722,7 @@
       <VENDOR name="auroramysql" version="8.0" />
     </DATABASE>
     <PHP version="8.2.0" level="required">
+      <RESTRICT function="restrict_php_version_85" message="unsupportedphpversion85" />
     </PHP>
     <PCREUNICODE level="optional">
       <FEEDBACK>
@@ -4918,6 +4919,7 @@
       <VENDOR name="auroramysql" version="8.0" />
     </DATABASE>
     <PHP version="8.2.0" level="required">
+      <RESTRICT function="restrict_php_version_85" message="unsupportedphpversion85" />
     </PHP>
     <PCREUNICODE level="optional">
       <FEEDBACK>
@@ -5119,6 +5121,7 @@
       <VENDOR name="auroramysql" version="8.0" />
     </DATABASE>
     <PHP version="8.3.0" level="required">
+      <RESTRICT function="restrict_php_version_85" message="unsupportedphpversion85" />
     </PHP>
     <PCREUNICODE level="optional">
       <FEEDBACK>
