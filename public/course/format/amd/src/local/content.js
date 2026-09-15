@@ -131,6 +131,10 @@ export default class Component extends BaseComponent {
                 toggleAllSelector: this.selectors.TOGGLEALL,
                 collapseSelector: this.selectors.COLLAPSE,
                 onToggleAll,
+                // Delegated sections (subsections) must not drive the toggler state (see
+                // _refreshAllSectionsToggler), so this component keeps the toggler in sync itself
+                // via the section.contentcollapsed watcher below.
+                autoRefresh: false,
             });
             this._refreshAllSectionsToggler(state);
         }
