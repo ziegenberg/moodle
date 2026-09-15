@@ -2034,7 +2034,13 @@ final class oauth2_test extends \advanced_testcase {
      * username/password alone.
      */
     public function test_do_login_valid_credentials_with_invalid_logintoken_does_not_authenticate(): void {
+        global $CFG;
+
         $this->resetAfterTest();
+
+        // Redirect error logging to the test log to avoid expected output during invalid login attempts.
+        $oldlog = ini_get('error_log');
+        ini_set('error_log', "{$CFG->dataroot}/testlog.log");
 
         // Rejected login-token attempts are logged with the requesting user agent; supply one so
         // that this does not trigger an unrelated PHP warning for a missing array key.
@@ -2073,6 +2079,8 @@ final class oauth2_test extends \advanced_testcase {
 
         // No Moodle session was established for the rejected credentials.
         $this->assertFalse(isloggedin());
+
+        ini_set('error_log', $oldlog);
     }
 
     /**
@@ -2083,7 +2091,13 @@ final class oauth2_test extends \advanced_testcase {
      * attacker could authenticate with valid credentials simply by omitting the field.
      */
     public function test_do_login_valid_credentials_missing_logintoken_does_not_bypass_validation(): void {
+        global $CFG;
+
         $this->resetAfterTest();
+
+        // Redirect error logging to the test log to avoid expected output during invalid login attempts.
+        $oldlog = ini_get('error_log');
+        ini_set('error_log', "{$CFG->dataroot}/testlog.log");
 
         // Rejected login-token attempts are logged with the requesting user agent; supply one so
         // that this does not trigger an unrelated PHP warning for a missing array key.
@@ -2117,6 +2131,8 @@ final class oauth2_test extends \advanced_testcase {
 
         // No Moodle session was established for the rejected credentials.
         $this->assertFalse(isloggedin());
+
+        ini_set('error_log', $oldlog);
     }
 
     /**
