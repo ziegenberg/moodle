@@ -58,7 +58,13 @@ class token_manager {
     /** @var int How close to expiry a token is flagged as expiring soon, in days. */
     public const int EXPIRY_IMMINENT_DAYS = 3;
 
-    /** @var int The length of the generated secret, in characters. */
+    /**
+     * The number of bytes used to generate the secret.
+     *
+     * Each byte is converted to a two-character hexadecimal representation.
+     *
+     * @var int
+     */
     protected const int SECRET_LENGTH = 32;
 
     /**
@@ -103,7 +109,7 @@ class token_manager {
         $this->validate_expiry($expirytime);
         $this->validate_scopes($scopes);
 
-        $secret = random_string(self::SECRET_LENGTH);
+        $secret = bin2hex(random_bytes(self::SECRET_LENGTH));
 
         $token = $this->repository->create_token(
             $name,
