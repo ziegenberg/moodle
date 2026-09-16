@@ -622,6 +622,57 @@ abstract class route_testcase extends \advanced_testcase {
     }
 
     /**
+     * Assert that the specified route/method is authorized when the given scopes are granted.
+     *
+     * Unlike {@see self::assert_route_required_scopes()}, which asserts the exact identifiers a route
+     * declares as required, this asserts the runtime authorization behaviour: whether the granted scopes
+     * (which may include an ancestor of a required scope, satisfying it via the scope hierarchy) are enough
+     * to satisfy at least one of the route's alternative (OR) scope sets.
+     *
+     * @param string[] $grantedscopes The scopes to test against, for example: ['core_user:user:read']
+     * @param callable|array|string $callable The route method to check, for example [my_api::class, 'method']
+     */
+    protected function assert_route_authorized_with_scopes(
+        array $grantedscopes,
+        callable|array|string $callable,
+    ): void {
+        $scopesets = util::get_all_required_scopes_for_method($callable);
+
+        $satisfied = false;
+        foreach ($scopesets as $scopeset) {
+            if ($scopeset->is_satisfied_by($grantedscopes)) {
+                $satisfied = true;
+                break;
+            }
+        }
+
+        $this->assertTrue(
+            $satisfied,
+            'The route was not authorized by the granted scopes.',
+        );
+    }
+
+    /**
+     * Assert that the specified route/method is NOT authorized when the given scopes are granted.
+     *
+     * @param string[] $grantedscopes The scopes to test against, for example: ['core_user:user:read']
+     * @param callable|array|string $callable The route method to check, for example [my_api::class, 'method']
+     */
+    protected function assert_route_not_authorized_with_scopes(
+        array $grantedscopes,
+        callable|array|string $callable,
+    ): void {
+        $scopesets = util::get_all_required_scopes_for_method($callable);
+
+        foreach ($scopesets as $scopeset) {
+            $this->assertFalse(
+                $scopeset->is_satisfied_by($grantedscopes),
+                'The route was unexpectedly authorized by the granted scopes.',
+            );
+        }
+    }
+
+    /**
      * Determine whether a scope set contains a scope which can never be resolved to an identifier.
      *
      * Such a scope set can never be satisfied by anyone (it is a permanent fail-safe placeholder, put in
