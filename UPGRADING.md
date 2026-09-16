@@ -6,7 +6,7 @@ More detailed information on key changes can be found in the [Developer update n
 
 The format of this change log follows the advice given at [Keep a CHANGELOG](https://keepachangelog.com).
 
-## 5.3dev
+## 5.3beta
 
 ### core
 
@@ -571,6 +571,14 @@ The format of this change log follows the advice given at [Keep a CHANGELOG](htt
 
   For more information see [MDL-87554](https://tracker.moodle.org/browse/MDL-87554)
 
+### core_form
+
+#### Changed
+
+- The `duration` form element type now more strictly enforces units as defined by the caller, to avoid undefined behaviour during submission. An exception will be thrown where `defaultunit` is not part of the element `units` array
+
+  For more information see [MDL-89434](https://tracker.moodle.org/browse/MDL-89434)
+
 ### core_grades
 
 #### Added
@@ -744,22 +752,6 @@ The format of this change log follows the advice given at [Keep a CHANGELOG](htt
 - The manual enrol instance `->enrol_cohort(...)` method is deprecated as it is no longer used/lacked group support
 
   For more information see [MDL-89439](https://tracker.moodle.org/browse/MDL-89439)
-
-### format_topics
-
-#### Added
-
-- The `enablelinearnav` setting has been introduced to control course linear navigation at the course level. A corresponding site-wide admin setting is also available to define the default value for newly created courses.
-
-  For more information see [MDL-87302](https://tracker.moodle.org/browse/MDL-87302)
-
-### format_weeks
-
-#### Added
-
-- The `enablelinearnav` setting has been introduced to control course linear navigation at the course level. A corresponding site-wide admin setting is also available to define the default value for newly created courses.
-
-  For more information see [MDL-87302](https://tracker.moodle.org/browse/MDL-87302)
 
 ### gradereport_user
 
