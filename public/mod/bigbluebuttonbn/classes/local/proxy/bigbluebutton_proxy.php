@@ -90,6 +90,7 @@ class bigbluebutton_proxy extends proxy_base {
      * @param string|null $userfullname
      * @param bool $isguestjoin
      * @return string
+     * @throws \coding_exception if a guest join is requested but guest access is disabled for the instance
      */
     private static function internal_get_join_url(
         instance $instance,
@@ -97,6 +98,10 @@ class bigbluebutton_proxy extends proxy_base {
         ?string $userfullname = null,
         bool $isguestjoin = false
     ): string {
+        if ($isguestjoin && !$instance->is_guest_allowed()) {
+            throw new \coding_exception('Cannot build a guest join url when guest access is disabled for this instance.');
+        }
+
         $data = [
             'meetingID' => $instance->get_meeting_id(),
             'fullName' => $userfullname ?? $instance->get_user_fullname(),
@@ -105,11 +110,15 @@ class bigbluebutton_proxy extends proxy_base {
             'role' => $instance->get_current_user_role()
         ];
 
-        if (!$isguestjoin) {
+        // Check if guest access enabled before setting guest parameter.
+        if ($isguestjoin) {
+            $data['guest'] = "true";
+        } else if ($instance->is_guest_allowed()) {
             $data['userID'] = $instance->get_user_id();
             $data['guest'] = "false";
         } else {
-            $data['guest'] = "true";
+            // Do not pass the guest parameter here to avoid conflicts with guestPolicy configuration in BBB.
+            $data['userID'] = $instance->get_user_id();
         }
 
         if (!is_null($jointime)) {
