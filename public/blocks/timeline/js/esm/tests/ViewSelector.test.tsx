@@ -44,6 +44,7 @@ function optionFor(container: HTMLElement, filtername: string): HTMLElement {
 
 beforeEach(() => {
     (globalThis as any).mockString('ariaviewselector', 'block_timeline', 'Sort by');
+    (globalThis as any).mockString('ariaviewselectorbutton', 'block_timeline', 'Sort by dates: sort timeline items');
     (globalThis as any).mockString('ariaviewselectoroption', 'block_timeline', 'option');
     (globalThis as any).mockString('sortbydates', 'block_timeline', 'Sort by dates');
     (globalThis as any).mockString('sortbycourses', 'block_timeline', 'Sort by courses');
@@ -131,7 +132,19 @@ describe('ViewSelector', () => {
         await waitFor(() => {
             expect(screen.getByRole('button', {name: /^Sort by dates\b/})).toBeInTheDocument();
         });
-        expect(screen.getByRole('button')).not.toHaveAttribute('aria-label');
+    });
+
+    it('names the toggle from a single string rather than two concatenated halves', async() => {
+        await renderSelector(<ViewSelector activeOrder="sortbydates" onChange={jest.fn()} />);
+
+        const toggle = screen.getByRole('button');
+        await waitFor(() => {
+            expect(toggle).toHaveAttribute('aria-label', 'Sort by dates: sort timeline items');
+        });
+
+        // The qualifier must not also sit inside the button as hidden text: that would append it
+        // to the name a second time, and leave each half to be translated out of context.
+        expect(toggle.textContent).toBe('Sort by dates');
     });
 
     it('gives the dropdown menu an accessible name', async() => {
