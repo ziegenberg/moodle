@@ -812,7 +812,10 @@ class assign_feedback_comments extends assign_feedback_plugin {
      * @return array - An array of fileareas (keys) and descriptions (values)
      */
     public function get_file_areas() {
-        return array(ASSIGNFEEDBACK_COMMENTS_FILEAREA => $this->get_name());
+        return [
+            ASSIGNFEEDBACK_COMMENTS_FILEAREA => $this->get_name(),
+            ASSIGNFEEDBACK_COMMENTS_FILEAREA_MARKER => $this->get_name(),
+        ];
     }
 
     /**
