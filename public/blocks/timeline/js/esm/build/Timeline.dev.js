@@ -91,7 +91,7 @@ function Timeline({ midnight, filter, order, limit, nocoursesurl, noeventsurl, h
       columnNumber: 13
     }, this),
     /* @__PURE__ */ jsxDEV("div", { className: "p-0", children: [
-      /* @__PURE__ */ jsxDEV("div", { "data-region": "view-dates", role: "tabpanel", className: showCoursesView ? "d-none" : "", children: !showCoursesView && /* @__PURE__ */ jsxDEV(
+      /* @__PURE__ */ jsxDEV("div", { "data-region": "view-dates", className: showCoursesView ? "d-none" : "", children: !showCoursesView && /* @__PURE__ */ jsxDEV(
         DatesView,
         {
           midnight,
@@ -116,7 +116,7 @@ function Timeline({ midnight, filter, order, limit, nocoursesurl, noeventsurl, h
         lineNumber: 114,
         columnNumber: 17
       }, this),
-      /* @__PURE__ */ jsxDEV("div", { "data-region": "view-courses", role: "tabpanel", className: showCoursesView ? "" : "d-none", children: showCoursesView && /* @__PURE__ */ jsxDEV(
+      /* @__PURE__ */ jsxDEV("div", { "data-region": "view-courses", className: showCoursesView ? "" : "d-none", children: showCoursesView && /* @__PURE__ */ jsxDEV(
         CoursesView,
         {
           midnight,

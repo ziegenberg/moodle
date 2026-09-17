@@ -80,4 +80,65 @@ describe('ViewSelector', () => {
         expect(optionFor(container, 'sortbydates')).toHaveTextContent('Sort by dates');
         expect(optionFor(container, 'sortbycourses')).toHaveTextContent('Sort by courses');
     });
+
+    it('marks the dropdown up as a menu, not a tablist', async() => {
+        const {container} = await renderSelector(<ViewSelector activeOrder="sortbydates" onChange={jest.fn()} />);
+
+        expect(container.querySelector('[role="menu"]')).toBeInTheDocument();
+        expect(container.querySelector('[role="tablist"], [role="tab"]')).not.toBeInTheDocument();
+        expect(optionFor(container, 'sortbydates')).toHaveAttribute('role', 'menuitem');
+        expect(optionFor(container, 'sortbycourses')).toHaveAttribute('role', 'menuitem');
+    });
+
+    it('leaves no option referring to a panel that does not exist', async() => {
+        const {container} = await renderSelector(<ViewSelector activeOrder="sortbydates" onChange={jest.fn()} />);
+
+        for (const name of ['sortbydates', 'sortbycourses']) {
+            const option = optionFor(container, name);
+            expect(option).not.toHaveAttribute('aria-controls');
+            expect(option).toHaveAttribute('href', '#');
+        }
+    });
+
+    it('exposes the collapsed state on the toggle before the dropdown is first opened', async() => {
+        await renderSelector(<ViewSelector activeOrder="sortbydates" onChange={jest.fn()} />);
+
+        const toggle = screen.getByRole('button');
+        expect(toggle).toHaveAttribute('aria-expanded', 'false');
+        expect(toggle).toHaveAttribute('aria-controls', 'menusortby');
+        expect(document.getElementById('menusortby')).toBeInTheDocument();
+    });
+
+    it('leaves the expanded state Bootstrap set alone when the component re-renders', async() => {
+        const {rerender} = await renderSelector(<ViewSelector activeOrder="sortbydates" onChange={jest.fn()} />);
+
+        // Stand in for Bootstrap's dropdown JS, which owns the attribute once the menu opens.
+        const toggle = screen.getByRole('button');
+        toggle.setAttribute('aria-expanded', 'true');
+
+        await act(async() => {
+            rerender(<ViewSelector activeOrder="sortbycourses" onChange={jest.fn()} />);
+        });
+
+        expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    });
+
+    it('leads the toggle accessible name with the visible selection (WCAG 2.5.3)', async() => {
+        await renderSelector(<ViewSelector activeOrder="sortbydates" onChange={jest.fn()} />);
+
+        // Someone driving the page by voice says the words they can see, so the visible text
+        // has to be in the accessible name, and lead it.
+        await waitFor(() => {
+            expect(screen.getByRole('button', {name: /^Sort by dates\b/})).toBeInTheDocument();
+        });
+        expect(screen.getByRole('button')).not.toHaveAttribute('aria-label');
+    });
+
+    it('gives the dropdown menu an accessible name', async() => {
+        await renderSelector(<ViewSelector activeOrder="sortbydates" onChange={jest.fn()} />);
+
+        await waitFor(() => {
+            expect(screen.getByRole('menu', {name: 'Sort by'})).toBeInTheDocument();
+        });
+    });
 });

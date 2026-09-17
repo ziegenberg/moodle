@@ -28,6 +28,7 @@ import {useAriaLabels} from '../common/useAriaLabels';
 
 const MENU_ID = 'menudayfilter';
 const SPAN_ID = 'timeline-day-filter-current-selection';
+const LABEL_ID = 'timeline-day-filter-label';
 const GROUP_ID = 'duedatefiltergrouplabel';
 
 interface FilterOption {
@@ -97,20 +98,34 @@ export default function DayFilter({activeFilter, onChange}: DayFilterProps) {
                 className="btn btn-outline-secondary dropdown-toggle icon-no-margin"
                 data-bs-toggle="dropdown"
                 aria-haspopup="true"
-                aria-label={buttonLabel}
+                // Bootstrap's dropdown JS flips this to "true" on open and owns it from then
+                // on. The literal never changes between renders, so React's reconciler leaves
+                // the attribute alone and will not reset it while the menu is open.
+                aria-expanded="false"
                 aria-controls={MENU_ID}
                 title={buttonLabel}
-                aria-describedby={SPAN_ID}
             >
+                {/* The visible selection leads the accessible name, so someone driving the page
+                    by voice can activate the button by saying the words they can see (WCAG
+                    2.5.3). The qualifier that used to be an aria-label follows it, hidden, and
+                    names the menu below. */}
                 <span id={SPAN_ID} data-active-item-text="">
                     <String
                         identifier={activeOption.labelKey}
                         component={activeOption.labelComponent}
                     >{''}</String>
                 </span>
+                <span id={LABEL_ID} className="visually-hidden">{` ${buttonLabel}`}</span>
             </button>
 
-            <div id={MENU_ID} role="menu" className="dropdown-menu" data-show-active-item="" data-skip-active-class="true">
+            <div
+                id={MENU_ID}
+                role="menu"
+                aria-labelledby={LABEL_ID}
+                className="dropdown-menu"
+                data-show-active-item=""
+                data-skip-active-class="true"
+            >
                 {TOP_OPTIONS.map(renderItem)}
 
                 <div className="dropdown-divider" role="separator" />

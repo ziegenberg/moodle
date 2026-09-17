@@ -86,6 +86,28 @@ describe('DayFilter', () => {
         expect(onChange).toHaveBeenCalledWith('overdue');
     });
 
+    it('exposes the collapsed state on the toggle before the dropdown is first opened', async() => {
+        await renderFilter(<DayFilter activeFilter="all" onChange={jest.fn()} />);
+
+        const toggle = screen.getByRole('button');
+        expect(toggle).toHaveAttribute('aria-expanded', 'false');
+        expect(toggle).toHaveAttribute('aria-controls', 'menudayfilter');
+    });
+
+    it('leaves the expanded state Bootstrap set alone when the component re-renders', async() => {
+        const {rerender} = await renderFilter(<DayFilter activeFilter="all" onChange={jest.fn()} />);
+
+        // Stand in for Bootstrap's dropdown JS, which owns the attribute once the menu opens.
+        const toggle = screen.getByRole('button');
+        toggle.setAttribute('aria-expanded', 'true');
+
+        await act(async() => {
+            rerender(<DayFilter activeFilter="overdue" onChange={jest.fn()} />);
+        });
+
+        expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    });
+
     it('renders all top-level and grouped date-range options', async() => {
         const {container} = await renderFilter(<DayFilter activeFilter="all" onChange={jest.fn()} />);
 
@@ -95,5 +117,24 @@ describe('DayFilter', () => {
         expect(optionFor(container, 'next30days')).toHaveTextContent('Next 30 days');
         expect(optionFor(container, 'next3months')).toHaveTextContent('Next 3 months');
         expect(optionFor(container, 'next6months')).toHaveTextContent('Next 6 months');
+    });
+
+    it('leads the toggle accessible name with the visible selection (WCAG 2.5.3)', async() => {
+        await renderFilter(<DayFilter activeFilter="all" onChange={jest.fn()} />);
+
+        // Someone driving the page by voice says the words they can see, so the visible text
+        // has to be in the accessible name, and lead it.
+        await waitFor(() => {
+            expect(screen.getByRole('button', {name: /^All\b/})).toBeInTheDocument();
+        });
+        expect(screen.getByRole('button')).not.toHaveAttribute('aria-label');
+    });
+
+    it('gives the dropdown menu an accessible name', async() => {
+        await renderFilter(<DayFilter activeFilter="all" onChange={jest.fn()} />);
+
+        await waitFor(() => {
+            expect(screen.getByRole('menu', {name: 'Filter by date due'})).toBeInTheDocument();
+        });
     });
 });
