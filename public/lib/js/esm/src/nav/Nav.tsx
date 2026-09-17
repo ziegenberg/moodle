@@ -113,16 +113,11 @@ const resolveGlobalFunction = (path: string): ((...args: unknown[]) => void) | u
     path.split('.').reduce<any>((obj, key) => obj?.[key], window as unknown as Record<string, unknown>);
 
 /**
- * Minimal shape of the YUI `Y` instance this module needs: just `Y.on`, used to re-register
- * component_actions exactly as core/actions.mustache's {{#js}} block did server-side.
- */
-type YuiLike = {on: (...args: unknown[]) => void};
-
-/**
- * Re-registers each item's action_link actions (e.g. popup_action) via Y.on, exactly as
- * core/actions.mustache's {{#js}} block used to do server-side. Needed because the React export
- * only carries href/attributes, not arbitrary inline JS: nodes like "Print book"/"Print chapter"
- * rely on a popup_action to open a new window, and lose that behaviour without this.
+ * Re-registers each item's action_link actions (e.g. popup_action) as plain DOM event listeners,
+ * standing in for the inline binding core/actions.mustache's {{#js}} block used to do server-side.
+ * Needed because the React export only carries href/attributes, not arbitrary inline JS: nodes
+ * like "Print book"/"Print chapter" rely on a popup_action to open a new window, and lose that
+ * behaviour without this.
  *
  * @param items The nodes to scan for actions.
  */
@@ -133,36 +128,27 @@ const useActionLinkBehavior = (items: NavNode[]): void => {
             return undefined;
         }
 
-        let cancelled = false;
+        const cleanups: (() => void)[] = [];
 
-        requireAsync<YuiLike>('core/yui').then((Y) => {
-            if (cancelled) {
-                return undefined;
+        nodesWithActions.forEach((item) => {
+            const el = document.getElementById(item.id!);
+            if (!el) {
+                return;
             }
-            nodesWithActions.forEach((item) => {
-                const el = document.getElementById(item.id!);
-                if (!el || el.dataset.actionLinkBound === '1') {
+            item.actions!.forEach((action) => {
+                const fn = resolveGlobalFunction(action.jsfunction);
+                if (!fn) {
                     return;
                 }
-                let boundAny = false;
-                item.actions!.forEach((action) => {
-                    const fn = resolveGlobalFunction(action.jsfunction);
-                    if (!fn) {
-                        return;
-                    }
-                    const args = action.jsfunctionargs ? JSON.parse(action.jsfunctionargs) : undefined;
-                    Y.on(action.event, fn, `#${item.id}`, null, args);
-                    boundAny = true;
-                });
-                if (boundAny) {
-                    el.dataset.actionLinkBound = '1';
-                }
+                const args = action.jsfunctionargs ? JSON.parse(action.jsfunctionargs) : undefined;
+                const listener = (event: Event) => fn(event, args);
+                el.addEventListener(action.event, listener);
+                cleanups.push(() => el.removeEventListener(action.event, listener));
             });
-            return undefined;
         });
 
         return () => {
-            cancelled = true;
+            cleanups.forEach((cleanup) => cleanup());
         };
     }, [items]);
 };

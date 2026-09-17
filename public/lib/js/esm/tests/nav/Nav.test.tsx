@@ -408,3 +408,70 @@ describe('@moodle/lms/core/nav/Nav submenus in the More menu', () => {
         expect(container.querySelectorAll('.dropdown-submenu .dropdown-divider')).toHaveLength(1);
     });
 });
+
+// Nodes such as "Print book"/"Print chapter" carry a popup_action, exported as an action_link
+// action rather than a real href behaviour. This used to be re-registered via YUI's Y.on
+// (see MDL-89776); these tests confirm the plain-DOM replacement without ever mocking core/yui,
+// so an unmocked requireAsync('core/yui') call would fail the test.
+describe('@moodle/lms/core/nav/Nav action link behaviour', () => {
+    afterEach(() => {
+        delete (window as unknown as {openpopup?: unknown}).openpopup;
+    });
+
+    /**
+     * Build a top-level node carrying a popup_action-style action_link action, as
+     * booktool_print_extend_settings_navigation() exports for "Print book"/"Print chapter".
+     *
+     * @param text The node's label.
+     * @param args The jsfunctionargs payload, JSON-encoded as component_action::export_for_template() does.
+     * @returns The node.
+     */
+    const makeActionLinkItem = (text: string, args: Record<string, unknown>): NavNode => {
+        const id = `${text.toLowerCase().replace(/\s+/g, '-')}-link`;
+        return {
+            ...makeItems([text])[0],
+            id,
+            // Print book/Print chapter are always force_into_more_menu()'d server-side, so their
+            // action_link only ever renders as a DropdownItems <a>, which is the only renderPill
+            // path that puts item.id onto the DOM node (NavPill has no id prop).
+            forceintomoremenu: true,
+            actions: [{id, event: 'click', jsfunction: 'openpopup', jsfunctionargs: JSON.stringify(args)}],
+        };
+    };
+
+    it('binds a node\'s action_link action to its element without loading core/yui', () => {
+        const openpopup = jest.fn();
+        (window as unknown as {openpopup: unknown}).openpopup = openpopup;
+
+        const items = [makeActionLinkItem('Print book', {url: '/mod/book/tool/print/index.php?id=1', name: 'popup'})];
+        renderItems(items, 10);
+
+        const link = document.getElementById('print-book-link');
+        expect(link).not.toBeNull();
+
+        act(() => {
+            link!.dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true}));
+        });
+
+        expect(openpopup).toHaveBeenCalledTimes(1);
+        expect(openpopup.mock.calls[0][1]).toEqual({url: '/mod/book/tool/print/index.php?id=1', name: 'popup'});
+    });
+
+    it('removes the action_link listener when the node is unmounted', () => {
+        const openpopup = jest.fn();
+        (window as unknown as {openpopup: unknown}).openpopup = openpopup;
+
+        const items = [makeActionLinkItem('Print book', {url: '/mod/book/tool/print/index.php?id=1'})];
+        const {unmount} = render(<Nav items={items} morelabel="More" istablist={false} />);
+
+        const link = document.getElementById('print-book-link');
+        expect(link).not.toBeNull();
+
+        unmount();
+
+        expect(() => act(() => {
+            link!.dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true}));
+        })).not.toThrow();
+        expect(openpopup).not.toHaveBeenCalled();
+    });
+});
