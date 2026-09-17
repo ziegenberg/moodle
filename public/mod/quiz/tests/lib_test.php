@@ -27,6 +27,7 @@ namespace mod_quiz;
 use context_module;
 use core_external\external_api;
 use mod_quiz\quiz_settings;
+use PHPUnit\Framework\Attributes\CoversFunction;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -38,8 +39,73 @@ require_once($CFG->dirroot . '/mod/quiz/tests/quiz_question_helper_test_trait.ph
  * @copyright  2008 The Open University
  * @license    http://www.gnu.org/copyleft/gpl.html GNU Public License
  */
+#[CoversFunction('quiz_add_instance')]
+#[CoversFunction('quiz_update_instance')]
 final class lib_test extends \advanced_testcase {
     use \quiz_question_helper_test_trait;
+
+    /**
+     * Test that creating a quiz without a due date uses the database default without triggering warnings.
+     */
+    public function test_quiz_add_instance_without_duedate(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $course = $this->getDataGenerator()->create_course();
+
+        $quiz = (object) [
+            'course' => $course->id,
+            'name' => 'Quiz without a due date',
+            'intro' => '',
+            'introformat' => FORMAT_HTML,
+            'timeopen' => 0,
+            'timeclose' => 0,
+            'quizpassword' => '',
+            'grade' => 100,
+            'decimalpoints' => 2,
+            'questiondecimalpoints' => -1,
+        ];
+        $quiz->coursemodule = add_course_module((object) [
+            'course' => $course->id,
+            'module' => $DB->get_field('modules', 'id', ['name' => 'quiz'], MUST_EXIST),
+        ]);
+
+        $quizid = quiz_add_instance($quiz);
+
+        $this->assertEquals(0, $DB->get_field('quiz', 'duedate', ['id' => $quizid], MUST_EXIST));
+        $this->assertFalse($DB->record_exists('event', [
+            'modulename' => 'quiz',
+            'instance' => $quizid,
+            'eventtype' => QUIZ_EVENT_TYPE_DUE,
+        ]));
+    }
+
+    /**
+     * Test that updating a quiz without a due date preserves the stored date and its calendar event.
+     */
+    public function test_quiz_update_instance_without_duedate(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $course = $this->getDataGenerator()->create_course();
+        $duedate = time() + DAYSECS;
+        $quiz = $this->getDataGenerator()->create_module('quiz', ['course' => $course->id, 'duedate' => $duedate]);
+        $quiz->instance = $quiz->id;
+        $quiz->coursemodule = $quiz->cmid;
+        $quiz->quizpassword = $quiz->password;
+        unset($quiz->duedate);
+
+        $this->assertTrue(quiz_update_instance($quiz, null));
+
+        $this->assertEquals($duedate, $DB->get_field('quiz', 'duedate', ['id' => $quiz->id], MUST_EXIST));
+        $this->assertEquals($duedate, $DB->get_field('event', 'timestart', [
+            'modulename' => 'quiz',
+            'instance' => $quiz->id,
+            'eventtype' => QUIZ_EVENT_TYPE_DUE,
+        ], MUST_EXIST));
+    }
 
     public function test_quiz_has_grades(): void {
         $quiz = new \stdClass();
