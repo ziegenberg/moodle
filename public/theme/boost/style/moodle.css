@@ -46967,7 +46967,7 @@ div.editor_atto_toolbar button .icon {
 }
 
 .primary-navigation .navigation.primarynav-navbar .more-nav {
-  gap: var(--mds-spacing-xs);
+  gap: var(--mds-spacing-xxs);
 }
 .primary-navigation .navigation.primarynav-navbar .nav-item {
   height: 60px;
@@ -47083,7 +47083,7 @@ div.editor_atto_toolbar button .icon {
   height: 60px;
 }
 .secondary-navigation .navigation.secondarynav-tabbar .more-nav {
-  gap: var(--mds-spacing-xs);
+  gap: var(--mds-spacing-xxs);
 }
 .secondary-navigation .navigation.secondarynav-tabbar .nav-item {
   height: 60px;
