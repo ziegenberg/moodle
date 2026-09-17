@@ -824,7 +824,7 @@ All rights reserved.</copyright>
       <location>google2</location>
       <name>Google APIs</name>
       <description>Library Google APIs Client Library for PHP</description>
-      <version>2.18.4</version>
+      <version>2.19.4</version>
       <license>Apache</license>
       <licenseversion>2.0</licenseversion>
       <repository>https://github.com/googleapis/google-api-php-client</repository>
@@ -833,7 +833,7 @@ All rights reserved.</copyright>
       <location>google2-auth</location>
       <name>Google Auth</name>
       <description>Google Auth Library for PHP</description>
-      <version>1.49.0</version>
+      <version>1.53.0</version>
       <license>Apache</license>
       <licenseversion>2.0</licenseversion>
       <repository>https://github.com/googleapis/google-auth-library-php</repository>
@@ -842,7 +842,7 @@ All rights reserved.</copyright>
       <location>google2-service</location>
       <name>Google Client Services</name>
       <description>Google PHP API Client Services</description>
-      <version>0.424.0</version>
+      <version>0.457.0</version>
       <license>Apache</license>
       <licenseversion>2.0</licenseversion>
       <repository>https://github.com/googleapis/google-api-php-client-services</repository>
