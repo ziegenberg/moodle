@@ -67,8 +67,10 @@ if ($hassiteconfig || has_capability('moodle/site:configview', context_system::i
         $premiumfeaturesurl = (new moodle_url("/admin/settings.php", ['section' => 'premiumfeatures']))->out(true);
     }
 
+    $ismobilewsdisabled = empty($CFG->enablemobilewebservice);
+
     // Contextual Premium plan promotions at the top of related core settings pages.
-    if ($hassiteconfig && !during_initial_install() && !$ispremiumplan) {
+    if ($hassiteconfig && !during_initial_install() && !$ismobilewsdisabled && !$ispremiumplan) {
         $subscriptionurl = (new moodle_url('/admin/tool/mobile/subscription.php'))->out(false);
 
         $haslogos = !empty(get_config('core_admin', 'logo')) || !empty(get_config('core_admin', 'logocompact'));
@@ -110,7 +112,6 @@ if ($hassiteconfig || has_capability('moodle/site:configview', context_system::i
     }
 
     // Setting pages group.
-    $ismobilewsdisabled = empty($CFG->enablemobilewebservice);
     $ADMIN->add(
         'root',
         new admin_category('mobileapp', new lang_string('mobileapp', 'tool_mobile'), $ismobilewsdisabled),
