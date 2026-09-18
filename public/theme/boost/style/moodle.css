@@ -31194,8 +31194,8 @@ audio.mediaplugin_html5audio {
 }
 
 .moodle-dialogue-base .moodle-dialogue-wrap {
-  background-color: var(--bs-white);
-  border: 1px solid #ccc;
+  background-color: var(--mds-bg-surface-default);
+  border: 1px solid var(--mds-border-default);
 }
 
 .modal.show {
@@ -31205,7 +31205,7 @@ audio.mediaplugin_html5audio {
 .moodle-dialogue-base .moodle-dialogue-wrap .moodle-dialogue-hd {
   display: flex;
   padding: 1rem 1rem;
-  border-bottom: 1px solid #dee2e6;
+  border-bottom: 1px solid var(--mds-border-default);
 }
 
 .moodle-dialogue-base .moodle-dialogue-wrap .moodle-dialogue-hd.yui3-widget-hd {
@@ -31237,6 +31237,7 @@ audio.mediaplugin_html5audio {
   padding: 1rem 1rem;
   margin: -1rem -1rem -1rem auto;
   position: relative;
+  color: inherit;
   background-color: transparent;
   border: 0;
   background-image: none;
@@ -31273,30 +31274,30 @@ audio.mediaplugin_html5audio {
 }
 
 .moodle-dialogue-exception .param-stacktrace label {
-  background-color: #eee;
-  border: 1px solid #ccc;
+  background-color: var(--mds-bg-surface-strong);
+  border: 1px solid var(--mds-border-default);
   border-bottom-width: 0;
 }
 
 .moodle-dialogue-exception .param-stacktrace pre {
-  border: 1px solid #ccc;
-  background-color: var(--bs-white);
+  border: 1px solid var(--mds-border-default);
+  background-color: var(--mds-bg-surface-default);
 }
 
 .moodle-dialogue-exception .param-stacktrace .stacktrace-file {
-  color: navy;
+  color: var(--mds-text-feedback-primary);
   font-size: 0.875rem;
 }
 
 .moodle-dialogue-exception .param-stacktrace .stacktrace-line {
-  color: #f0ad4e;
+  color: var(--mds-text-feedback-warning);
   font-size: 0.875rem;
 }
 
 .moodle-dialogue-exception .param-stacktrace .stacktrace-call {
-  color: #333;
+  color: var(--mds-text-default);
   font-size: 90%;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--mds-border-default);
 }
 
 .moodle-dialogue-base .moodle-dialogue .moodle-dialogue-content .moodle-dialogue-ft:empty {
@@ -31362,7 +31363,7 @@ audio.mediaplugin_html5audio {
   height: 100%;
   top: 0;
   left: 0;
-  background-color: var(--bs-white);
+  background-color: var(--mds-bg-surface-default);
   text-align: center;
   padding: 10% 0;
 }
