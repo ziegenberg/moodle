@@ -111,7 +111,11 @@ class create_token extends \moodleform {
                 'advcheckbox',
                 $elementname,
                 '',
-                html_writer::div($scope::get_summary(), 'fw-bold') .
+                html_writer::div(
+                    $scope::get_summary() . ' - ' .
+                        html_writer::tag('code', $identifier, ['class' => 'fw-normal text-muted']),
+                    'fw-bold',
+                ) .
                     html_writer::div($scope::get_description(), 'text-muted small'),
             );
             $mform->setType($elementname, PARAM_BOOL);

@@ -106,13 +106,21 @@ class api_token extends base {
                 static $names = null;
                 $names ??= di::get(token_manager::class)->get_scope_names();
                 $badges = array_map(
-                    // A scope withdrawn by its plugin still shows, by identifier, rather than vanishing.
-                    // text-nowrap keeps each name on one line: allowed to wrap, a name breaks into a
+                    // The text-nowrap keeps each name on one line: allowed to wrap, a name breaks into a
                     // narrow centred stack that is unreadable in a phone-width column.
-                    static fn(string $scope): string => \core\output\html_writer::span(
-                        $names[$scope] ?? $scope,
-                        'badge text-bg-secondary text-nowrap',
-                    ),
+                    static function (string $scope) use ($names): string {
+                        $class = 'badge border border-secondary text-secondary-emphasis text-nowrap';
+
+                        if (!isset($names[$scope])) {
+                            return \core\output\html_writer::span($scope, $class);
+                        }
+
+                        return \core\output\html_writer::span($names[$scope], $class, [
+                            'data-bs-toggle' => 'tooltip',
+                            'title' => $scope,
+                            'tabindex' => '0',
+                        ]);
+                    },
                     array_filter(explode(' ', $value), static fn($scope) => $scope !== ''),
                 );
 
