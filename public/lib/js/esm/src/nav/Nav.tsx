@@ -23,7 +23,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-import {Fragment, cloneElement, isValidElement, useEffect, useId, useLayoutEffect, useRef, useState,
+import {Fragment, cloneElement, isValidElement, useEffect, useId, useLayoutEffect, useMemo, useRef, useState,
     type ReactElement, type ReactNode} from 'react';
 import {NavPill} from '@moodlehq/design-system';
 import {requireAsync} from '@moodle/lms/core/amd';
@@ -122,6 +122,21 @@ const resolveGlobalFunction = (path: string): ((...args: unknown[]) => void) | u
  * @param items The nodes to scan for actions.
  */
 const useActionLinkBehavior = (items: NavNode[]): void => {
+    // Callers like `overflow` rebuild `items` as a new array on every render, even when the
+    // underlying actions haven't changed. Keying the effect below off this content signature,
+    // rather than off `items` itself, avoids tearing down and rebinding every listener on
+    // each such re-render.
+    const actionSignature = useMemo(
+        () => JSON.stringify(
+            items
+                .filter((item) => item.id && item.actions?.length)
+                .map((item) => [item.id, item.actions!.map(
+                    (action) => [action.event, action.jsfunction, action.jsfunctionargs],
+                )]),
+        ),
+        [items],
+    );
+
     useEffect(() => {
         const nodesWithActions = items.filter((item) => item.id && item.actions?.length);
         if (nodesWithActions.length === 0) {
@@ -150,7 +165,8 @@ const useActionLinkBehavior = (items: NavNode[]): void => {
         return () => {
             cleanups.forEach((cleanup) => cleanup());
         };
-    }, [items]);
+        // ActionSignature captures everything about `items` this effect cares about (see above).
+    }, [actionSignature]);
 };
 
 /**
