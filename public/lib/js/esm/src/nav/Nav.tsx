@@ -23,7 +23,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-import {Fragment, cloneElement, isValidElement, useEffect, useId, useLayoutEffect, useRef, useState,
+import {Fragment, cloneElement, isValidElement, useEffect, useId, useLayoutEffect, useMemo, useRef, useState,
     type ReactElement, type ReactNode} from 'react';
 import {NavPill} from '@moodlehq/design-system';
 import {requireAsync} from '@moodle/lms/core/amd';
@@ -113,58 +113,60 @@ const resolveGlobalFunction = (path: string): ((...args: unknown[]) => void) | u
     path.split('.').reduce<any>((obj, key) => obj?.[key], window as unknown as Record<string, unknown>);
 
 /**
- * Minimal shape of the YUI `Y` instance this module needs: just `Y.on`, used to re-register
- * component_actions exactly as core/actions.mustache's {{#js}} block did server-side.
- */
-type YuiLike = {on: (...args: unknown[]) => void};
-
-/**
- * Re-registers each item's action_link actions (e.g. popup_action) via Y.on, exactly as
- * core/actions.mustache's {{#js}} block used to do server-side. Needed because the React export
- * only carries href/attributes, not arbitrary inline JS: nodes like "Print book"/"Print chapter"
- * rely on a popup_action to open a new window, and lose that behaviour without this.
+ * Re-registers each item's action_link actions (e.g. popup_action) as plain DOM event listeners,
+ * standing in for the inline binding core/actions.mustache's {{#js}} block used to do server-side.
+ * Needed because the React export only carries href/attributes, not arbitrary inline JS: nodes
+ * like "Print book"/"Print chapter" rely on a popup_action to open a new window, and lose that
+ * behaviour without this.
  *
  * @param items The nodes to scan for actions.
  */
 const useActionLinkBehavior = (items: NavNode[]): void => {
+    // Callers like `overflow` rebuild `items` as a new array on every render, even when the
+    // underlying actions haven't changed. Keying the effect below off this content signature,
+    // rather than off `items` itself, avoids tearing down and rebinding every listener on
+    // each such re-render.
+    const actionSignature = useMemo(
+        () => JSON.stringify(
+            items
+                .filter((item) => item.id && item.actions?.length)
+                .map((item) => [item.id, item.actions!.map(
+                    (action) => [action.event, action.jsfunction, action.jsfunctionargs],
+                )]),
+        ),
+        [items],
+    );
+
     useEffect(() => {
         const nodesWithActions = items.filter((item) => item.id && item.actions?.length);
         if (nodesWithActions.length === 0) {
             return undefined;
         }
 
-        let cancelled = false;
+        const cleanups: (() => void)[] = [];
 
-        requireAsync<YuiLike>('core/yui').then((Y) => {
-            if (cancelled) {
-                return undefined;
+        nodesWithActions.forEach((item) => {
+            const el = document.getElementById(item.id!);
+            if (!el) {
+                return;
             }
-            nodesWithActions.forEach((item) => {
-                const el = document.getElementById(item.id!);
-                if (!el || el.dataset.actionLinkBound === '1') {
+            item.actions!.forEach((action) => {
+                const fn = resolveGlobalFunction(action.jsfunction);
+                if (!fn) {
                     return;
                 }
-                let boundAny = false;
-                item.actions!.forEach((action) => {
-                    const fn = resolveGlobalFunction(action.jsfunction);
-                    if (!fn) {
-                        return;
-                    }
-                    const args = action.jsfunctionargs ? JSON.parse(action.jsfunctionargs) : undefined;
-                    Y.on(action.event, fn, `#${item.id}`, null, args);
-                    boundAny = true;
-                });
-                if (boundAny) {
-                    el.dataset.actionLinkBound = '1';
-                }
+                const args = action.jsfunctionargs ? JSON.parse(action.jsfunctionargs) : undefined;
+                const listener = (event: Event) => fn(event, args);
+                el.addEventListener(action.event, listener);
+                cleanups.push(() => el.removeEventListener(action.event, listener));
             });
-            return undefined;
         });
 
         return () => {
-            cancelled = true;
+            cleanups.forEach((cleanup) => cleanup());
         };
-    }, [items]);
+        // ActionSignature captures everything about `items` this effect cares about (see above).
+    }, [actionSignature]);
 };
 
 /**
