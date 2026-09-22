@@ -474,4 +474,31 @@ describe('@moodle/lms/core/nav/Nav action link behaviour', () => {
         })).not.toThrow();
         expect(openpopup).not.toHaveBeenCalled();
     });
+
+    it('does not rebind the action_link listener when items is a new array with the same content', () => {
+        const openpopup = jest.fn();
+        (window as unknown as {openpopup: unknown}).openpopup = openpopup;
+
+        const items = [makeActionLinkItem('Print book', {url: '/mod/book/tool/print/index.php?id=1'})];
+        const {rerender} = render(<Nav items={items} morelabel="More" istablist={false} />);
+
+        const link = document.getElementById('print-book-link')!;
+        const addSpy = jest.spyOn(link, 'addEventListener');
+        const removeSpy = jest.spyOn(link, 'removeEventListener');
+
+        // Callers such as the overflow measurement loop rebuild `items` as a fresh array on
+        // every render, even when nothing has actually changed. A new array with equivalent
+        // content must not tear down and rebind the listener.
+        act(() => {
+            rerender(<Nav items={[...items]} morelabel="More" istablist={false} />);
+        });
+
+        expect(addSpy).not.toHaveBeenCalled();
+        expect(removeSpy).not.toHaveBeenCalled();
+
+        act(() => {
+            link.dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true}));
+        });
+        expect(openpopup).toHaveBeenCalledTimes(1);
+    });
 });
