@@ -34,6 +34,7 @@ async function renderFilter(...args: Parameters<typeof render>) {
 
 beforeEach(() => {
     (globalThis as any).mockString('ariadayfilter', 'block_timeline', 'Filter by date due');
+    (globalThis as any).mockString('ariadayfilterbutton', 'block_timeline', 'All: filter timeline by date');
     (globalThis as any).mockString('ariadayfilteroption', 'block_timeline', 'option');
     (globalThis as any).mockString('all', 'core', 'All');
     (globalThis as any).mockString('overdue', 'block_timeline', 'Overdue');
@@ -127,7 +128,19 @@ describe('DayFilter', () => {
         await waitFor(() => {
             expect(screen.getByRole('button', {name: /^All\b/})).toBeInTheDocument();
         });
-        expect(screen.getByRole('button')).not.toHaveAttribute('aria-label');
+    });
+
+    it('names the toggle from a single string rather than two concatenated halves', async() => {
+        await renderFilter(<DayFilter activeFilter="all" onChange={jest.fn()} />);
+
+        const toggle = screen.getByRole('button');
+        await waitFor(() => {
+            expect(toggle).toHaveAttribute('aria-label', 'All: filter timeline by date');
+        });
+
+        // The qualifier must not also sit inside the button as hidden text: that would append it
+        // to the name a second time, and leave each half to be translated out of context.
+        expect(toggle.textContent).toBe('All');
     });
 
     it('gives the dropdown menu an accessible name', async() => {

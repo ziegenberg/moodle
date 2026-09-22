@@ -25,10 +25,9 @@
 import String from '@moodle/lms/core/String';
 import type {FilterName} from '../common/types';
 import {useAriaLabels} from '../common/useAriaLabels';
+import {useComposedLabel} from '../common/useComposedLabel';
 
 const MENU_ID = 'menudayfilter';
-const SPAN_ID = 'timeline-day-filter-current-selection';
-const LABEL_ID = 'timeline-day-filter-label';
 const GROUP_ID = 'duedatefiltergrouplabel';
 
 interface FilterOption {
@@ -67,9 +66,13 @@ interface DayFilterProps {
  * so the gap and outside-click behaviour match the original exactly.
  */
 export default function DayFilter({activeFilter, onChange}: DayFilterProps) {
-    const {buttonLabel, itemLabels} = useAriaLabels('ariadayfilter', 'ariadayfilteroption', ALL_OPTIONS);
+    const {buttonLabel: menuLabel, itemLabels} = useAriaLabels('ariadayfilter', 'ariadayfilteroption', ALL_OPTIONS);
 
     const activeOption = ALL_OPTIONS.find(o => o.name === activeFilter) ?? ALL_OPTIONS[0];
+
+    const toggleLabel = useComposedLabel(
+        'ariadayfilterbutton', activeOption.labelKey, activeOption.labelComponent
+    );
 
     const renderItem = (option: FilterOption) => (
         <a
@@ -102,26 +105,22 @@ export default function DayFilter({activeFilter, onChange}: DayFilterProps) {
                 // on. The literal never changes between renders, so React's reconciler leaves
                 // the attribute alone and will not reset it while the menu is open.
                 aria-expanded="false"
+                aria-label={toggleLabel}
                 aria-controls={MENU_ID}
-                title={buttonLabel}
+                title={menuLabel}
             >
-                {/* The visible selection leads the accessible name, so someone driving the page
-                    by voice can activate the button by saying the words they can see (WCAG
-                    2.5.3). The qualifier that used to be an aria-label follows it, hidden, and
-                    names the menu below. */}
-                <span id={SPAN_ID} data-active-item-text="">
+                <span data-active-item-text="">
                     <String
                         identifier={activeOption.labelKey}
                         component={activeOption.labelComponent}
                     >{''}</String>
                 </span>
-                <span id={LABEL_ID} className="visually-hidden">{` ${buttonLabel}`}</span>
             </button>
 
             <div
                 id={MENU_ID}
                 role="menu"
-                aria-labelledby={LABEL_ID}
+                aria-label={menuLabel}
                 className="dropdown-menu"
                 data-show-active-item=""
                 data-skip-active-class="true"

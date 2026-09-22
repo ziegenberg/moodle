@@ -28,9 +28,8 @@
 import String from '@moodle/lms/core/String';
 import type {OrderName} from '../common/types';
 import {useAriaLabels} from '../common/useAriaLabels';
+import {useComposedLabel} from '../common/useComposedLabel';
 
-const SPAN_ID = 'timeline-view-selector-current-selection';
-const LABEL_ID = 'timeline-view-selector-label';
 
 interface ViewOption {
     name: OrderName;
@@ -56,9 +55,13 @@ interface ViewSelectorProps {
 export default function ViewSelector({activeOrder, onChange}: ViewSelectorProps) {
     const menuId = 'menusortby';
 
-    const {buttonLabel, itemLabels} = useAriaLabels('ariaviewselector', 'ariaviewselectoroption', VIEW_OPTIONS);
+    const {buttonLabel: menuLabel, itemLabels} = useAriaLabels(
+        'ariaviewselector', 'ariaviewselectoroption', VIEW_OPTIONS
+    );
 
     const activeOption = VIEW_OPTIONS.find(o => o.name === activeOrder) ?? VIEW_OPTIONS[0];
+
+    const toggleLabel = useComposedLabel('ariaviewselectorbutton', activeOption.labelKey);
 
     return (
         <div data-region="view-selector" className="dropdown mb-1">
@@ -71,23 +74,19 @@ export default function ViewSelector({activeOrder, onChange}: ViewSelectorProps)
                 // on. The literal never changes between renders, so React's reconciler leaves
                 // the attribute alone and will not reset it while the menu is open.
                 aria-expanded="false"
+                aria-label={toggleLabel}
                 aria-controls={menuId}
-                title={buttonLabel}
+                title={menuLabel}
             >
-                {/* The visible selection leads the accessible name, so someone driving the page
-                    by voice can activate the button by saying the words they can see (WCAG
-                    2.5.3). The qualifier that used to be an aria-label follows it, hidden, and
-                    names the menu below. */}
-                <span id={SPAN_ID} data-active-item-text="">
+                <span data-active-item-text="">
                     <String identifier={activeOption.labelKey} component="block_timeline">{''}</String>
                 </span>
-                <span id={LABEL_ID} className="visually-hidden">{` ${buttonLabel}`}</span>
             </button>
 
             <div
                 id={menuId}
                 role="menu"
-                aria-labelledby={LABEL_ID}
+                aria-label={menuLabel}
                 className="dropdown-menu dropdown-menu-end"
                 data-show-active-item=""
             >
