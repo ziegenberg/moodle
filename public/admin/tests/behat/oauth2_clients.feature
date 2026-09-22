@@ -13,8 +13,11 @@ Feature: Create OAuth2 clients
     And I set the field "Name" to "Test Confidential Client"
     And I set the field "Description" to "A test confidential OAuth2 client"
     And I click on "Confidential" "radio"
-    And I set the field "Authorization Code" to "1"
+    And the field "Authorization Code" matches value "1"
+    And the field "Client Credentials" matches value "0"
+    And I should not see "The Client Credentials flow enables direct, non-interactive API access without requiring a user login step. Anyone with the client ID and secret will be granted system/admin permissions. Enable this flow only for trusted machine-to-machine integrations."
     And I set the field "Client Credentials" to "1"
+    And I should see "The Client Credentials flow enables direct, non-interactive API access without requiring a user login step. Anyone with the client ID and secret will be granted system/admin permissions. Enable this flow only for trusted machine-to-machine integrations."
     And I should see "Callback URIs"
     And I set the field "redirecturi[0]" to "https://example.com/callback"
     And the "Proof Key for Code Exchange" "checkbox" should be enabled
@@ -38,6 +41,7 @@ Feature: Create OAuth2 clients
     And I click on "Confidential" "radio"
     And I set the field "Authorization Code" to "0"
     And I set the field "Client Credentials" to "1"
+    And I should see "The Client Credentials flow enables direct, non-interactive API access without requiring a user login step. Anyone with the client ID and secret will be granted system/admin permissions. Enable this flow only for trusted machine-to-machine integrations."
     And I should not see "Callback URIs"
     And "Proof Key for Code Exchange" "field" should not be visible
     When I press "Create client"
@@ -60,6 +64,7 @@ Feature: Create OAuth2 clients
     And I click on "Confidential" "radio"
     And I set the field "Authorization Code" to "1"
     And I set the field "Client Credentials" to "0"
+    And I should not see "The Client Credentials flow enables direct, non-interactive API access without requiring a user login step. Anyone with the client ID and secret will be granted system/admin permissions. Enable this flow only for trusted machine-to-machine integrations."
     And I should see "Callback URIs"
     And I set the field "redirecturi[0]" to "https://example.com/callback"
     And the "Proof Key for Code Exchange" "checkbox" should be enabled
@@ -80,8 +85,11 @@ Feature: Create OAuth2 clients
     Given I click on "Create client" "link"
     And I set the field "Name" to "Test Public Client"
     And I set the field "Description" to "A test public OAuth2 client"
+    And I set the field "Client Credentials" to "1"
+    And I should see "The Client Credentials flow enables direct, non-interactive API access without requiring a user login step. Anyone with the client ID and secret will be granted system/admin permissions. Enable this flow only for trusted machine-to-machine integrations."
     And I click on "Public" "radio"
     And "Client Credentials" "field" should not be visible
+    And I should not see "The Client Credentials flow enables direct, non-interactive API access without requiring a user login step. Anyone with the client ID and secret will be granted system/admin permissions. Enable this flow only for trusted machine-to-machine integrations."
     And the "Authorization Code" "field" should be disabled
     And I should see "Callback URIs"
     And I set the field "redirecturi[0]" to "https://example.com/callback"

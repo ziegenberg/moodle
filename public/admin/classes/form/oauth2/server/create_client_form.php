@@ -31,7 +31,7 @@ class create_client_form extends base_client_form {
      * Form definition.
      */
     public function definition(): void {
-        global $PAGE, $OUTPUT;
+        global $PAGE;
 
         $mform = $this->_form;
 
@@ -95,13 +95,23 @@ class create_client_form extends base_client_form {
         );
 
         $mform->setDefault('flow_auth_code', 1);
-        $mform->setDefault('flow_client_credentials', 1);
+        $mform->setDefault('flow_client_credentials', 0);
 
         // Client Credentials is not available to Public clients.
         $mform->hideIf('flow_client_credentials', 'clienttype', 'eq', client_entity::TYPE_PUBLIC);
 
         // Public clients must use Authorization Code.
         $mform->disabledIf('flow_auth_code', 'clienttype', 'eq', client_entity::TYPE_PUBLIC);
+
+        // Client Credentials flow warning notice.
+        $this->add_warning_notice_element(
+            'clientcredentialswarning',
+            get_string('oauth2server_clientgranttypeclientcredswarning', 'admin'),
+        );
+
+        // Hide the warning notice for Public clients, and while Client Credentials is unchecked.
+        $mform->hideIf('clientcredentialswarning', 'clienttype', 'eq', client_entity::TYPE_PUBLIC);
+        $mform->hideIf('clientcredentialswarning', 'flow_client_credentials', 'notchecked');
 
         // Redirect URI fields.
         $this->add_redirect_uri_elements();
@@ -129,21 +139,10 @@ class create_client_form extends base_client_form {
             client_entity::TYPE_PUBLIC,
         );
 
-        // Warning notice.
-        $icon = html_writer::tag('i', '', ['class' => 'fa fa-exclamation-triangle me-2', 'aria-hidden' => 'true']);
-
-        $mform->addElement(
-            'static',
-            'warningnotice',
-            '',
-            $OUTPUT->notification(
-                $icon . get_string(
-                    'oauth2server_clientcreationwarning',
-                    'admin'
-                ),
-                \core\output\notification::NOTIFY_WARNING,
-                false,
-            ),
+        // Warning notice about the inability to change client type and primary flow once the client is created.
+        $this->add_warning_notice_element(
+            'clientcreationwarning',
+            get_string('oauth2server_clientcreationwarning', 'admin'),
         );
 
         // Action buttons.
@@ -201,5 +200,29 @@ class create_client_form extends base_client_form {
         $mform->hideIf('add_redirecturi_fields', 'flow_auth_code', 'notchecked');
 
         $mform->hideIf('redirecturis_footer', 'flow_auth_code', 'notchecked');
+    }
+
+    /**
+     * Add a warning notice element to the form.
+     *
+     * @param string $elementname The name of the form element.
+     * @param string $warningtext The warning text to display.
+     * @return void
+     */
+    private function add_warning_notice_element(string $elementname, string $warningtext): void {
+        global $OUTPUT;
+
+        $icon = html_writer::tag('i', '', ['class' => 'fa fa-exclamation-triangle me-2', 'aria-hidden' => 'true']);
+
+        $this->_form->addElement(
+            'static',
+            $elementname,
+            '',
+            $OUTPUT->notification(
+                $icon . $warningtext,
+                \core\output\notification::NOTIFY_WARNING,
+                false,
+            ),
+        );
     }
 }
