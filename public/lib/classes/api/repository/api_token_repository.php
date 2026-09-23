@@ -53,7 +53,15 @@ class api_token_repository {
 
         $record = new \stdClass();
         $record->name = $name;
-        $record->token = password_hash($secret, PASSWORD_DEFAULT);
+
+        // Ensure that scopes are sorted for consistency.
+        sort($scopes);
+
+        // When we hash the secret we include a checksum of the granted scopes and expiry to ensure that these
+        // are not changed in the database.
+        $secret .= $this->calculate_token_checksum($userid, $scopes, $expirytime);
+
+        $record->token = password_hash($this->prehash_secret($secret), PASSWORD_DEFAULT);
         $record->userid = $userid;
         $record->scopes = implode(' ', $scopes);
         $record->description = $description;
@@ -120,34 +128,6 @@ class api_token_repository {
     }
 
     /**
-     * Update an existing token.
-     *
-     * Only the following fields can be updated via this method: name, description, scopes, expirytime.
-     *
-     * @param int $tokenid The token ID.
-     * @param array $updates The updates.
-     * @return void
-     */
-    public function update_token(int $tokenid, array $updates): void {
-        global $DB;
-
-        $allowedfields = ['name', 'description', 'scopes', 'expirytime'];
-        $filteredupdates = array_intersect_key($updates, array_flip($allowedfields));
-
-        if (empty($filteredupdates)) {
-            return;
-        }
-
-        $token = $DB->get_record('rest_api_tokens', ['id' => $tokenid], '*', MUST_EXIST);
-
-        foreach ($filteredupdates as $field => $value) {
-            $token->{$field} = $value;
-        }
-
-        $DB->update_record('rest_api_tokens', $token);
-    }
-
-    /**
      * Revoke a token.
      *
      * @param int $tokenid The token ID.
@@ -177,6 +157,14 @@ class api_token_repository {
     }
 
     /**
+     * A pre-computed bcrypt hash, used only to burn an equivalent amount of CPU time to a real
+     * password_verify() call when no matching token row exists to check against.
+     *
+     * @var string
+     */
+    protected const string DUMMY_HASH = '$2y$10$VeFTuEKh7qoWSrbPxWsnVeyLNgcZCrakBQAvqKQcVbaro8Jj2smvu';
+
+    /**
      * Validate a token.
      *
      * @param int $tokenid The token ID.
@@ -187,9 +175,27 @@ class api_token_repository {
      * @throws \core\exception\revoked_api_token_exception If the token has been revoked.
      */
     public function validate_token(int $tokenid, string $secret): api_token_entity {
-        $tokenentity = $this->get_by_id($tokenid);
+        try {
+            $tokenentity = $this->get_by_id($tokenid);
+        } catch (\dml_missing_record_exception $e) {
+            // Without this, a request for a token ID that does not exist returns immediately with a
+            // different exception type to one for an ID that exists but has the wrong secret (which
+            // only fails after the cost of a bcrypt verify). Both the timing difference and the
+            // distinct exception would let an attacker enumerate valid token IDs by probing every
+            // integer. Performing a dummy verify here keeps both the timing and the exception thrown
+            // the same in either case.
+            password_verify($this->prehash_secret($secret), self::DUMMY_HASH);
+            throw new \core\exception\invalid_api_token_exception();
+        }
 
-        if (!password_verify($secret, $tokenentity->get_token())) {
+        $userid = $tokenentity->get_userid();
+        $checksum = $this->calculate_token_checksum(
+            $userid,
+            $tokenentity->get_scopes(),
+            $tokenentity->get_expirytime(),
+        );
+
+        if (!password_verify($this->prehash_secret($secret . $checksum), $tokenentity->get_token())) {
             throw new \core\exception\invalid_api_token_exception();
         }
 
@@ -252,5 +258,47 @@ class api_token_repository {
         return array_map(function ($record) {
             return api_token_entity::create_from_record($record);
         }, $records);
+    }
+
+    /**
+     * Pre-hash the secret and its appended checksum.
+     *
+     * The default password_hash() algorithm is bcrypt, which silently truncates its input to 72 bytes. Our
+     * secret is already 64 bytes (see {@see token_manager::SECRET_LENGTH}), leaving very little room for the
+     * scopes/expirytime checksum appended in {@see self::create_token()} and {@see self::validate_token()}.
+     * Without pre-hashing, two tokens whose secret + checksum share the same first ~72 bytes would produce
+     * the same bcrypt hash, defeating the checksum's purpose of detecting tampering with stored scopes or
+     * expiry time.
+     *
+     * Hashing first collapses the input to a fixed-length 64-character SHA-256 digest, well under the bcrypt
+     * limit, regardless of how many scopes are granted or how long their names are.
+     *
+     * @param string $secret The raw secret, with the checksum already appended.
+     * @return string The pre-hashed digest to pass to password_hash()/password_verify().
+     */
+    protected function prehash_secret(
+        #[\SensitiveParameter]
+        string $secret,
+    ): string {
+        return hash('sha256', $secret);
+    }
+
+    /**
+     * Calculate the checksum used as an addendum to the token secret.
+     *
+     * Note: We do not hash the checksum in any way. It is used as-is appended to the token secret.
+     * If we were to shasum it then we would open it to collision attacks.
+     *
+     * @param array $scopes
+     * @param int|null $expirytime
+     * @return string
+     */
+    protected function calculate_token_checksum(
+        int $userid,
+        array $scopes,
+        ?int $expirytime,
+    ): string {
+        sort($scopes);
+        return $userid . '|' . implode(' ', $scopes) . '|' . ($expirytime ?? '');
     }
 }

@@ -55,12 +55,207 @@ final class api_token_repository_test extends \advanced_testcase {
         $record = $DB->get_record('rest_api_tokens', ['id' => $token->get_id()], '*', MUST_EXIST);
 
         $this->assertEquals('Token 1', $record->name);
-        $this->assertTrue(password_verify('secret', $record->token));
         $this->assertEquals($user->id, $record->userid);
         $this->assertEquals('scope', $record->scopes);
         $this->assertEquals('A description', $record->description);
         $this->assertEquals(1700000000, $record->expirytime);
         $this->assertEquals(api_token_entity::REVOKED_NO, $record->revoked);
+
+        // The token stored in the database is a hashed version of the secret combined with a checksum of
+        // the scopes and expiry time. The secret + checksum is pre-hashed with SHA-256 before being passed
+        // to password_hash(), so that it fits within bcrypt's 72-byte input limit.
+        $checksum = $user->id . '|' . implode(' ', ['scope']) . '|1700000000';
+        $this->assertTrue(password_verify(hash('sha256', 'secret' . $checksum), $record->token));
+    }
+
+    /**
+     * Scopes are sorted before being stored, and before being folded into the secret checksum, so that the
+     * order in which callers supply them cannot change the resulting hash.
+     */
+    public function test_create_token_sorts_scopes(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+
+        $user = $this->getDataGenerator()->create_user();
+        $repository = new api_token_repository();
+
+        $token = $repository->create_token(
+            'Token 1',
+            'secret',
+            $user->id,
+            ['zeta', 'alpha', 'mid'],
+            null,
+            1700000000
+        );
+
+        $record = $DB->get_record('rest_api_tokens', ['id' => $token->get_id()], '*', MUST_EXIST);
+
+        // The scopes are stored sorted alphabetically, regardless of the order supplied.
+        $this->assertEquals('alpha mid zeta', $record->scopes);
+
+        // The checksum embedded in the hash is calculated from the sorted scopes, and the secret + checksum
+        // is pre-hashed with SHA-256 before being passed to password_hash().
+        $checksum = $user->id . '|' . 'alpha mid zeta' . '|' . 1700000000;
+        $this->assertTrue(password_verify(hash('sha256', 'secret' . $checksum), $record->token));
+    }
+
+    /**
+     * Creating a token with the same secret and scopes, but supplied in a different order, produces the same
+     * checksum, so the order the caller passes scopes in does not weaken or otherwise affect validation.
+     */
+    public function test_create_token_scope_order_does_not_affect_validation(): void {
+        $this->resetAfterTest();
+
+        $user = $this->getDataGenerator()->create_user();
+        $repository = new api_token_repository();
+
+        $token = $repository->create_token(
+            'Token',
+            'secret',
+            $user->id,
+            ['zeta', 'alpha', 'mid'],
+        );
+
+        // Validation still succeeds because the checksum is calculated from the sorted scopes, both at
+        // creation time and at validation time.
+        $validated = $repository->validate_token($token->get_id(), 'secret');
+        $this->assertEquals($token->get_id(), $validated->get_id());
+    }
+
+    /**
+     * If the scopes stored against a token are tampered with directly in the database, the checksum embedded
+     * in the hashed secret no longer matches, so the token fails validation. This prevents an attacker with
+     * database access from silently escalating the privileges of an existing token.
+     */
+    public function test_validate_token_fails_if_scopes_tampered(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+
+        $user = $this->getDataGenerator()->create_user();
+        $repository = new api_token_repository();
+
+        $token = $repository->create_token('Token', 'secret', $user->id, ['scope']);
+
+        // Tamper with the stored scopes, granting an extra scope that was never part of the checksum.
+        $DB->set_field('rest_api_tokens', 'scopes', 'scope extrascope', ['id' => $token->get_id()]);
+
+        $this->expectException(\core\exception\invalid_api_token_exception::class);
+        $repository->validate_token($token->get_id(), 'secret');
+    }
+
+    /**
+     * Real secrets are 64 bytes long (see {@see token_manager::SECRET_LENGTH}), which leaves very little
+     * headroom under bcrypt's 72-byte input limit for the scopes/expirytime checksum appended to them.
+     * Without pre-hashing the secret+checksum (see {@see api_token_repository::prehash_secret()}), bcrypt
+     * would silently truncate the checksum, so tampering with scopes/expirytime beyond the first ~8 bytes
+     * of the checksum would go undetected. This test uses a realistically-sized secret and enough scopes
+     * to overflow the 72-byte limit, confirming that tampering is still detected.
+     */
+    public function test_validate_token_fails_if_scopes_tampered_with_long_secret_and_scopes(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+
+        $user = $this->getDataGenerator()->create_user();
+        $repository = new api_token_repository();
+
+        // A realistically-sized secret, as generated by token_manager::SECRET_LENGTH.
+        $secret = bin2hex(random_bytes(32));
+
+        // Enough scopes that the secret + checksum comfortably exceeds bcrypt's 72-byte limit.
+        $scopes = ['course:view', 'course:update', 'user:view', 'user:update', 'mod:quiz:attempt'];
+
+        $token = $repository->create_token('Token', $secret, $user->id, $scopes);
+
+        // Tamper with a scope character far beyond byte 72 of the secret + checksum, which a naive
+        // bcrypt-only hash would silently ignore.
+        $tamperedscopes = implode(' ', $scopes) . ' extrascope';
+        $DB->set_field('rest_api_tokens', 'scopes', $tamperedscopes, ['id' => $token->get_id()]);
+
+        $this->expectException(\core\exception\invalid_api_token_exception::class);
+        $repository->validate_token($token->get_id(), $secret);
+    }
+
+    /**
+     * If the expiry time stored against a token is tampered with directly in the database, the checksum
+     * embedded in the hashed secret no longer matches, so the token fails validation. This prevents an
+     * attacker with database access from silently extending the lifetime of an existing token.
+     */
+    public function test_validate_token_fails_if_expirytime_tampered(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+
+        $user = $this->getDataGenerator()->create_user();
+        $repository = new api_token_repository();
+
+        $token = $repository->create_token('Token', 'secret', $user->id, ['scope'], null, time() + 3600);
+
+        // Tamper with the stored expiry time, extending the lifetime of the token.
+        $DB->set_field('rest_api_tokens', 'expirytime', time() + 999999, ['id' => $token->get_id()]);
+
+        // The token is rejected as invalid (not merely expired), because the checksum mismatch is detected
+        // before the expiry is even considered.
+        $this->expectException(\core\exception\invalid_api_token_exception::class);
+        $repository->validate_token($token->get_id(), 'secret');
+    }
+
+    /**
+     * A token created with no expiry has a stable checksum representation for the missing expiry, and
+     * therefore validates correctly.
+     */
+    public function test_validate_token_with_no_expiry_succeeds(): void {
+        $this->resetAfterTest();
+
+        $user = $this->getDataGenerator()->create_user();
+        $repository = new api_token_repository();
+
+        $token = $repository->create_token('Token', 'secret', $user->id, ['scope'], null, null);
+
+        $validated = $repository->validate_token($token->get_id(), 'secret');
+        $this->assertEquals($token->get_id(), $validated->get_id());
+    }
+
+    /**
+     * Validating a token ID that does not exist in the database at all must fail with the invalid_api_token_exception
+     *
+     * The same exception is used for both missing and invalid tokens, otherwise, an attacker could
+     * enumerate valid token IDs by noticing that non-existent IDs raise a different exception.
+     */
+    public function test_validate_token_fails_for_missing_secret(): void {
+        $this->resetAfterTest();
+
+        $user = $this->getDataGenerator()->create_user();
+        $repository = new api_token_repository();
+
+        $token = $repository->create_token('Token', 'secret', $user->id, ['scope']);
+
+        // A token ID which was never created.
+        $missingid = $token->get_id() + 1000;
+
+        $this->expectException(\core\exception\invalid_api_token_exception::class);
+        $repository->validate_token($missingid, 'secret');
+    }
+
+    /**
+     * Validating a token ID that does not exist in the database at all must fail with the invalid_api_token_exception
+     *
+     * The same exception is used for both missing and invalid tokens, otherwise, an attacker could
+     * enumerate valid token IDs by noticing that non-existent IDs raise a different exception.
+     */
+    public function test_validate_token_fails_for_wrong_secret(): void {
+        $this->resetAfterTest();
+
+        $user = $this->getDataGenerator()->create_user();
+        $repository = new api_token_repository();
+
+        $token = $repository->create_token('Token', 'secret', $user->id, ['scope']);
+
+        // An existing token ID, but with the wrong secret, must raise the exact same exception class.
+        $this->expectException(\core\exception\invalid_api_token_exception::class);
+        $repository->validate_token($token->get_id(), 'wrongsecret');
     }
 
     /**
@@ -96,49 +291,6 @@ final class api_token_repository_test extends \advanced_testcase {
 
         $this->expectException(\dml_missing_record_exception::class);
         $repository->get_by_id(999999);
-    }
-
-    /**
-     * Test token update.
-     */
-    public function test_update_token(): void {
-        $this->resetAfterTest();
-
-        $user = $this->getDataGenerator()->create_user();
-        $repository = new api_token_repository();
-
-        $token = $repository->create_token(
-            'Original Name',
-            'secret',
-            $user->id,
-            ['scope'],
-            'Original Description',
-            1700000000
-        );
-
-        $updates = [
-            'name' => 'Updated Name',
-            'token' => 'updatedsecrethash',
-            'userid' => 99999,
-            'description' => 'Updated Description',
-            'scopes' => 'updatedscope',
-            'expirytime' => 1800000000,
-        ];
-
-        $repository->update_token($token->get_id(), $updates);
-
-        $updatedtoken = $repository->get_by_id($token->get_id());
-
-        // Verify allowed updates successfully persisted.
-        $this->assertEquals('Updated Name', $updatedtoken->get_name());
-        $this->assertEquals('Updated Description', $updatedtoken->get_description());
-        $this->assertEquals(['updatedscope'], $updatedtoken->get_scopes());
-        $this->assertEquals(1800000000, $updatedtoken->get_expirytime());
-        // Verify that protected fields were NOT modified.
-        // The user ID should not have changed.
-        $this->assertEquals($user->id, $updatedtoken->get_userid());
-        // The token hash should not have changed.
-        $this->assertNotEquals('updatedsecrethash', $updatedtoken->get_token());
     }
 
     /**
@@ -304,7 +456,10 @@ final class api_token_repository_test extends \advanced_testcase {
 
         $repository = new api_token_repository();
 
-        $this->expectException(\dml_missing_record_exception::class);
+        // A token ID with no matching row must be rejected the same way as one with a wrong secret
+        // (invalid_api_token_exception), not with a lower-level dml_missing_record_exception. Otherwise
+        // the exception type itself would tell a caller whether a given token ID exists at all.
+        $this->expectException(\core\exception\invalid_api_token_exception::class);
         $repository->get_from_token($this->build_token_string(999999, 'somesecret'));
     }
 
