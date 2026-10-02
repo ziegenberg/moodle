@@ -28,11 +28,11 @@ namespace core_badges;
 
 defined('MOODLE_INTERNAL') || die();
 
-global $CFG;
-require_once($CFG->libdir . '/filelib.php');
-
-use context_system;
-use curl;
+use core\di;
+use core\http_client;
+use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Psr7\Request as HttpRequest;
+use GuzzleHttp\RequestOptions;
 
 /**
  * Represent a single method for the remote api and this class using for Open Badge API v2.1 methods.
@@ -128,24 +128,6 @@ class backpack_api2p1_mapping {
     }
 
     /**
-     * Standard options used for all curl requests.
-     *
-     * @return array
-     */
-    private function get_curl_options() {
-        return array(
-            'FRESH_CONNECT'     => true,
-            'RETURNTRANSFER'    => true,
-            'FORBID_REUSE'      => true,
-            'HEADER'            => 0,
-            'CONNECTTIMEOUT'    => 3,
-            'CONNECTTIMEOUT'    => 3,
-            // Follow redirects with the same type of request when sent 301, or 302 redirects.
-            'CURLOPT_POSTREDIR' => 3,
-        );
-    }
-
-    /**
      * Make an api request and parse the response.
      *
      * @param string $apiurl Raw request url.
@@ -154,27 +136,48 @@ class backpack_api2p1_mapping {
      * @return bool|mixed
      */
     public function request($apiurl, $tokenkey, $post = []) {
-        $curl = new curl();
-        $url = $this->get_url($apiurl);
+        $headers = ['Accept' => 'application/json', 'Expect' => ''];
         if ($tokenkey) {
-            $curl->setHeader('Authorization: Bearer ' . $tokenkey);
+            $headers['Authorization'] = 'Bearer ' . $tokenkey;
         }
-
         if ($this->json) {
-            $curl->setHeader(array('Content-type: application/json'));
+            $headers['Content-Type'] = 'application/json';
             if ($this->method == 'post') {
                 $post = json_encode($post);
             }
         }
 
-        $curl->setHeader(array('Accept: application/json', 'Expect:'));
-        $options = $this->get_curl_options();
-        if ($this->method == 'get') {
-            $response = $curl->get($url, $post, $options);
-        } else if ($this->method == 'post') {
-            $response = $curl->post($url, $post, $options);
+        $url = $this->get_url($apiurl);
+        // GET parameters are appended to the URL as a query string.
+        if ($this->method == 'get' && is_array($post) && !empty($post)) {
+            $url .= (stripos($url, '?') !== false) ? '&' : '?';
+            $url .= http_build_query($post);
+            $post = null;
         }
-        $response = json_decode($response);
+
+        $options = [
+            RequestOptions::HTTP_ERRORS => false,
+            RequestOptions::CONNECT_TIMEOUT => 3,
+            // Follow redirects with the same type of request when sent 301, or 302 redirects.
+            RequestOptions::ALLOW_REDIRECTS => ['strict' => true],
+            'curl' => [
+                CURLOPT_FRESH_CONNECT => true,
+                CURLOPT_FORBID_REUSE => true,
+            ],
+        ];
+        $request = new HttpRequest(
+            method: strtoupper($this->method),
+            uri: $url,
+            headers: $headers,
+            body: is_array($post) ? null : $post,
+        );
+
+        try {
+            $response = di::get(http_client::class)->send($request, $options);
+        } catch (GuzzleException $e) {
+            return null;
+        }
+        $response = json_decode($response->getBody());
         if (isset($response->result)) {
             $response = $response->result;
         }
