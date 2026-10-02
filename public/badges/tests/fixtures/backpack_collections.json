@@ -1,0 +1,13 @@
+{
+    "result": [
+        {
+            "entityType": "BackpackCollection",
+            "entityId": "collection-1",
+            "name": "Collection 1",
+            "description": "The first public collection",
+            "share_url": "https://backpack.example.org/collection-1",
+            "published": true,
+            "assertions": []
+        }
+    ]
+}
