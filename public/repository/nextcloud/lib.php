@@ -22,6 +22,10 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or
  */
 
+use core\di;
+use core\http_client;
+use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\RequestOptions;
 use repository_nextcloud\issuer_management;
 use repository_nextcloud\ocs_client;
 
@@ -93,12 +97,6 @@ class repository_nextcloud extends repository {
     private $controlledlinkfoldername;
 
     /**
-     * Curl instance that can be used to fetch file from nextcloud instance.
-     * @var curl
-     */
-    private $curl;
-
-    /**
      * repository_nextcloud constructor.
      *
      * @param int $repositoryid
@@ -149,7 +147,6 @@ class repository_nextcloud extends repository {
         }
 
         $this->ocsclient = new ocs_client($this->get_user_oauth_client());
-        $this->curl = new curl();
     }
 
     /**
@@ -1026,30 +1023,45 @@ class repository_nextcloud extends repository {
         $url = $reference->link;
         if (file_extension_in_typegroup($file->get_filepath() . $file->get_filename(), 'web_image')) {
             $saveas = $this->prepare_file(uniqid());
+            $httpclient = di::get(http_client::class);
+
             try {
-                $result = $this->curl->download_one($url, [], [
-                    'filepath' => $saveas,
-                    'timeout' => $CFG->repositorysyncimagetimeout,
-                    'followlocation' => true,
+                $response = $httpclient->get($url, [
+                    RequestOptions::SINK => $saveas,
+                    RequestOptions::TIMEOUT => $CFG->repositorysyncimagetimeout,
+                    RequestOptions::HTTP_ERRORS => false,
                 ]);
 
-                $info = $this->curl->get_info();
-
-                if ($result === true && isset($info['http_code']) && $info['http_code'] === 200) {
+                if ($response->getStatusCode() === 200) {
                     $file->set_synchronised_content_from_file($saveas);
                     return true;
                 }
-            } catch (Exception $e) {
-                // If the download fails lets download with get().
-                $this->curl->get($url, null, ['timeout' => $CFG->repositorysyncimagetimeout, 'followlocation' => true, 'nobody' => true]);
-                $info = $this->curl->get_info();
 
-                if (isset($info['http_code']) && $info['http_code'] === 200 &&
-                    array_key_exists('download_content_length', $info) &&
-                    $info['download_content_length'] >= 0) {
-                        $filesize = (int)$info['download_content_length'];
+                // The download returned an error status code, so the file is not available.
+                if (file_exists($saveas)) {
+                    unlink($saveas);
+                }
+            } catch (GuzzleException $e) {
+                // If the download fails, try to at least synchronise the file size via a HEAD request.
+                if (file_exists($saveas)) {
+                    unlink($saveas);
+                }
+
+                try {
+                    $response = $httpclient->head($url, [
+                        RequestOptions::TIMEOUT => $CFG->repositorysyncimagetimeout,
+                        RequestOptions::HTTP_ERRORS => false,
+                    ]);
+                } catch (GuzzleException $e) {
+                    $response = null;
+                }
+
+                if ($response !== null && $response->getStatusCode() === 200 && $response->hasHeader('Content-Length')) {
+                    $filesize = (int) $response->getHeaderLine('Content-Length');
+                    if ($filesize >= 0) {
                         $file->set_synchronized(null, $filesize);
                         return true;
+                    }
                 }
 
                 $file->set_missingsource();
