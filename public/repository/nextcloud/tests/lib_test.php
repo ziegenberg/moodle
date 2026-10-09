@@ -23,6 +23,9 @@
  */
 namespace repository_nextcloud;
 
+use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Psr7\Response;
 use repository_nextcloud;
 use webdav_client;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -850,37 +853,37 @@ XML;
     }
 
     /**
-     * This function provides the data for test_sync_reference
+     * This function provides the data for test_sync_reference.
      *
      * @return array[]
      */
     public static function sync_reference_provider(): array {
         return [
-            'referecncelastsync done recently' => [
-                [
-                    'storedfile_record' => [
-                            'contextid' => \context_system::instance()->id,
-                            'component' => 'core',
-                            'filearea'  => 'unittest',
-                            'itemid'    => 0,
-                            'filepath'  => '/',
-                            'filename'  => 'testfile.txt',
+            'referencelastsync done recently' => [
+                'storedfileargs' => [
+                    'record' => [
+                        'contextid' => \context_system::instance()->id,
+                        'component' => 'core',
+                        'filearea'  => 'unittest',
+                        'itemid'    => 0,
+                        'filepath'  => '/',
+                        'filename'  => 'testfile.txt',
                     ],
-                    'storedfile_reference' => json_encode(
-                        [
-                            'type' => 'FILE_REFERENCE',
-                            'link' => 'https://test.local/fakelink/',
-                            'usesystem' => true,
-                            'referencelastsync' => DAYSECS + time()
-                        ]
-                    ),
+                    'reference' => json_encode([
+                        'type' => 'FILE_REFERENCE',
+                        'link' => 'https://test.local/fakelink/',
+                        'usesystem' => true,
+                        'referencelastsync' => DAYSECS + time(),
+                    ]),
+                    'lastsyncrecent' => true,
                 ],
-                'mockfunctions' => ['get_referencelastsync'],
-                'expectedresult' => false
+                'httpresponses' => [],
+                'expectsync' => 'none',
+                'expectedresult' => false,
             ],
             'file without link' => [
-                [
-                    'storedfile_record' => [
+                'storedfileargs' => [
+                    'record' => [
                         'contextid' => \context_system::instance()->id,
                         'component' => 'core',
                         'filearea'  => 'unittest',
@@ -888,19 +891,18 @@ XML;
                         'filepath'  => '/',
                         'filename'  => 'testfile.txt',
                     ],
-                    'storedfile_reference' => json_encode(
-                        [
-                            'type' => 'FILE_REFERENCE',
-                            'usesystem' => true,
-                        ]
-                    ),
+                    'reference' => json_encode([
+                        'type' => 'FILE_REFERENCE',
+                        'usesystem' => true,
+                    ]),
                 ],
-                'mockfunctions' => [],
-                'expectedresult' => false
+                'httpresponses' => [],
+                'expectsync' => 'none',
+                'expectedresult' => false,
             ],
-            'file extenstion to exclude' => [
-                [
-                    'storedfile_record' => [
+            'file extension to exclude' => [
+                'storedfileargs' => [
+                    'record' => [
                         'contextid' => \context_system::instance()->id,
                         'component' => 'core',
                         'filearea'  => 'unittest',
@@ -908,20 +910,19 @@ XML;
                         'filepath'  => '/',
                         'filename'  => 'testfile.txt',
                     ],
-                    'storedfile_reference' => json_encode(
-                        [
-                            'link' => 'https://test.local/fakelink/',
-                            'type' => 'FILE_REFERENCE',
-                            'usesystem' => true,
-                        ]
-                    ),
+                    'reference' => json_encode([
+                        'link' => 'https://test.local/fakelink/',
+                        'type' => 'FILE_REFERENCE',
+                        'usesystem' => true,
+                    ]),
                 ],
-                'mockfunctions' => [],
-                'expectedresult' => false
+                'httpresponses' => [],
+                'expectsync' => 'none',
+                'expectedresult' => false,
             ],
-            'file extenstion for image' => [
-                [
-                    'storedfile_record' => [
+            'image file downloaded successfully' => [
+                'storedfileargs' => [
+                    'record' => [
                         'contextid' => \context_system::instance()->id,
                         'component' => 'core',
                         'filearea'  => 'unittest',
@@ -929,67 +930,161 @@ XML;
                         'filepath'  => '/',
                         'filename'  => 'testfile.png',
                     ],
-                    'storedfile_reference' => json_encode(
-                        [
-                            'link' => 'https://test.local/fakelink/',
-                            'type' => 'FILE_REFERENCE',
-                            'usesystem' => true,
-                        ]
-                    ),
-                    'mock_curl' => true,
+                    'reference' => json_encode([
+                        'link' => 'https://test.local/fakelink/',
+                        'type' => 'FILE_REFERENCE',
+                        'usesystem' => true,
+                    ]),
                 ],
-                'mockfunctions' => [''],
-                'expectedresult' => true
+                'httpresponses' => [new Response(200, [], 'image content')],
+                'expectsync' => 'content',
+                'expectedresult' => true,
+            ],
+            'image download returns error status' => [
+                'storedfileargs' => [
+                    'record' => [
+                        'contextid' => \context_system::instance()->id,
+                        'component' => 'core',
+                        'filearea'  => 'unittest',
+                        'itemid'    => 0,
+                        'filepath'  => '/',
+                        'filename'  => 'testfile.png',
+                    ],
+                    'reference' => json_encode([
+                        'link' => 'https://test.local/fakelink/',
+                        'type' => 'FILE_REFERENCE',
+                        'usesystem' => true,
+                    ]),
+                ],
+                'httpresponses' => [new Response(404)],
+                'expectsync' => 'none',
+                'expectedresult' => false,
+            ],
+            'image download fails, head request provides the size' => [
+                'storedfileargs' => [
+                    'record' => [
+                        'contextid' => \context_system::instance()->id,
+                        'component' => 'core',
+                        'filearea'  => 'unittest',
+                        'itemid'    => 0,
+                        'filepath'  => '/',
+                        'filename'  => 'testfile.png',
+                    ],
+                    'reference' => json_encode([
+                        'link' => 'https://test.local/fakelink/',
+                        'type' => 'FILE_REFERENCE',
+                        'usesystem' => true,
+                    ]),
+                ],
+                'httpresponses' => [
+                    new ConnectException('Connection refused', new Request('GET', 'https://test.local/fakelink/')),
+                    new Response(200, ['Content-Length' => '1234']),
+                ],
+                'expectsync' => 'size',
+                'expectedresult' => true,
+            ],
+            'image download fails, head request fails too' => [
+                'storedfileargs' => [
+                    'record' => [
+                        'contextid' => \context_system::instance()->id,
+                        'component' => 'core',
+                        'filearea'  => 'unittest',
+                        'itemid'    => 0,
+                        'filepath'  => '/',
+                        'filename'  => 'testfile.png',
+                    ],
+                    'reference' => json_encode([
+                        'link' => 'https://test.local/fakelink/',
+                        'type' => 'FILE_REFERENCE',
+                        'usesystem' => true,
+                    ]),
+                ],
+                'httpresponses' => [
+                    new ConnectException('Connection refused', new Request('GET', 'https://test.local/fakelink/')),
+                    new ConnectException('Connection refused', new Request('HEAD', 'https://test.local/fakelink/')),
+                ],
+                'expectsync' => 'missing',
+                'expectedresult' => true,
             ],
         ];
     }
 
     /**
-     * Testing sync_reference
+     * Testing sync_reference.
      *
      * @dataProvider sync_reference_provider
      * @param array $storedfileargs
-     * @param array $mockfunctions
+     * @param array $httpresponses
+     * @param string $expectsync
      * @param bool $expectedresult
      * @return void
+     * @covers \repository_nextcloud::sync_reference
      */
-    public function test_sync_reference(array $storedfileargs, $mockfunctions, bool $expectedresult): void {
+    public function test_sync_reference(
+        array $storedfileargs,
+        array $httpresponses,
+        string $expectsync,
+        bool $expectedresult,
+    ): void {
         $this->resetAfterTest(true);
 
-        if (isset($mockfunctions[0])) {
-            $storedfile = $this->createMock(\stored_file::class);
+        $storedfile = $this->createMock(\stored_file::class);
 
-            if ($mockfunctions[0] === 'get_referencelastsync') {
-                if (!$expectedresult) {
-                    $storedfile->method('get_referencelastsync')->willReturn(DAYSECS + time());
-                }
-            } else {
-                $storedfile->method('get_referencelastsync')->willReturn(null);
-            }
+        if (!empty($storedfileargs['lastsyncrecent'])) {
+            $storedfile->method('get_referencelastsync')->willReturn(DAYSECS + time());
+        } else {
+            $storedfile->method('get_referencelastsync')->willReturn(null);
+        }
 
-            $storedfile->method('get_reference')->willReturn($storedfileargs['storedfile_reference']);
-            $storedfile->method('get_filepath')->willReturn($storedfileargs['storedfile_record']['filepath']);
-            $storedfile->method('get_filename')->willReturn($storedfileargs['storedfile_record']['filename']);
+        $storedfile->method('get_reference')->willReturn($storedfileargs['reference']);
+        $storedfile->method('get_filepath')->willReturn($storedfileargs['record']['filepath']);
+        $storedfile->method('get_filename')->willReturn($storedfileargs['record']['filename']);
 
-            if ((isset($storedfileargs['mock_curl']) && $storedfileargs)) {
-                // Lets mock curl, else it would not serve the purpose here.
-                $curl = $this->createMock(\curl::class);
-                $curl->method('download_one')->willReturn(true);
-                $curl->method('get_info')->willReturn(['http_code' => 200]);
+        if ($expectsync === 'content') {
+            $storedfile->expects($this->once())->method('set_synchronised_content_from_file')->with(
+                $this->callback(function ($path) {
+                    return is_file($path);
+                })
+            );
+        } else if ($expectsync === 'size') {
+            $storedfile->expects($this->once())->method('set_synchronized')->with(null, 1234);
+        } else if ($expectsync === 'missing') {
+            $storedfile->expects($this->once())->method('set_missingsource');
+        } else {
+            $storedfile->expects($this->never())->method('set_synchronised_content_from_file');
+            $storedfile->expects($this->never())->method('set_synchronized');
+            $storedfile->expects($this->never())->method('set_missingsource');
+        }
 
-                $reflectionproperty = new \ReflectionProperty($this->repo, 'curl');
-                $reflectionproperty->setValue($this->repo, $curl);
+        if (!empty($httpresponses)) {
+            $history = [];
+            ['mock' => $mock] = $this->get_mocked_http_client($history);
+            foreach ($httpresponses as $response) {
+                $mock->append($response);
             }
         } else {
-            $fs = get_file_storage();
-            $storedfile = $fs->create_file_from_reference(
-                $storedfileargs['storedfile_record'],
-                $this->repo->id,
-                $storedfileargs['storedfile_reference']);
+            $history = [];
         }
 
         $actualresult = $this->repo->sync_reference($storedfile);
         $this->assertEquals($expectedresult, $actualresult);
+
+        if ($expectsync === 'content') {
+            $this->assertCount(1, $history);
+            $this->assertEquals('GET', $history[0]['request']->getMethod());
+            $this->assertEquals('https://test.local/fakelink/', (string) $history[0]['request']->getUri());
+        } else if ($expectsync === 'size' || $expectsync === 'missing') {
+            $this->assertCount(2, $history);
+            $this->assertEquals('GET', $history[0]['request']->getMethod());
+            $this->assertEquals('HEAD', $history[1]['request']->getMethod());
+            $this->assertEquals('https://test.local/fakelink/', (string) $history[1]['request']->getUri());
+        } else if ($expectsync === 'none' && !empty($httpresponses)) {
+            $this->assertCount(1, $history);
+            $this->assertEquals('GET', $history[0]['request']->getMethod());
+            $this->assertEquals('https://test.local/fakelink/', (string) $history[0]['request']->getUri());
+        } else {
+            $this->assertCount(0, $history);
+        }
     }
 
     /**
@@ -1098,7 +1193,7 @@ XML;
      * @param string $searchtext The text to search for
      * @param array|bool $mockresponse The mock response from the webdav search method
      * @param array $expectedlist The expected result list
-     * @covers ::search
+     * @covers \repository_nextcloud::search
      */
     public function test_search(string $searchtext, array|bool $mockresponse, array $expectedlist): void {
         $expected = $this->get_initialised_return_array();
@@ -1138,7 +1233,7 @@ XML;
      * @param string $expecteddebugging Expected debugging message
      * @param bool $openreturn Whether WebDAV open should succeed
      * @param bool $expectsearch Whether search method should be called
-     * @covers ::search
+     * @covers \repository_nextcloud::search
      */
     public function test_search_errors(string $searchtext, array|null $userinfo, string $expecteddebugging,
             bool $openreturn = true, bool $expectsearch = true): void {
