@@ -164,15 +164,16 @@ class ocs_client extends rest {
      * @param array $functionargs Request parameters
      * @param bool|string $rawpost Optional param to include in the body of a post
      * @param bool|string $contenttype Content type of the request body. Default: multipart/form-data if !$rawpost, JSON otherwise
+     * @param array $headers Extra headers to send with the request.
      * @return object|string
      * @throws \coding_exception
      * @throws \core\oauth2\rest_exception
      */
-    public function call($functionname, $functionargs, $rawpost = false, $contenttype = false) {
+    public function call($functionname, $functionargs, $rawpost = false, $contenttype = false, array $headers = []) {
         if ($rawpost === false && $contenttype === false) {
-            return parent::call($functionname, $functionargs, false, 'multipart/form-data');
+            return parent::call($functionname, $functionargs, false, 'multipart/form-data', $headers);
         } else {
-            return parent::call($functionname, $functionargs, $rawpost, $contenttype);
+            return parent::call($functionname, $functionargs, $rawpost, $contenttype, $headers);
         }
     }
 

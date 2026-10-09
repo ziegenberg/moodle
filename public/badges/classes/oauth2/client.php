@@ -236,21 +236,28 @@ class client extends \core\oauth2\client {
                 'scope' => $this->get_scopes(),
             );
         }
+        $headers = [];
         if ($this->basicauth) {
             $idsecret = $this->clientid . ':' . $this->clientsecret;
-            $this->setHeader('Authorization: Basic ' . base64_encode($idsecret));
+            $headers['Authorization'] = 'Basic ' . base64_encode($idsecret);
         } else {
             $params['client_id'] = $this->clientid;
             $params['client_secret'] = $this->clientsecret;
         }
         // Requests can either use http GET or POST.
-        $response = $this->post($this->token_url(), $this->build_post_data($params));
-        if ($this->info['http_code'] !== 200) {
-            $debuginfo = !empty($this->error) ? $this->error : $response;
-            throw new moodle_exception('oauth2refreshtokenerror', 'core_error', '', $this->info['http_code'], $debuginfo);
+        $options = [
+            'headers' => $headers,
+            // Do not throw an exception for failed requests, as these are handled below.
+            'http_errors' => false,
+        ];
+        $response = $this->httpclient->post($this->token_url(), array_merge($options, ['form_params' => $params]));
+        $responsebody = $response->getBody()->getContents();
+        if ($response->getStatusCode() !== 200) {
+            $debuginfo = !empty($responsebody) ? $responsebody : $response->getReasonPhrase();
+            throw new moodle_exception('oauth2refreshtokenerror', 'core_error', '', $response->getStatusCode(), $debuginfo);
         }
 
-        $r = json_decode($response);
+        $r = json_decode($responsebody);
 
         if (is_null($r)) {
             throw new moodle_exception("Could not decode JSON token response");

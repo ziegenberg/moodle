@@ -116,10 +116,10 @@ class converter implements \core_files\converter_interface {
             'fields' => 'id,name'
         ];
 
-        $client->setHeader('X-Upload-Content-Type: ' . $filemimetype);
-        $client->setHeader('X-Upload-Content-Length: ' . $filesize);
-
-        $headers = $service->call('upload', $params, json_encode($metadata));
+        $headers = $service->call('upload', $params, json_encode($metadata), 'application/json', [
+            'X-Upload-Content-Type' => $filemimetype,
+            'X-Upload-Content-Length' => (string) $filesize,
+        ]);
 
         $uploadurl;
         // Google returns a location header with the location for the upload.

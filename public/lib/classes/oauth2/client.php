@@ -404,27 +404,37 @@ class client extends \oauth2_client {
             'grant_type' => 'refresh_token'
         );
 
+        $headers = [];
+
         if ($this->basicauth) {
             $idsecret = urlencode($this->issuer->get('clientid')) . ':' . urlencode($this->issuer->get('clientsecret'));
-            $this->setHeader('Authorization: Basic ' . base64_encode($idsecret));
+            $headers['Authorization'] = 'Basic ' . base64_encode($idsecret);
         } else {
             $params['client_id'] = $this->issuer->get('clientid');
             $params['client_secret'] = $this->issuer->get('clientsecret');
         }
 
+        $options = [
+            'headers' => $headers,
+            // Do not throw an exception for failed requests, as these are handled below.
+            'http_errors' => false,
+        ];
+
         // Requests can either use http GET or POST.
         if ($this->use_http_get()) {
-            $response = $this->get($this->token_url(), $params);
+            $response = $this->httpclient->get($this->token_url(), array_merge($options, ['query' => $params]));
         } else {
-            $response = $this->post($this->token_url(), $this->build_post_data($params));
+            $response = $this->httpclient->post($this->token_url(), array_merge($options, ['form_params' => $params]));
         }
 
-        if ($this->info['http_code'] !== 200) {
-            $debuginfo = !empty($this->error) ? $this->error : $response;
-            throw new moodle_exception('oauth2refreshtokenerror', 'core_error', '', $this->info['http_code'], $debuginfo);
+        $responsebody = $response->getBody()->getContents();
+
+        if ($response->getStatusCode() !== 200) {
+            $debuginfo = !empty($responsebody) ? $responsebody : $response->getReasonPhrase();
+            throw new moodle_exception('oauth2refreshtokenerror', 'core_error', '', $response->getStatusCode(), $debuginfo);
         }
 
-        $r = json_decode($response);
+        $r = json_decode($responsebody);
 
         if (!empty($r->error)) {
             throw new moodle_exception($r->error . ' ' . $r->error_description);

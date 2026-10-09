@@ -19,6 +19,8 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir.'/filelib.php');
 
+use core\http_client;
+
 /**
  * OAuth helper class
  *
@@ -403,7 +405,7 @@ class oauth_helper {
  * @copyright Dan Poltawski <talktodan@gmail.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-abstract class oauth2_client extends curl {
+abstract class oauth2_client {
     /** @var string $clientid client identifier issued to the client */
     private $clientid = '';
     /** @var string $clientsecret The client secret. */
@@ -416,12 +418,12 @@ abstract class oauth2_client extends curl {
     protected $accesstoken = null;
     /** @var string $refreshtoken refresh token string */
     protected $refreshtoken = '';
-    /** @var string $mocknextresponse string */
-    private $mocknextresponse = '';
     /** @var array $upgradedcodes list of upgraded codes in this request */
     private static $upgradedcodes = [];
     /** @var bool basicauth */
     protected $basicauth = false;
+    /** @var http_client The HTTP client used to make requests to the authorisation server. */
+    protected $httpclient;
 
     /**
      * Returns the auth url for OAuth 2.0 request
@@ -442,14 +444,25 @@ abstract class oauth2_client extends curl {
      * @param string $clientsecret
      * @param moodle_url $returnurl
      * @param string $scope
+     * @param http_client|null $httpclient An optional HTTP client. If not provided, one is resolved from the
+     *                                     dependency container. This is primarily useful for tests.
      */
-    public function __construct($clientid, $clientsecret, moodle_url $returnurl, $scope) {
-        parent::__construct();
+    public function __construct($clientid, $clientsecret, moodle_url $returnurl, $scope, ?http_client $httpclient = null) {
+        $this->httpclient = $httpclient ?? \core\di::get(http_client::class);
         $this->clientid = $clientid;
         $this->clientsecret = $clientsecret;
         $this->returnurl = $returnurl;
         $this->scope = $scope;
         $this->accesstoken = $this->get_stored_token();
+    }
+
+    /**
+     * Get the HTTP client used by this OAuth2 client.
+     *
+     * @return http_client
+     */
+    public function get_httpclient(): http_client {
+        return $this->httpclient;
     }
 
     /**
@@ -573,9 +586,12 @@ abstract class oauth2_client extends curl {
             'redirect_uri' => $callbackurl->out(false),
         );
 
+        // The list of headers to send with the request.
+        $headers = [];
+
         if ($this->basicauth) {
             $idsecret = urlencode($this->clientid) . ':' . urlencode($this->clientsecret);
-            $this->setHeader('Authorization: Basic ' . base64_encode($idsecret));
+            $headers['Authorization'] = 'Basic ' . base64_encode($idsecret);
         } else {
             $params['client_id'] = $this->clientid;
             $params['client_secret'] = $this->clientsecret;
@@ -586,19 +602,27 @@ abstract class oauth2_client extends curl {
             $params = array_merge($params, $this->get_additional_upgrade_token_parameters());
         }
 
+        $options = [
+            'headers' => $headers,
+            // Do not throw an exception for failed requests, as these are handled below.
+            'http_errors' => false,
+        ];
+
         // Requests can either use http GET or POST.
         if ($this->use_http_get()) {
-            $response = $this->get($this->token_url(), $params);
+            $response = $this->httpclient->get($this->token_url(), array_merge($options, ['query' => $params]));
         } else {
-            $response = $this->post($this->token_url(), $this->build_post_data($params));
+            $response = $this->httpclient->post($this->token_url(), array_merge($options, ['form_params' => $params]));
         }
 
-        if ($this->info['http_code'] !== 200) {
-            $debuginfo = !empty($this->error) ? $this->error : $response;
-            throw new moodle_exception('oauth2upgradetokenerror', 'core_error', '', $this->info['http_code'], $debuginfo);
+        $responsebody = $response->getBody()->getContents();
+
+        if ($response->getStatusCode() !== 200) {
+            $debuginfo = !empty($responsebody) ? $responsebody : $response->getReasonPhrase();
+            throw new moodle_exception('oauth2upgradetokenerror', 'core_error', '', $response->getStatusCode(), $debuginfo);
         }
 
-        $r = json_decode($response);
+        $r = json_decode($responsebody);
 
         if (is_null($r)) {
             throw new moodle_exception("Could not decode JSON token response");
@@ -639,49 +663,165 @@ abstract class oauth2_client extends curl {
     }
 
     /**
-     * Make a HTTP request, adding the access token we have
+     * Add the current access token to a set of request options, either as a query string parameter or as a
+     * Bearer token in the Authorization header, depending on the value returned by use_http_get().
      *
-     * @param string $url The URL to request
-     * @param array $options
-     * @param mixed $acceptheader mimetype (as string) or false to skip sending an accept header.
-     * @return string
+     * @param array $options The Guzzle request options.
+     * @return array The request options with the access token added.
      */
-    protected function request($url, $options = array(), $acceptheader = 'application/json') {
-        $murl = new moodle_url($url);
-
+    protected function add_auth_to_request_options(array $options): array {
         if ($this->accesstoken) {
             if ($this->use_http_get()) {
-                // If using HTTP GET add as a parameter.
-                $murl->param('access_token', $this->accesstoken->token);
+                // Some APIs expect the access token to be passed as a query string parameter.
+                $options['query'] = array_merge($options['query'] ?? [], ['access_token' => $this->accesstoken->token]);
             } else {
-                $this->setHeader('Authorization: Bearer '.$this->accesstoken->token);
+                $options['headers']['Authorization'] = 'Bearer ' . $this->accesstoken->token;
             }
         }
-
-        if ($acceptheader) {
-            $this->setHeader('Accept: ' . $acceptheader);
-        }
-
-        $response = parent::request($murl->out(false), $options);
-
-        $this->resetHeader();
-
-        return $response;
+        return $options;
     }
 
     /**
-     * Multiple HTTP Requests
-     * This function could run multi-requests in parallel.
+     * Make an authenticated HTTP GET request.
      *
-     * @param array $requests An array of files to request
-     * @param array $options An array of options to set
-     * @return array An array of results
+     * @param string $url The URL to request
+     * @param array $params An array of name value pairs to be added to the URL as a query string.
+     * @param array $options Guzzle request options.
+     * @return string The response body.
      */
-    protected function multi($requests, $options = array()) {
-        if ($this->accesstoken) {
-            $this->setHeader('Authorization: Bearer '.$this->accesstoken->token);
+    public function get($url, $params = array(), $options = array()) {
+        if (!empty($params)) {
+            $options['query'] = array_merge($options['query'] ?? [], $params);
         }
-        return parent::multi($requests, $options);
+        $options = $this->add_auth_to_request_options($options);
+        // Do not throw an exception for HTTP error responses, mirroring the previous curl behaviour.
+        if (!isset($options['http_errors'])) {
+            $options['http_errors'] = false;
+        }
+
+        return $this->httpclient->get($url, $options)->getBody()->getContents();
+    }
+
+    /**
+     * Make an authenticated HTTP POST request.
+     *
+     * @param string $url The URL to request
+     * @param array|string $params An array of name value pairs to send as form data, or a raw request body.
+     * @param array $options Guzzle request options.
+     * @return string The response body.
+     */
+    public function post($url, $params = '', $options = array()) {
+        if (is_array($params) && !empty($params)) {
+            $options['form_params'] = $params;
+        } else if (is_string($params) && $params !== '') {
+            // A pre-encoded application/x-www-form-urlencoded body.
+            $options['body'] = $params;
+            if (!isset($options['headers']['Content-Type'])) {
+                $options['headers']['Content-Type'] = 'application/x-www-form-urlencoded';
+            }
+        }
+        $options = $this->add_auth_to_request_options($options);
+        // Do not throw an exception for HTTP error responses, mirroring the previous curl behaviour.
+        if (!isset($options['http_errors'])) {
+            $options['http_errors'] = false;
+        }
+
+        return $this->httpclient->post($url, $options)->getBody()->getContents();
+    }
+
+    /**
+     * Make an authenticated HTTP request.
+     *
+     * This method is retained for backward compatibility with pre-existing subclasses of oauth2_client.
+     *
+     * @param string $url The URL to request
+     * @param array $options Guzzle request options.
+     * @param mixed $acceptheader mimetype (as string) or false to skip sending an accept header.
+     * @return string The response body.
+     */
+    protected function request($url, $options = array(), $acceptheader = 'application/json') {
+        $options = $this->add_auth_to_request_options($options);
+
+        if ($acceptheader) {
+            $options['headers']['Accept'] = $acceptheader;
+        }
+        if (!isset($options['http_errors'])) {
+            $options['http_errors'] = false;
+        }
+
+        return $this->httpclient->request('GET', $url, $options)->getBody()->getContents();
+    }
+
+    /**
+     * Download a file to the requested filesystem location, without loading it into memory.
+     *
+     * @param string $url
+     * @param array|null $params key-value pairs to be added to the URL as a query string
+     * @param array $options Request options. May contain a 'filepath' or 'file' to write the response to,
+     *                       along with any of 'timeout', 'connecttimeout', 'followlocation' or 'maxredirs'.
+     * @return true|string true on success or an error string on failure
+     */
+    public function download_one($url, $params, $options = array()) {
+        $sink = false;
+        $filepath = null;
+        $guzzleoptions = [];
+
+        if (!empty($params)) {
+            $guzzleoptions['query'] = $params;
+        }
+
+        if (!empty($options['filepath'])) {
+            // Open the target file; the response is written here directly.
+            $filepath = $options['filepath'];
+            if (!($sink = fopen($filepath, 'w'))) {
+                return get_string('cannotwritefile', 'error', $filepath);
+            }
+            $guzzleoptions['sink'] = $sink;
+        } else if (!empty($options['file'])) {
+            // Write the response to the supplied stream. The caller owns the stream.
+            $guzzleoptions['sink'] = $options['file'];
+        }
+
+        $mappedoptions = [
+            'timeout' => 'timeout',
+            'connecttimeout' => 'connect_timeout',
+        ];
+        foreach ($mappedoptions as $old => $new) {
+            if (!empty($options[$old])) {
+                $guzzleoptions[$new] = $options[$old];
+            }
+        }
+
+        if (array_key_exists('followlocation', $options)) {
+            if (empty($options['followlocation'])) {
+                $guzzleoptions['allow_redirects'] = false;
+            } else if (!empty($options['maxredirs'])) {
+                $guzzleoptions['allow_redirects'] = ['max' => (int) $options['maxredirs']];
+            } else {
+                $guzzleoptions['allow_redirects'] = true;
+            }
+        }
+
+        $guzzleoptions = $this->add_auth_to_request_options($guzzleoptions);
+        // Do not throw an exception for HTTP error responses, mirroring the previous curl behaviour.
+        $guzzleoptions['http_errors'] = false;
+
+        try {
+            $this->httpclient->request('GET', $url, $guzzleoptions);
+            $result = true;
+        } catch (\GuzzleHttp\Exception\GuzzleException $e) {
+            $result = $e->getMessage();
+        }
+
+        if ($filepath !== null) {
+            // The file was opened by this method, so close (and possibly remove) it here.
+            fclose($sink);
+            if ($result !== true) {
+                unlink($filepath);
+            }
+        }
+
+        return $result;
     }
 
     /**

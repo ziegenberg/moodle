@@ -22,6 +22,8 @@ use core\oauth2\endpoint;
 use core\oauth2\issuer;
 use core\oauth2\system_account;
 use \core\oauth2\user_field_mapping;
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\Psr7\Response;
 
 /**
  * Tests for oauth2 apis (\core\oauth2\*).
@@ -166,7 +168,11 @@ final class oauth2_test extends \advanced_testcase {
 
         // Fake a response with an access token.
         $response = json_encode($responsedata);
-        \curl::mock_response($response);
+        $httpclient = new http_client([
+            'handler' => new MockHandler([new Response(200, [], $response)]),
+        ]);
+        di::set(http_client::class, $httpclient);
+
         $client = api::get_system_oauth_client($issuer);
         $this->assertTrue($client->is_logged_in());
 
