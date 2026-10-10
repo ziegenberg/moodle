@@ -25,6 +25,11 @@
  */
 require_once($CFG->dirroot . '/repository/lib.php');
 
+use core\di;
+use core\http_client;
+use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\RequestOptions;
+
 /**
  * Repository to access Dropbox files
  *
@@ -623,35 +628,48 @@ class repository_dropbox extends repository {
             return false;
         }
 
-        $c = new curl;
         $url = $this->get_file_download_link($reference->url);
+        $httpclient = di::get(http_client::class);
+
         if (file_extension_in_typegroup($reference->path, 'web_image')) {
             $saveas = $this->prepare_file('');
             try {
-                $result = $c->download_one($url, [], [
-                        'filepath' => $saveas,
-                        'timeout' => $CFG->repositorysyncimagetimeout,
-                        'followlocation' => true,
-                    ]);
-                $info = $c->get_info();
-                if ($result === true && isset($info['http_code']) && $info['http_code'] == 200) {
+                $response = $httpclient->get($url, [
+                    RequestOptions::SINK => $saveas,
+                    RequestOptions::TIMEOUT => $CFG->repositorysyncimagetimeout,
+                    RequestOptions::HTTP_ERRORS => false,
+                ]);
+
+                if ($response->getStatusCode() === 200) {
                     $file->set_synchronised_content_from_file($saveas);
                     return true;
                 }
-            } catch (Exception $e) {
-                // IF the download_one fails, we will attempt to download
-                // again with get() anyway.
+            } catch (GuzzleException $e) {
+                // If the download fails, we will attempt to synchronise the file size anyway.
+            } finally {
+                // Remove any partially downloaded content.
+                if (file_exists($saveas)) {
+                    unlink($saveas);
+                }
             }
         }
 
-        $c->get($url, null, array('timeout' => $CFG->repositorysyncimagetimeout, 'followlocation' => true, 'nobody' => true));
-        $info = $c->get_info();
-        if (isset($info['http_code']) && $info['http_code'] == 200 &&
-                array_key_exists('download_content_length', $info) &&
-                $info['download_content_length'] >= 0) {
-            $filesize = (int)$info['download_content_length'];
-            $file->set_synchronized(null, $filesize);
-            return true;
+        // Even if the image download failed, we can at least synchronise the file size.
+        try {
+            $response = $httpclient->head($url, [
+                RequestOptions::TIMEOUT => $CFG->repositorysyncimagetimeout,
+                RequestOptions::HTTP_ERRORS => false,
+            ]);
+        } catch (GuzzleException $e) {
+            $response = null;
+        }
+
+        if ($response !== null && $response->getStatusCode() === 200 && $response->hasHeader('Content-Length')) {
+            $filesize = (int) $response->getHeaderLine('Content-Length');
+            if ($filesize >= 0) {
+                $file->set_synchronized(null, $filesize);
+                return true;
+            }
         }
         $file->set_missingsource();
         return true;
