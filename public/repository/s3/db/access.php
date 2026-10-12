@@ -25,13 +25,13 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$capabilities = array(
+$capabilities = [
 
-    'repository/s3:view' => array(
+    'repository/s3:view' => [
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => array(
-            'user' => CAP_ALLOW
-        )
-    )
-);
+        'archetypes' => [
+            'user' => CAP_ALLOW,
+        ],
+    ],
+];
