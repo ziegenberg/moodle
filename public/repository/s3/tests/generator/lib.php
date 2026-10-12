@@ -32,7 +32,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class repository_s3_generator extends testing_repository_generator {
-
     /**
      * Fill in type record defaults.
      *
@@ -47,10 +46,15 @@ class repository_s3_generator extends testing_repository_generator {
         if (!isset($record['secret_key'])) {
             $record['secret_key'] = 'secret_key';
         }
+        if (!isset($record['api_region'])) {
+            $record['api_region'] = 'us-east-1';
+        }
         if (!isset($record['endpoint'])) {
-            $record['endpoint'] = 'endpoint';
+            $record['endpoint'] = '';
+        }
+        if (!isset($record['use_path_style'])) {
+            $record['use_path_style'] = '0';
         }
         return $record;
     }
-
 }

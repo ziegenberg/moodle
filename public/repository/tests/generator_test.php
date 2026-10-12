@@ -47,12 +47,32 @@ final class generator_test extends \advanced_testcase {
         $this->resetAfterTest(true);
 
         // All the repository types.
-        $all = array('coursefiles', 'dropbox', 'equella', 'filesystem', 'flickr',
-            'flickr_public', 'googledocs', 'local', 'nextcloud', 'merlot', 'recent', 's3', 'upload', 'url',
-            'user', 'webdav', 'wikimedia', 'youtube');
+        $all = [
+            'areafiles',
+            'contentbank',
+            'coursefiles',
+            'dropbox',
+            'equella',
+            'filesystem',
+            'flickr',
+            'flickr_public',
+            'googledocs',
+            'local',
+            'merlot',
+            'nextcloud',
+            'onedrive',
+            'recent',
+            's3',
+            'upload',
+            'url',
+            'user',
+            'webdav',
+            'wikimedia',
+            'youtube',
+        ];
 
         // The ones enabled during installation.
-        $alreadyenabled = array('local', 'recent', 'upload', 'url', 'user', 'wikimedia');
+        $alreadyenabled = ['contentbank', 'areafiles', 'local', 'recent', 'upload', 'url', 'user', 'wikimedia'];
 
         // Enable all the repositories which are not enabled yet.
         foreach ($all as $type) {
