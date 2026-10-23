@@ -136,8 +136,9 @@ final class access_controlled_link_manager_test extends \advanced_testcase {
  </data>
 </ocs>
 XML;
-        $this->ocsmockclient->expects($this->once())->method('call')->with('create_share', $params)->will(
-            $this->returnValue($expectedresponse));
+        $this->ocsmockclient->expects($this->once())->method('call')->with('create_share', $params)->willReturn(
+            $expectedresponse
+        );
 
         $result = $this->linkmanager->create_share_user_sysaccount("/ambient.txt");
         $xml = simplexml_load_string($expectedresponse);
@@ -167,8 +168,9 @@ XML;
     <data/>
 </ocs>
 XML;
-        $this->ocsmockclient->expects($this->once())->method('call')->with('delete_share', $deleteshareparams)->will(
-            $this->returnValue($returnxml));
+        $this->ocsmockclient->expects($this->once())->method('call')->with('delete_share', $deleteshareparams)->willReturn(
+            $returnxml
+        );
         $this->linkmanager->delete_share_dataowner_sysaccount($shareid, 'repository_nextcloud');
 
     }
@@ -437,8 +439,9 @@ XML;
 XML;
         $this->set_private_property($this->ocsmockclient, 'systemocsclient', $this->linkmanager);
 
-        $this->ocsmockclient->expects($this->exactly(3))->method('call')->with('get_shares', $params)->will(
-            $this->returnValue($expectedresponse));
+        $this->ocsmockclient->expects($this->exactly(3))->method('call')->with('get_shares', $params)->willReturn(
+            $expectedresponse
+        );
         $xmlobjuser1 = (int) $this->linkmanager->get_shares_from_path($reference->link, 'user2');
         $xmlobjuser2 = (int) $this->linkmanager->get_shares_from_path($reference->link, 'user1');
 
@@ -585,7 +588,8 @@ XML;
         $this->set_private_property($this->ocsmockclient, 'systemocsclient', $this->linkmanager);
 
         $this->ocsmockclient->expects($this->exactly(3))->method('call')->with('get_information_of_share',
-            $this->logicalOr($params303, $params302))->will($this->returnValue($expectedresponse));
+            $this->logicalOr($params303, $params302)
+        )->willReturn($expectedresponse);
 
         // Test function for two different users. Setting the id is just a dummy value since always $expectedresponse ...
         // ... is returned.
