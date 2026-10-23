@@ -981,8 +981,7 @@ final class file_system_filedir_test extends \advanced_testcase {
         global $DB;
 
         $DB = $this->getMockBuilder(\moodle_database::class)
-            ->onlyMethods(['record_exists'])
-            ->getMockForAbstractClass();
+            ->getMock();
 
         $DB->expects($this->never())
             ->method('record_exists');
@@ -1015,8 +1014,7 @@ final class file_system_filedir_test extends \advanced_testcase {
         $vfileroot = $this->setup_vfile_root($filedircontent);
 
         $DB = $this->getMockBuilder(\moodle_database::class)
-            ->onlyMethods(['record_exists'])
-            ->getMockForAbstractClass();
+            ->getMock();
 
         $DB->method('record_exists')->willReturn(true);
 
@@ -1048,8 +1046,7 @@ final class file_system_filedir_test extends \advanced_testcase {
         $vfileroot = $this->setup_vfile_root($filedircontent);
 
         $DB = $this->getMockBuilder(\moodle_database::class)
-            ->onlyMethods(['record_exists'])
-            ->getMockForAbstractClass();
+            ->getMock();
 
         $DB->method('record_exists')->willReturn(false);
 
