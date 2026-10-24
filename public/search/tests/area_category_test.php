@@ -33,8 +33,8 @@ final class area_category_test extends \advanced_testcase {
     protected function get_mocked_area($areaid) {
         $builder = $this->getMockBuilder('\core_search\base');
         $builder->disableOriginalConstructor();
-        $builder->onlyMethods(array('get_area_id', 'check_access', 'get_context_url', 'get_doc_url',
-                'get_document'));
+        $builder->onlyMethods(['get_area_id', 'check_access', 'get_context_url', 'get_doc_url',
+                'get_document']);
         $area = $builder->getMock();
         $area->method('get_area_id')->willReturn($areaid);
 

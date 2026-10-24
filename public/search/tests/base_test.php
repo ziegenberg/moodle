@@ -112,8 +112,8 @@ final class base_test extends \advanced_testcase {
         // with required methods stubbed.
         $builder = $this->getMockBuilder('\core_search\base');
         $builder->disableOriginalConstructor();
-        $builder->onlyMethods(array('get_search_fileareas', 'get_component_name',
-                'check_access', 'get_context_url', 'get_doc_url', 'get_document'));
+        $builder->onlyMethods(['get_search_fileareas', 'get_component_name',
+                'check_access', 'get_context_url', 'get_doc_url', 'get_document']);
         $stub = $builder->getMock();
         $stub->method('get_search_fileareas')->willReturn(array($filearea));
         $stub->method('get_component_name')->willReturn($component);
