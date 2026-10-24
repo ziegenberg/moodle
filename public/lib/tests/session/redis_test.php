@@ -37,9 +37,13 @@ use RedisException;
  * @runClassInSeparateProcess
  * @covers \core\session\redis
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\core\session\redis::class)]
+#[\PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses]
 final class redis_test extends \advanced_testcase {
     /** @var string $keyprefix This key prefix used when testing Redis */
     protected string $keyprefix = '';
+    /** @var string $olderrorlog The error_log ini setting to restore in tearDown. */
+    protected string $olderrorlog = '';
     /** @var ?Redis $redis The current testing redis connection */
     protected ?Redis $redis = null;
     /** @var bool $encrypted Is the current testing redis connection encrypted*/
@@ -53,6 +57,9 @@ final class redis_test extends \advanced_testcase {
     public function setUp(): void {
         global $CFG;
         parent::setUp();
+
+        // Store the error_log ini setting so it can be restored in tearDown().
+        $this->olderrorlog = ini_get('error_log');
 
         if (!extension_loaded('redis')) {
             $this->markTestSkipped('Redis extension not loaded.');
@@ -102,6 +109,9 @@ final class redis_test extends \advanced_testcase {
     }
 
     public function tearDown(): void {
+        // Restore the error_log ini setting changed by the tests.
+        ini_set('error_log', $this->olderrorlog);
+
         if (!extension_loaded('redis') || !defined('TEST_SESSION_REDIS_HOST')) {
             return;
         }
@@ -183,7 +193,7 @@ final class redis_test extends \advanced_testcase {
 
         // Trap the error log and send it to stdOut so we can expect output at the right times.
         $errorlog = tempnam(sys_get_temp_dir(), "rediserrorlog");
-        $this->iniSet('error_log', $errorlog);
+        ini_set('error_log', $errorlog);
         try {
             $sessblocked->read('sess1');
             $this->fail('Session lock must fail to be obtained.');
