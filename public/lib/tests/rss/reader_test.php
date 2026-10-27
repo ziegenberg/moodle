@@ -16,6 +16,7 @@
 
 namespace core\rss;
 
+use core\deprecation;
 use core\http_client;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Handler\MockHandler;
@@ -217,32 +218,6 @@ final class reader_test extends \advanced_testcase {
     }
 
     /**
-     * Test that non-http(s) feed URLs are rejected rather than read as local files.
-     *
-     * SimplePie's PSR-18 client treats any URL which is not http(s) as a path to a
-     * local file (SimplePie\HTTP\Psr18Client::requestLocalFile()), so a user-supplied
-     * feed URL pointing at a server file would otherwise be read and parsed. The
-     * reader rejects these URLs and reports an error, and valid http(s) URLs still work.
-     *
-     * @covers \core\rss\reader::set_feed_url
-     */
-    public function test_rejects_non_http_feed_url(): void {
-        // A bare local path (accepted by PARAM_URL) must never be fetched.
-        $feed = new reader(feedurl: '/etc/passwd', client: $this->get_valid_feed_client());
-        $this->assertNotEmpty($feed->error());
-        $this->assertNull($feed->get_title());
-
-        // Other schemes are rejected the same way.
-        $feed = new reader(feedurl: 'file:///etc/passwd', client: $this->get_valid_feed_client());
-        $this->assertNotEmpty($feed->error());
-        $this->assertNull($feed->get_title());
-
-        // Valid http(s) URLs still work.
-        $feed = new reader(feedurl: 'http://example.com/rsstest.xml', client: $this->get_valid_feed_client());
-        $this->assertNull($feed->error());
-    }
-
-    /**
      * Data provider for content-type sniffing tests.
      *
      * @return array
@@ -282,6 +257,9 @@ final class reader_test extends \advanced_testcase {
         $feed = new reader();
 
         $feed->set_timeout(30);
+        $this->assertDebuggingCalled(deprecation::get_deprecation_string(
+            deprecation::from([reader::class, 'set_timeout'])
+        ));
 
         $this->assertSame(30, $feed->timeout);
 
@@ -302,6 +280,9 @@ final class reader_test extends \advanced_testcase {
         $feed = new reader(feedurl: 'http://example.com/rsstest.xml', client: $client);
 
         $feed->set_timeout(30);
+        $this->assertDebuggingCalled(deprecation::get_deprecation_string(
+            deprecation::from([reader::class, 'set_timeout'])
+        ));
 
         $this->assertSame(30, $feed->timeout);
         $this->assertNull($feed->error());

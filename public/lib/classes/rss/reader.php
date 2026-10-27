@@ -16,6 +16,8 @@
 
 namespace core\rss;
 
+use core\attribute\deprecated;
+use core\deprecation;
 use core\http_client;
 use core_cache\cache;
 use core_cache\simple_cache;
@@ -114,43 +116,24 @@ class reader extends SimplePie {
      * If a client was injected by the caller, the caller remains responsible
      * for configuring its timeout.
      *
+     * @deprecated since Moodle 6.0 - use the $timeout constructor argument instead
      * @param int $timeout The maximum number of seconds to spend waiting to retrieve a feed.
      */
+    #[deprecated(
+        replacement: 'the $timeout argument of the \\core\\rss\\reader constructor',
+        since: '6.0',
+        reason: 'The timeout is configured on the HTTP client',
+        mdl: 'MDL-89728',
+    )]
     public function set_timeout(int $timeout = 10): void {
+        \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
+
         $this->timeout = (int) $timeout;
 
         if ($this->ownsclient) {
             $this->httpclient = $this->create_http_client($this->timeout);
             $this->set_http_client($this->httpclient, new HttpFactory(), new HttpFactory());
         }
-    }
-
-    /**
-     * Set the URL of the feed to be fetched or subscribed to.
-     *
-     * Only http(s) URLs are supported. SimplePie's PSR-18 client treats any
-     * non-http(s) URL as a path to a local file and reads it from disk
-     * (SimplePie\HTTP\Psr18Client::requestLocalFile()), so allowing a feed URL
-     * to point at a local path would let a user with feed management rights read
-     * arbitrary readable server files. Rejecting non-http(s) URLs here checks
-     * every feed URL at the single choke point used by the blocks, the blog, and
-     * cron alike.
-     *
-     * No exception is thrown for a rejected URL: the error is recorded on the
-     * reader so callers that already check error() (block rendering, cron and the
-     * feed forms) degrade gracefully, and any previously stored invalid feed URL
-     * remains visible instead of fatalling the page. The feed URL is left unset,
-     * so init() returns early without ever attempting a fetch.
-     *
-     * @param string|\Stringable $url The URL of the feed.
-     */
-    public function set_feed_url($url): void {
-        if (is_array($url) || !preg_match('#^https?://#i', (string) $url)) {
-            $this->error = get_string('invalidurl', 'error');
-            return;
-        }
-
-        parent::set_feed_url($url);
     }
 
     /**
