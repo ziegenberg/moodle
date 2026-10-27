@@ -59,7 +59,7 @@ class behat_http extends behat_base {
      * @param BeforeScenarioScope $scope
      */
     public function clear_http_mocks(BeforeScenarioScope $scope) {
-        \core\http_client::clear_mock_responses();
+        \core\test\http_mock::clear_responses();
         $this->mocks = [];
     }
 
@@ -168,6 +168,6 @@ class behat_http extends behat_base {
             );
         }
 
-        \core\http_client::set_mock_responses($responses);
+        \core\test\http_mock::set_responses($responses);
     }
 }
