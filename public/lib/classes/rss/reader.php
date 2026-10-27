@@ -39,6 +39,12 @@ use SimplePie\SimplePie;
  * @since     Moodle 2.0
  */
 class reader extends SimplePie {
+    /** @var ClientInterface|null The HTTP client used for feed requests. */
+    private ?ClientInterface $httpclient = null;
+
+    /** @var bool Whether the HTTP client was created by this reader (rather than injected). */
+    private bool $ownsclient = false;
+
     /**
      * Constructor - creates an instance of the SimplePie class with Moodle defaults.
      *
@@ -53,25 +59,20 @@ class reader extends SimplePie {
     public function __construct(?string $feedurl = null, int $timeout = 2, ?ClientInterface $client = null) {
         parent::__construct();
 
-        // Use Moodle's shared HTTP client for outgoing feed requests.
+        // Match Moodle encoding.
+        $this->set_output_encoding('UTF-8');
+
+        $this->timeout = $timeout;
+        $this->httpclient = $client;
         if ($client === null) {
-            $client = new http_client([
-                // SimplePie's Psr18Client follows redirects itself (and tracks the
-                // permanent URL), so disable Guzzle's own redirect handling.
-                'allow_redirects' => false,
-                'connect_timeout' => $timeout,
-                'timeout' => $timeout,
-            ]);
+            $this->httpclient = $this->create_http_client($timeout);
+            $this->ownsclient = true;
         }
-        $factory = new HttpFactory();
-        $this->set_http_client($client, $factory, $factory);
+        $this->set_http_client($this->httpclient, new HttpFactory(), new HttpFactory());
 
         // Use Moodle's HTMLPurifier for text cleaning.
         $this->get_registry()->register(Sanitize::class, reader_sanitize::class, true);
         $this->sanitize = new reader_sanitize();
-
-        // Match Moodle encoding.
-        $this->set_output_encoding('UTF-8');
 
         // Use Moodle's shared cache (MUC), exposed as a PSR-16 simple cache, to
         // store parsed feed data. SimplePie manages a 1 hour expiry via the TTL.
@@ -82,6 +83,45 @@ class reader extends SimplePie {
         if ($feedurl !== null) {
             $this->set_feed_url($feedurl);
             $this->init();
+        }
+    }
+
+    /**
+     * Create a Moodle HTTP client with the given timeout.
+     *
+     * @param int $timeout how many seconds requests should wait for server responses
+     * @return http_client
+     */
+    private function create_http_client(int $timeout): http_client {
+        return new http_client([
+            // SimplePie's Psr18Client follows redirects itself (and tracks the
+            // permanent URL), so disable Guzzle's own redirect handling.
+            'allow_redirects' => false,
+            'connect_timeout' => $timeout,
+            'timeout' => $timeout,
+        ]);
+    }
+
+    /**
+     * Set the default timeout for fetching remote feeds.
+     *
+     * SimplePie's own set_timeout() has no effect (and triggers a notice) once
+     * a PSR-18 client has been set with set_http_client(). To preserve the
+     * historical behaviour of moodle_simplepie::set_timeout(), the Moodle HTTP
+     * client created by this reader is rebuilt so that the new timeout applies
+     * to subsequent requests.
+     *
+     * If a client was injected by the caller, the caller remains responsible
+     * for configuring its timeout.
+     *
+     * @param int $timeout The maximum number of seconds to spend waiting to retrieve a feed.
+     */
+    public function set_timeout(int $timeout = 10): void {
+        $this->timeout = (int) $timeout;
+
+        if ($this->ownsclient) {
+            $this->httpclient = $this->create_http_client($this->timeout);
+            $this->set_http_client($this->httpclient, new HttpFactory(), new HttpFactory());
         }
     }
 
