@@ -40,14 +40,24 @@ class simple_cache implements CacheInterface {
     #[\Override]
     public function get($key, $default = null): mixed {
         $result = $this->cache->get($key, IGNORE_MISSING);
-        if (helper::result_found($result)) {
-            return $result;
+        if ($result instanceof simple_cache_value) {
+            return $result->data;
         }
         return $default;
     }
 
     #[\Override]
     public function set($key, $value, $ttl = null): bool {
+        $ttl = self::normalise_ttl($ttl);
+
+        if ($ttl !== null && $ttl <= 0) {
+            // PSR-16: a zero or negative TTL means the item should be deleted immediately.
+            // Deleting an item which does not exist is still a success.
+            $this->delete($key);
+            return true;
+        }
+
+        $value = new simple_cache_value($value);
         if ($ttl !== null) {
             $value = new ttl_wrapper($value, $ttl);
         }
@@ -66,25 +76,43 @@ class simple_cache implements CacheInterface {
 
     #[\Override]
     public function getMultiple($keys, $default = null): iterable {
-        return array_map(
-            fn ($result) => helper::result_found($result) ? $result : $default,
-            $this->cache->get_many($keys),
-        );
+        $keys = self::normalise_iterable($keys);
+        $found = $this->cache->get_many($keys);
+
+        $result = [];
+        foreach ($keys as $key) {
+            $value = $found[$key] ?? false;
+            $result[$key] = $value instanceof simple_cache_value ? $value->data : $default;
+        }
+        return $result;
     }
 
     #[\Override]
     public function setMultiple($values, $ttl = null): bool {
-        if ($ttl !== null) {
-            $values = array_map(
-                fn ($value) => new ttl_wrapper($value, $ttl),
-                $values,
-            );
+        $values = self::normalise_iterable($values);
+        $ttl = self::normalise_ttl($ttl);
+
+        if ($ttl !== null && $ttl <= 0) {
+            // PSR-16: a zero or negative TTL means the items should be deleted immediately.
+            // Deleting items which do not exist is still a success.
+            $this->deleteMultiple(array_keys($values));
+            return true;
         }
-        return $this->cache->set_many($values);
+
+        $wrapped = [];
+        foreach ($values as $key => $value) {
+            $value = new simple_cache_value($value);
+            if ($ttl !== null) {
+                $value = new ttl_wrapper($value, $ttl);
+            }
+            $wrapped[$key] = $value;
+        }
+        return $this->cache->set_many($wrapped);
     }
 
     #[\Override]
     public function deleteMultiple($keys): bool {
+        $keys = self::normalise_iterable($keys);
         $count = $this->cache->delete_many($keys);
 
         return ($count === count($keys));
@@ -92,6 +120,50 @@ class simple_cache implements CacheInterface {
 
     #[\Override]
     public function has($key): bool {
-        return $this->cache->has($key);
+        // Implement has() through get() so that expired TTL entries are reported
+        // as missing. MUC's cache::has() only checks the ttl_wrapper expiry when
+        // the cache definition itself has a TTL, which is not the case for the
+        // ad-hoc cache instances used through this wrapper.
+        $result = $this->cache->get($key, IGNORE_MISSING);
+        return $result instanceof simple_cache_value;
+    }
+
+    /**
+     * Normalise a TTL into seconds, or null when no expiry applies.
+     *
+     * PSR-16 allows an integer number of seconds or a DateInterval. MUC's
+     * ttl_wrapper casts the value with (int), which is undefined behaviour for
+     * a DateInterval object, so it is converted to seconds here.
+     *
+     * @param int|\DateInterval|null $ttl
+     * @return int|null
+     */
+    private static function normalise_ttl($ttl): ?int {
+        if ($ttl === null) {
+            return null;
+        }
+
+        if ($ttl instanceof \DateInterval) {
+            $now = new \DateTimeImmutable();
+            return $now->add($ttl)->getTimestamp() - $now->getTimestamp();
+        }
+
+        return (int) $ttl;
+    }
+
+    /**
+     * Normalise an iterable of keys or values into an array.
+     *
+     * PSR-16 bulk methods accept any iterable, while the underlying MUC cache
+     * only accepts arrays.
+     *
+     * @param iterable $items
+     * @return array
+     */
+    private static function normalise_iterable(iterable $items): array {
+        if (is_array($items)) {
+            return $items;
+        }
+        return iterator_to_array($items);
     }
 }
