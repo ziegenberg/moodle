@@ -5,8 +5,9 @@ Obtained from https://github.com/simplepie/simplepie/releases/
 To upgrade this library:
 
 ```sh
-# Preserve the Moodle-owned readme file.
+# Preserve the Moodle-owned readme file and the deprecated backward-compatibility stub.
 mv public/lib/simplepie/readme_moodle.txt ./
+mv public/lib/simplepie/moodle_simplepie.php ./
 rm -rf public/lib/simplepie/*
 
 tempdir=`mktemp -d`
@@ -24,8 +25,9 @@ cp -rf "${tempdir}/vendor/simplepie/simplepie/src" public/lib/simplepie/src
 # Moodle keeps a single BSD-3-Clause licence file named LICENSE.txt.
 cp -f "${tempdir}/vendor/simplepie/simplepie/LICENSES/BSD-3-Clause.txt" public/lib/simplepie/LICENSE.txt
 
-# Restore the Moodle-owned readme file.
+# Restore the Moodle-owned files.
 mv readme_moodle.txt public/lib/simplepie/
+mv moodle_simplepie.php public/lib/simplepie/
 rm -rf "${tempdir}"
 git add public/lib/simplepie
 ```

@@ -16,6 +16,7 @@
 
 namespace core\rss;
 
+use core\http_client;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\Psr7\Request;
@@ -269,6 +270,45 @@ final class reader_test extends \advanced_testcase {
 
         $this->assertNull($feed->error(), "Failed to parse feed served as {$contenttype}");
         $this->assertSame('Moodle News', $feed->get_title());
+    }
+
+    /**
+     * set_timeout() must not trigger the SimplePie notice about set_http_client() having
+     * been called, and the timeout must be applied to the client created by the reader.
+     *
+     * @covers \core\rss\reader::set_timeout
+     */
+    public function test_set_timeout_applies_to_owned_client(): void {
+        $feed = new reader();
+
+        $feed->set_timeout(30);
+
+        $this->assertSame(30, $feed->timeout);
+
+        $prop = new \ReflectionProperty(reader::class, 'httpclient');
+        $client = $prop->getValue($feed);
+        $this->assertInstanceOf(http_client::class, $client);
+        $this->assertSame(30, $client->getConfig('timeout'));
+        $this->assertSame(30, $client->getConfig('connect_timeout'));
+    }
+
+    /**
+     * set_timeout() with an injected client must not throw and must keep the injected client.
+     *
+     * @covers \core\rss\reader::set_timeout
+     */
+    public function test_set_timeout_with_injected_client(): void {
+        $client = $this->get_valid_feed_client();
+        $feed = new reader(feedurl: 'http://example.com/rsstest.xml', client: $client);
+
+        $feed->set_timeout(30);
+
+        $this->assertSame(30, $feed->timeout);
+        $this->assertNull($feed->error());
+        $this->assertSame('Moodle News', $feed->get_title());
+
+        $prop = new \ReflectionProperty(reader::class, 'httpclient');
+        $this->assertSame($client, $prop->getValue($feed));
     }
 
     /**
