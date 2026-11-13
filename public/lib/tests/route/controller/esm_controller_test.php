@@ -19,6 +19,7 @@ namespace core\route\controller;
 use core\tests\router\route_testcase;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\ServerRequest;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Tests for the ESM controller shim route.
@@ -57,6 +58,21 @@ final class esm_controller_test extends route_testcase {
         $map->set_fixture($filename);
 
         return \core\di::get(esm_controller::class);
+    }
+
+    /**
+     * Assert that the response carries RFC 9110 IMF-fixdate Last-Modified and Expires headers.
+     *
+     * @param ResponseInterface $response
+     */
+    private function assert_http_date_headers(ResponseInterface $response): void {
+        $pattern = '/^[A-Z][a-z]{2}, \d{2} [A-Z][a-z]{2} \d{4} \d{2}:\d{2}:\d{2} GMT$/';
+
+        $this->assertTrue($response->hasHeader('Last-Modified'), 'Responses must include a Last-Modified header.');
+        $this->assertMatchesRegularExpression($pattern, $response->getHeaderLine('Last-Modified'));
+
+        $this->assertTrue($response->hasHeader('Expires'), 'Responses must include an Expires header.');
+        $this->assertMatchesRegularExpression($pattern, $response->getHeaderLine('Expires'));
     }
 
     /**
@@ -100,12 +116,15 @@ final class esm_controller_test extends route_testcase {
 
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertStringContainsString('application/javascript', $response->getHeaderLine('Content-Type'));
+        $this->assert_http_date_headers($response);
     }
 
     /**
      * An invalid revision (−1) results in a short-lived cache response with no ETag.
      */
     public function test_serve_invalid_revision_uses_short_cache(): void {
+        $clock = $this->mock_clock_with_frozen(1700000000);
+
         $response = $this->make_test_controller()->serve(
             new ServerRequest('GET', '/-1/mod_test/index'),
             new Response(),
@@ -116,6 +135,15 @@ final class esm_controller_test extends route_testcase {
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertFalse($response->hasHeader('ETag'), 'Short-cache responses must not include an ETag.');
         $this->assertFalse($response->hasHeader('Cache-Control'), 'Short-cache responses must not include Cache-Control.');
+        $this->assert_http_date_headers($response);
+        $this->assertEquals(
+            $clock->now()->format(\core_date::HTTP_DATE_FORMAT),
+            $response->getHeaderLine('Last-Modified'),
+        );
+        $this->assertEquals(
+            $clock->now()->add(new \DateInterval('PT2S'))->format(\core_date::HTTP_DATE_FORMAT),
+            $response->getHeaderLine('Expires'),
+        );
     }
 
     /**
@@ -125,7 +153,11 @@ final class esm_controller_test extends route_testcase {
         $clock = $this->mock_clock_with_frozen();
         $revision = $clock->time();
 
-        $response = $this->make_test_controller()->serve(
+        $filename = make_request_directory() . '/test.js';
+        $controller = $this->make_test_controller($filename);
+        touch($filename, 1600000000);
+
+        $response = $controller->serve(
             new ServerRequest('GET', "/{$revision}/mod_test/index"),
             new Response(),
             $revision,
@@ -135,6 +167,15 @@ final class esm_controller_test extends route_testcase {
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertTrue($response->hasHeader('ETag'), 'Long-cache responses must include an ETag.');
         $this->assertStringContainsString('immutable', $response->getHeaderLine('Cache-Control'));
+        $this->assert_http_date_headers($response);
+        $this->assertEquals(
+            $clock->now()->setTimestamp(1600000000)->format(\core_date::HTTP_DATE_FORMAT),
+            $response->getHeaderLine('Last-Modified'),
+        );
+        $this->assertEquals(
+            $clock->now()->add(new \DateInterval('P1Y'))->format(\core_date::HTTP_DATE_FORMAT),
+            $response->getHeaderLine('Expires'),
+        );
     }
 
     /**
@@ -155,5 +196,6 @@ final class esm_controller_test extends route_testcase {
         $response = $controller->serve($request, new Response(), $revision, 'mod_test/index');
 
         $this->assertEquals(304, $response->getStatusCode());
+        $this->assert_http_date_headers($response);
     }
 }
