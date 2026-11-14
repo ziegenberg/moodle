@@ -82,7 +82,7 @@ class reader_sanitize extends Sanitize {
         }
 
         if ($this->output_encoding !== 'UTF-8') {
-            \core_text::convert($data, 'UTF-8', $this->output_encoding);
+            $data = \core_text::convert($data, 'UTF-8', $this->output_encoding);
         }
 
         return $data;

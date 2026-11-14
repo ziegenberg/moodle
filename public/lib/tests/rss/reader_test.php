@@ -16,12 +16,18 @@
 
 namespace core\rss;
 
+use core_cache\cache;
+use core_cache\store;
 use core\deprecation;
 use core\http_client;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\Promise\Create;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
+use Psr\Http\Message\RequestInterface;
+use SimplePie\Sanitize;
+use SimplePie\SimplePie;
 
 /**
  * Unit tests for the Moodle RSS reader (\core\rss\reader) and its sanitizer.
@@ -41,6 +47,10 @@ final class reader_test extends \advanced_testcase {
     protected function setUp(): void {
         parent::setUp();
         reader::reset_cache();
+
+        // Clear any mocked HTTP responses left behind by other test classes, so that
+        // requests from this class are never served by them (they would receive a 404).
+        \core\test\http_mock::clear_responses();
     }
 
     /**
@@ -75,6 +85,47 @@ final class reader_test extends \advanced_testcase {
         return $this->get_mock_client([
             new Response(200, ['Content-Type' => 'application/rss+xml'], $this->fixture()),
         ]);
+    }
+
+    /**
+     * The reader must apply the Moodle defaults: UTF-8 output encoding, Moodle sanitizer
+     * registered, the shared MUC cache with a one hour duration, and a client that does not
+     * follow redirects itself (SimplePie's Psr18Client does that).
+     *
+     * @covers \core\rss\reader
+     */
+    public function test_constructor_applies_moodle_defaults(): void {
+        $feed = new reader();
+
+        $this->assertSame('UTF-8', $feed->get_encoding());
+        $this->assertInstanceOf(reader_sanitize::class, $feed->sanitize);
+        $this->assertSame(3600, $feed->cache_duration);
+
+        // The Moodle sanitizer must also be registered in SimplePie's registry, so that
+        // code which creates sanitizers through the registry (rather than the sanitize
+        // property) gets the Moodle implementation.
+        $this->assertSame(reader_sanitize::class, $feed->get_registry()->get_class(\SimplePie\Sanitize::class));
+
+        // The reader-created client disables Guzzle's redirect handling: SimplePie's
+        // Psr18Client follows redirects itself and records the permanent URL.
+        $property = new \ReflectionProperty(reader::class, 'httpclient');
+        $client = $property->getValue($feed);
+        $this->assertInstanceOf(http_client::class, $client);
+        $this->assertFalse($client->getConfig('allow_redirects'));
+    }
+
+    /**
+     * The shared cache backing the reader must be purgeable through reset_cache().
+     *
+     * @covers \core\rss\reader::reset_cache
+     */
+    public function test_reset_cache_clears_the_shared_cache(): void {
+        $cache = cache::make_from_params(store::MODE_APPLICATION, 'core', 'rssfeed');
+        $cache->set('mykey', 'value');
+        $this->assertSame('value', $cache->get('mykey'));
+
+        $this->assertTrue(reader::reset_cache());
+        $this->assertFalse($cache->has('mykey'));
     }
 
     /**
@@ -249,7 +300,8 @@ final class reader_test extends \advanced_testcase {
 
     /**
      * set_timeout() must not trigger the SimplePie notice about set_http_client() having
-     * been called, and the timeout must be applied to the client created by the reader.
+     * been called, and the timeout must be applied to requests made through the client
+     * created by the reader.
      *
      * @covers \core\rss\reader::set_timeout
      */
@@ -266,18 +318,31 @@ final class reader_test extends \advanced_testcase {
         $prop = new \ReflectionProperty(reader::class, 'httpclient');
         $client = $prop->getValue($feed);
         $this->assertInstanceOf(http_client::class, $client);
-        $this->assertSame(30, $client->getConfig('timeout'));
-        $this->assertSame(30, $client->getConfig('connect_timeout'));
+
+        // Replace the underlying handler with one recording the request options, so we can
+        // verify the timeout middleware applies the reader's current timeout to each request.
+        $recorded = [];
+        $stack = $client->getConfig('handler');
+        $stack->setHandler(function (RequestInterface $request, array $options) use (&$recorded) {
+            $recorded = $options;
+            return Create::promiseFor(new Response(200));
+        });
+
+        $client->request('GET', 'https://example.com/feed.xml');
+        $this->assertSame(30, $recorded['timeout']);
+        $this->assertSame(30, $recorded['connect_timeout']);
     }
 
     /**
-     * set_timeout() with an injected client must not throw and must keep the injected client.
+     * set_timeout() after set_http_client() must not replace the client installed by the
+     * caller, and must not throw.
      *
      * @covers \core\rss\reader::set_timeout
      */
-    public function test_set_timeout_with_injected_client(): void {
+    public function test_set_timeout_after_set_http_client_keeps_caller_client(): void {
+        $feed = new reader();
         $client = $this->get_valid_feed_client();
-        $feed = new reader(feedurl: 'http://example.com/rsstest.xml', client: $client);
+        $feed->set_http_client($client, new \GuzzleHttp\Psr7\HttpFactory(), new \GuzzleHttp\Psr7\HttpFactory());
 
         $feed->set_timeout(30);
         $this->assertDebuggingCalled(deprecation::get_deprecation_string(
@@ -285,11 +350,18 @@ final class reader_test extends \advanced_testcase {
         ));
 
         $this->assertSame(30, $feed->timeout);
+        $feed->set_feed_url('http://example.com/rsstest.xml');
+        $feed->init();
         $this->assertNull($feed->error());
         $this->assertSame('Moodle News', $feed->get_title());
 
-        $prop = new \ReflectionProperty(reader::class, 'httpclient');
-        $this->assertSame($client, $prop->getValue($feed));
+        // SimplePie stores the caller's client inside its Psr18Client wrapper. Verify that
+        // set_timeout() did not replace it with a reader-owned client.
+        $simplepieprop = new \ReflectionProperty(\SimplePie\SimplePie::class, 'http_client');
+        $wrapped = $simplepieprop->getValue($feed);
+        $this->assertInstanceOf(\SimplePie\HTTP\Psr18Client::class, $wrapped);
+        $wrapperprop = new \ReflectionProperty(\SimplePie\HTTP\Psr18Client::class, 'httpClient');
+        $this->assertSame($client, $wrapperprop->getValue($wrapped));
     }
 
     /**
@@ -327,5 +399,76 @@ final class reader_test extends \advanced_testcase {
         $this->assertStringNotContainsString('onclick', $item);
         $this->assertStringNotContainsString('onerror', $item);
         $this->assertStringNotContainsString('javascript:', strtolower($item));
+    }
+
+    /**
+     * The sanitizer trims the input before processing.
+     *
+     * @covers \core\rss\reader_sanitize::sanitize
+     */
+    public function test_sanitizer_trims_input(): void {
+        $sanitizer = new reader_sanitize();
+        $this->assertSame('', $sanitizer->sanitize('   ', \SimplePie\SimplePie::CONSTRUCT_HTML));
+        $this->assertSame('<p>x</p>', $sanitizer->sanitize('  <p>x</p>  ', \SimplePie\SimplePie::CONSTRUCT_HTML));
+    }
+
+    /**
+     * The sanitizer detects HTML content when the type is CONSTRUCT_MAYBE_HTML.
+     *
+     * @dataProvider maybe_html_provider
+     * @covers \core\rss\reader_sanitize::sanitize
+     *
+     * @param string $data The data to sanitize.
+     * @param string $expected The expected output.
+     */
+    public function test_sanitizer_detects_html(string $data, string $expected): void {
+        $sanitizer = new reader_sanitize();
+        $this->assertSame($expected, $sanitizer->sanitize($data, \SimplePie\SimplePie::CONSTRUCT_MAYBE_HTML));
+    }
+
+    /**
+     * Data for test_sanitizer_detects_html().
+     *
+     * @return array
+     */
+    public static function maybe_html_provider(): array {
+        return [
+            'html markup' => ['<p>text</p>', '<p>text</p>'],
+            'plain text' => ['hello world', 'hello world'],
+        ];
+    }
+
+    /**
+     * The sanitizer resolves relative URLs against the base URL for IRI content.
+     *
+     * @covers \core\rss\reader_sanitize::sanitize
+     */
+    public function test_sanitizer_resolves_relative_urls(): void {
+        $sanitizer = new reader_sanitize();
+        $sanitizer->set_registry(new \SimplePie\Registry());
+
+        $result = $sanitizer->sanitize('/relative/path', \SimplePie\SimplePie::CONSTRUCT_IRI, 'https://example.com/base/');
+        $this->assertSame('https://example.com/relative/path', $result);
+
+        // Unresolvable URLs are cleaned rather than passed through.
+        $result = $sanitizer->sanitize('javascript:alert(1)', \SimplePie\SimplePie::CONSTRUCT_IRI, 'https://example.com/');
+        $this->assertSame('', $result);
+    }
+
+    /**
+     * The sanitizer converts the output encoding when it is not UTF-8.
+     *
+     * @covers \core\rss\reader_sanitize::sanitize
+     */
+    public function test_sanitizer_converts_output_encoding(): void {
+        $sanitizer = new reader_sanitize();
+        $sanitizer->set_registry(new \SimplePie\Registry());
+        $sanitizer->set_output_encoding('ISO-8859-1');
+
+        // Use non-ASCII content, which differs between UTF-8 and ISO-8859-1.
+        $data = '<p>Moodle &#252;ml&#228;ut</p>';
+        $result = $sanitizer->sanitize($data, \SimplePie\SimplePie::CONSTRUCT_HTML);
+        $this->assertSame(\core_text::convert('<p>Moodle ümläut</p>', 'UTF-8', 'ISO-8859-1'), $result);
+        $this->assertNotSame('<p>Moodle ümläut</p>', $result);
     }
 }

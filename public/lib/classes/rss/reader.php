@@ -21,8 +21,10 @@ use core\deprecation;
 use core\http_client;
 use core_cache\cache;
 use core_cache\simple_cache;
+use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Psr7\HttpFactory;
 use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestInterface;
 use SimplePie\Sanitize;
 use SimplePie\SimplePie;
 
@@ -44,9 +46,6 @@ class reader extends SimplePie {
     /** @var ClientInterface|null The HTTP client used for feed requests. */
     private ?ClientInterface $httpclient = null;
 
-    /** @var bool Whether the HTTP client was created by this reader (rather than injected). */
-    private bool $ownsclient = false;
-
     /**
      * Constructor - creates an instance of the SimplePie class with Moodle defaults.
      *
@@ -67,8 +66,7 @@ class reader extends SimplePie {
         $this->timeout = $timeout;
         $this->httpclient = $client;
         if ($client === null) {
-            $this->httpclient = $this->create_http_client($timeout);
-            $this->ownsclient = true;
+            $this->httpclient = $this->create_http_client();
         }
         $this->set_http_client($this->httpclient, new HttpFactory(), new HttpFactory());
 
@@ -89,29 +87,44 @@ class reader extends SimplePie {
     }
 
     /**
-     * Create a Moodle HTTP client with the given timeout.
+     * Create a Moodle HTTP client with a timeout middleware.
      *
-     * @param int $timeout how many seconds requests should wait for server responses
+     * The current reader timeout is applied to each request by a middleware, so that
+     * set_timeout() only needs to update the timeout property and never has to replace
+     * the client (which may have been set by the caller via set_http_client()).
+     *
      * @return http_client
      */
-    private function create_http_client(int $timeout): http_client {
-        return new http_client([
+    private function create_http_client(): http_client {
+        $client = new http_client([
             // SimplePie's Psr18Client follows redirects itself (and tracks the
             // permanent URL), so disable Guzzle's own redirect handling.
             'allow_redirects' => false,
-            'connect_timeout' => $timeout,
-            'timeout' => $timeout,
         ]);
+
+        // Apply the reader's current timeout to each request. The middleware is installed
+        // after construction (before the stack is resolved by the first request), so the
+        // default Moodle handlers (SSRF block list, redirects, cache) remain in place.
+        $stack = $client->getConfig('handler');
+        $stack->push(function (callable $handler): callable {
+            return function (RequestInterface $request, array $options) use ($handler): PromiseInterface {
+                $options['connect_timeout'] = $this->timeout;
+                $options['timeout'] = $this->timeout;
+                return $handler($request, $options);
+            };
+        }, 'moodle_rss_timeout');
+
+        return $client;
     }
 
     /**
      * Set the default timeout for fetching remote feeds.
      *
      * SimplePie's own set_timeout() has no effect (and triggers a notice) once
-     * a PSR-18 client has been set with set_http_client(). To preserve the
-     * historical behaviour of moodle_simplepie::set_timeout(), the Moodle HTTP
-     * client created by this reader is rebuilt so that the new timeout applies
-     * to subsequent requests.
+     * a PSR-18 client has been set with set_http_client(). The Moodle HTTP
+     * client created by this reader applies the current timeout to each request
+     * through a middleware, so this method only updates the timeout property and
+     * never replaces a client installed through set_http_client().
      *
      * If a client was injected by the caller, the caller remains responsible
      * for configuring its timeout.
@@ -129,11 +142,6 @@ class reader extends SimplePie {
         \core\deprecation::emit_deprecation([self::class, __FUNCTION__]);
 
         $this->timeout = (int) $timeout;
-
-        if ($this->ownsclient) {
-            $this->httpclient = $this->create_http_client($this->timeout);
-            $this->set_http_client($this->httpclient, new HttpFactory(), new HttpFactory());
-        }
     }
 
     /**
