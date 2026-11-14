@@ -41,6 +41,10 @@ class simple_cache implements CacheInterface {
     public function get($key, $default = null): mixed {
         $result = $this->cache->get($key, IGNORE_MISSING);
         if ($result instanceof simple_cache_value) {
+            if ($result->is_expired()) {
+                $this->cache->delete($key);
+                return $default;
+            }
             return $result->data;
         }
         return $default;
@@ -52,16 +56,14 @@ class simple_cache implements CacheInterface {
 
         if ($ttl !== null && $ttl <= 0) {
             // PSR-16: a zero or negative TTL means the item should be deleted immediately.
-            // Deleting an item which does not exist is still a success.
+            // Deleting an item which does not exist is still a success, but a delete that
+            // failed while the old entry is still cached is a failure.
             $this->delete($key);
-            return true;
+            return !$this->has($key);
         }
 
-        $value = new simple_cache_value($value);
-        if ($ttl !== null) {
-            $value = new ttl_wrapper($value, $ttl);
-        }
-        return $this->cache->set($key, $value);
+        $expires = $ttl !== null ? time() + $ttl : null;
+        return $this->cache->set($key, new simple_cache_value($value, $expires));
     }
 
     #[\Override]
@@ -76,13 +78,22 @@ class simple_cache implements CacheInterface {
 
     #[\Override]
     public function getMultiple($keys, $default = null): iterable {
-        $keys = self::normalise_iterable($keys);
+        $keys = self::normalise_iterable($keys, false);
         $found = $this->cache->get_many($keys);
 
         $result = [];
         foreach ($keys as $key) {
             $value = $found[$key] ?? false;
-            $result[$key] = $value instanceof simple_cache_value ? $value->data : $default;
+            if ($value instanceof simple_cache_value) {
+                if ($value->is_expired()) {
+                    $this->cache->delete($key);
+                    $result[$key] = $default;
+                } else {
+                    $result[$key] = $value->data;
+                }
+            } else {
+                $result[$key] = $default;
+            }
         }
         return $result;
     }
@@ -94,25 +105,27 @@ class simple_cache implements CacheInterface {
 
         if ($ttl !== null && $ttl <= 0) {
             // PSR-16: a zero or negative TTL means the items should be deleted immediately.
-            // Deleting items which do not exist is still a success.
-            $this->deleteMultiple(array_keys($values));
+            $keys = array_keys($values);
+            $this->deleteMultiple($keys);
+            foreach ($keys as $key) {
+                if ($this->has($key)) {
+                    return false;
+                }
+            }
             return true;
         }
 
+        $expires = $ttl !== null ? time() + $ttl : null;
         $wrapped = [];
         foreach ($values as $key => $value) {
-            $value = new simple_cache_value($value);
-            if ($ttl !== null) {
-                $value = new ttl_wrapper($value, $ttl);
-            }
-            $wrapped[$key] = $value;
+            $wrapped[$key] = new simple_cache_value($value, $expires);
         }
         return $this->cache->set_many($wrapped);
     }
 
     #[\Override]
     public function deleteMultiple($keys): bool {
-        $keys = self::normalise_iterable($keys);
+        $keys = self::normalise_iterable($keys, false);
         $count = $this->cache->delete_many($keys);
 
         return ($count === count($keys));
@@ -120,20 +133,26 @@ class simple_cache implements CacheInterface {
 
     #[\Override]
     public function has($key): bool {
-        // Implement has() through get() so that expired TTL entries are reported
-        // as missing. MUC's cache::has() only checks the ttl_wrapper expiry when
-        // the cache definition itself has a TTL, which is not the case for the
-        // ad-hoc cache instances used through this wrapper.
+        // Implement has() through the same lookup as get() so that expired entries are
+        // reported as missing. MUC's cache::has() only checks the ttl_wrapper expiry when
+        // the cache definition itself has a TTL, which is not the case for the ad-hoc
+        // cache instances used through this wrapper.
         $result = $this->cache->get($key, IGNORE_MISSING);
-        return $result instanceof simple_cache_value;
+        if ($result instanceof simple_cache_value) {
+            if ($result->is_expired()) {
+                $this->cache->delete($key);
+                return false;
+            }
+            return true;
+        }
+        return false;
     }
 
     /**
      * Normalise a TTL into seconds, or null when no expiry applies.
      *
-     * PSR-16 allows an integer number of seconds or a DateInterval. MUC's
-     * ttl_wrapper casts the value with (int), which is undefined behaviour for
-     * a DateInterval object, so it is converted to seconds here.
+     * PSR-16 allows an integer number of seconds or a DateInterval. The number
+     * of seconds is then used to compute the absolute expiry timestamp.
      *
      * @param int|\DateInterval|null $ttl
      * @return int|null
@@ -155,15 +174,20 @@ class simple_cache implements CacheInterface {
      * Normalise an iterable of keys or values into an array.
      *
      * PSR-16 bulk methods accept any iterable, while the underlying MUC cache
-     * only accepts arrays.
+     * only accepts arrays. $preservekeys controls whether iterator_to_array()
+     * keeps the iterator's keys: when an iterator repeats an index (e.g. two
+     * generators both yielding index 0), keeping the keys would silently drop
+     * entries. getMultiple() and deleteMultiple() only use the values, so they
+     * pass false; setMultiple() needs the keys, so it keeps them.
      *
      * @param iterable $items
+     * @param bool $preservekeys Whether to preserve the keys of the iterable.
      * @return array
      */
-    private static function normalise_iterable(iterable $items): array {
+    private static function normalise_iterable(iterable $items, bool $preservekeys = true): array {
         if (is_array($items)) {
             return $items;
         }
-        return iterator_to_array($items);
+        return iterator_to_array($items, $preservekeys);
     }
 }

@@ -23,6 +23,11 @@ namespace core_cache;
  * stored false value. Wrapping every stored value in this marker allows
  * simple_cache to tell the two apart, as required by PSR-16.
  *
+ * The marker also carries the expiry timestamp. Expiry is evaluated against
+ * the real clock here rather than through MUC's ttl_wrapper, because MUC's
+ * cache::now() is frozen for the lifetime of the process, and because MUC's
+ * static acceleration returns the outer wrapper without unwrapping it.
+ *
  * @package    core_cache
  * @copyright  2026 Daniel Ziegenberg <daniel@ziegenberg.at>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -34,11 +39,27 @@ final class simple_cache_value {
     public mixed $data;
 
     /**
+     * @var int|null The Unix timestamp when the entry expires, or null if it never expires.
+     */
+    public ?int $expires;
+
+    /**
      * Create a wrapper for a stored value.
      *
      * @param mixed $data The value being stored.
+     * @param int|null $expires The Unix timestamp when the entry expires, or null if it never expires.
      */
-    public function __construct(mixed $data) {
+    public function __construct(mixed $data, ?int $expires = null) {
         $this->data = $data;
+        $this->expires = $expires;
+    }
+
+    /**
+     * Whether the entry has expired.
+     *
+     * @return bool
+     */
+    public function is_expired(): bool {
+        return $this->expires !== null && $this->expires <= time();
     }
 }
