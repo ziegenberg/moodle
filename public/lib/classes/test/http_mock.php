@@ -160,6 +160,13 @@ final class http_mock {
             self::$responses[$url] = [$descriptor];
         }
 
+        // The Behat site may handle each request in a fresh PHP process (e.g. php-fpm), so the
+        // in-memory queue progress is lost between requests. Persist the remaining queues so
+        // that the next request continues where this one left off instead of restarting.
+        if (defined('BEHAT_SITE_RUNNING')) {
+            self::persist_responses();
+        }
+
         return new Response($descriptor['status'], $descriptor['headers'], $descriptor['body']);
     }
 
@@ -172,7 +179,17 @@ final class http_mock {
      * @return string
      */
     private static function url_key(RequestInterface $request): string {
-        return $request->getUri()->withQuery('')->withFragment('')->__toString();
+        return self::url_key_from_string((string) $request->getUri());
+    }
+
+    /**
+     * Get the key used to match a URL string against the configured mocked responses.
+     *
+     * @param string $url The URL to normalise.
+     * @return string
+     */
+    private static function url_key_from_string(string $url): string {
+        return (new \GuzzleHttp\Psr7\Uri($url))->withQuery('')->withFragment('')->__toString();
     }
 
     /**
@@ -181,13 +198,16 @@ final class http_mock {
      * Response objects are converted to arrays with the keys 'status', 'headers' and 'body' so
      * that the mocks can be serialised and shared with the Behat site.
      *
+     * Keys are normalised with the same URL key used for lookup, so that a mocked URL carrying
+     * a query string matches requests for the same scheme, host and path.
+     *
      * @param array $responses The mocked responses to normalise.
      * @return array
      */
     private static function normalise_responses(array $responses): array {
         $normalised = [];
         foreach ($responses as $url => $queue) {
-            $normalised[$url] = array_map(function ($entry): array {
+            $normalised[self::url_key_from_string($url)] = array_map(function ($entry): array {
                 if ($entry instanceof Response) {
                     return [
                         'status' => $entry->getStatusCode(),
@@ -219,10 +239,15 @@ final class http_mock {
 
     /**
      * Persist the currently installed mocked responses to the shared Behat dataroot.
+     *
+     * The write is atomic (temp file + rename) so that a concurrent reader never sees a
+     * partially written file.
      */
     private static function persist_responses(): void {
-        $content = json_encode(self::$responses);
-        file_put_contents(self::get_filename(), $content, LOCK_EX);
+        $filename = self::get_filename();
+        $tmp = $filename . '.tmp.' . getmypid();
+        file_put_contents($tmp, json_encode(self::$responses), LOCK_EX);
+        rename($tmp, $filename);
     }
 
     /**

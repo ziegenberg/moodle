@@ -69,6 +69,24 @@ final class http_mock_test extends \advanced_testcase {
     }
 
     /**
+     * A mocked URL carrying a query string must match requests for the same scheme, host and path,
+     * because lookup strips the query string.
+     */
+    public function test_mocked_url_with_query_string_matches(): void {
+        http_mock::set_responses([
+            'https://example.com/feed.xml?token=abc123' => [
+                new Response(200, [], 'content'),
+            ],
+        ]);
+
+        $client = new \core\http_client(['http_errors' => false]);
+        $response = $client->request('GET', 'https://example.com/feed.xml');
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame('content', (string) $response->getBody());
+    }
+
+    /**
      * Responses for a URL are served in order, repeating the last one once exhausted.
      */
     public function test_mocked_responses_are_consumed_in_order_and_repeated(): void {
