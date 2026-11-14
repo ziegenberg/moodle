@@ -15,6 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 use PHPUnit\Framework\Attributes\After;
+use PHPUnit\Framework\Attributes\BeforeClass;
 
 /**
  * The simplest PHPUnit test case customised for Moodle
@@ -27,17 +28,11 @@ use PHPUnit\Framework\Attributes\After;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 abstract class basic_testcase extends base_testcase {
-    /**
-     * Constructs a test case with the given name.
-     *
-     *
-     * @param string $name
-     */
-    final public function __construct($name = null) {
-        parent::__construct($name);
 
+    #[BeforeClass]
+    final public function setup_testcaste(): void {
         $this->setBackupGlobals(false);
-        $this->setRunTestInSeparateProcess(false);
+        $this->setPreserveGlobalState(false);
     }
 
     /**

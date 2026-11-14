@@ -23,6 +23,7 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use PHPUnit\Framework\Attributes\After;
 use PHPUnit\Framework\Attributes\Before;
+use PHPUnit\Framework\Attributes\BeforeClass;
 
 /**
  * Advanced PHPUnit test case customised for Moodle.
@@ -43,16 +44,8 @@ abstract class advanced_testcase extends base_testcase {
     /** @var int timestamp used for current time asserts */
     private $currenttimestart;
 
-    /**
-     * Constructs a test case with the given name.
-     *
-     * Note: use setUp() or setUpBeforeClass() in your test cases.
-     *
-     * @param string $name
-     */
-    final public function __construct(string $name) {
-        parent::__construct($name);
-
+    #[BeforeClass]
+    final public function setup_testcaste(): void {
         $this->setBackupGlobals(false);
         $this->setPreserveGlobalState(false);
     }
