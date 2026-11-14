@@ -15,7 +15,7 @@ on:
         default: ''
 
 env:
-  php: 8.4
+  php: 8.5
 
 jobs:
   Grunt:
@@ -93,7 +93,7 @@ jobs:
             db: mysqli
           # PostgreSQL builds always run with the highest PHP supported version.
           - os: ubuntu-24.04
-            php: 8.4
+            php: 8.5
             db: pgsql
 
     steps:
