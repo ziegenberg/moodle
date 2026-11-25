@@ -100,7 +100,10 @@ final class personal_access_token_expiry_task_test extends \advanced_testcase {
         \core\di::make(personal_access_token_expiry_task::class)->execute();
 
         $queued = manager::get_adhoc_tasks(send_personal_access_token_expiry_notices::class);
-        $this->assertEqualsCanonicalizing([$first->id, $second->id], array_map(fn($task) => $task->get_userid(), $queued));
+        $this->assertEqualsCanonicalizing(
+            [$first->id, $second->id],
+            array_values(array_map(fn($task) => $task->get_userid(), $queued)),
+        );
         $this->assertSame(0, $sink->count());
         $sink->close();
     }
