@@ -353,7 +353,7 @@ final class process_expired_oauth2_secrets_task_test extends \advanced_testcase 
         $adhoctasks = manager::get_adhoc_tasks(send_oauth2_secret_expired_notification_adhoc_task::class);
         $this->assertCount(2, $adhoctasks);
 
-        $recipientids = array_map(fn($task) => $task->get_userid(), $adhoctasks);
+        $recipientids = array_values(array_map(fn($task) => $task->get_userid(), $adhoctasks));
         $this->assertEqualsCanonicalizing([$roleholder->id, $admin->id], $recipientids);
     }
 }

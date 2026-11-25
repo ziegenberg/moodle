@@ -632,9 +632,9 @@ final class api_token_repository_test extends \advanced_testcase {
 
         $this->assertCount(count($expectednames), $tokens);
 
-        $actualnames = array_map(function ($token) {
+        $actualnames = array_values(array_map(function ($token) {
             return $token->get_name();
-        }, $tokens);
+        }, $tokens));
 
         $this->assertEqualsCanonicalizing($expectednames, $actualnames);
     }
