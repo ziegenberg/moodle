@@ -209,7 +209,7 @@ final class user_filter_manager_test extends advanced_testcase {
         // First user has filters in two reports.
         $useronefilters = user_filter_manager::get_all_for_user((int) $userone->id);
         $this->assertDebuggingCalled();
-        $this->assertEqualsCanonicalizing([$reportonefilter, $reporttwofilter], $useronefilters);
+        $this->assertEqualsCanonicalizing([$reportonefilter, $reporttwofilter], array_values($useronefilters));
 
         // Check for a user with no filters.
         $usertwofilters = user_filter_manager::get_all_for_user((int) $usertwo->id);
