@@ -44,6 +44,11 @@ class embed_has_associated_no_embed extends brickfield_accessibility_test {
                     return;
                 }
             }
+            // libxml2 >= 2.14.0 parses <embed> as a void element (HTML5), so the noembed element
+            // is no longer a child of embed but the next element sibling. Accept both.
+            if ($this->property_is_equal($embed->nextElementSibling, 'tagName', 'noembed')) {
+                return;
+            }
             // There were no 'noembed' child nodes. If the next sibling isn't, then the content is flawed.
             if (!$this->property_is_equal($embed->nextSibling, 'tagName', 'noembed')) {
                 $this->add_report($embed);
