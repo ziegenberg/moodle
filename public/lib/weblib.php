@@ -1114,6 +1114,11 @@ function purify_html($text, $options = array()) {
         $config->set('Cache.SerializerPath', $cachedir);
         $config->set('Cache.SerializerPermissions', $CFG->directorypermissions);
         $config->set('Core.NormalizeNewlines', false);
+        // Use the DirectLex lexer instead of the default DOMLex. DOMLex parses the HTML
+        // through DOMDocument::loadHTML(), and libxml2 >= 2.14.0 normalizes CR and CRLF
+        // line breaks to LF in text nodes, so line breaks can no longer be preserved.
+        // DirectLex is implemented in PHP only and is not affected by the libxml2 version.
+        $config->set('Core.LexerImpl', 'DirectLex');
         $config->set('Core.ConvertDocumentToFragment', true);
         $config->set('Core.Encoding', 'UTF-8');
         $config->set('HTML.Doctype', 'XHTML 1.0 Transitional');
